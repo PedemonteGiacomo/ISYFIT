@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'medical_history_screen.dart';
 import 'training_records_screen.dart';
+import 'account_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -26,6 +27,15 @@ class HomeScreen extends StatelessWidget {
               );
             },
             child: Text('Go to Training Records'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AccountScreen()),
+              );
+            },
+            child: Text('Go to Account'),
           ),
         ],
       ),

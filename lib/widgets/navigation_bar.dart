@@ -11,6 +11,9 @@ class NavigationBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onIndexChanged,
+      backgroundColor: Theme.of(context).primaryColorLight, // Use primary color
+      selectedItemColor: Theme.of(context).primaryColorDark, // Use secondary color
+      unselectedItemColor: Theme.of(context).colorScheme.secondary, // Use primary color dark
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -23,6 +26,10 @@ class NavigationBar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.fitness_center),
           label: 'Training',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.account_circle_rounded),
+          label: 'Account',
         ),
       ],
     );

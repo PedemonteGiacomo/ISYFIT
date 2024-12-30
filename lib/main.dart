@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/medical_history_screen.dart';
 import 'screens/training_records_screen.dart';
+import 'screens/account_screen.dart';
 import 'widgets/navigation_bar.dart' as navbar;
 
 void main() {
@@ -14,7 +15,14 @@ class IsyFitApp extends StatelessWidget {
     return MaterialApp(
       title: 'IsyFit',
       theme: ThemeData(
+        primaryColor: Colors.blue,
+        primaryColorDark: Colors.blue[700],
+        primaryColorLight: Colors.blue[100],
         primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: Colors.blueGrey, // Set the secondary color
+          onPrimary: Colors.white, // Color for text/icons on primary
+        ),
       ),
       home: MainLayout(),
     );
@@ -33,6 +41,7 @@ class _MainLayoutState extends State<MainLayout> {
     HomeScreen(),
     MedicalHistoryScreen(),
     TrainingRecordsScreen(),
+    AccountScreen(),
   ];
 
   @override
