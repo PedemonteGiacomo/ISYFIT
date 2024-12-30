@@ -1,21 +1,3 @@
-<<<<<<< HEAD
-# isyfit
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
 # Personal Trainer and Client Management Application
 
 ## 1. Identify Main User Groups
@@ -295,4 +277,3 @@ samples, guidance on mobile development, and a full API reference.
    - Release an alpha/beta for a small group of users.
 
 ---
->>>>>>> f4016efa671b2ee70dc383a21d5119c414ec83c7
