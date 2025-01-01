@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'login_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   @override
@@ -83,11 +84,17 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _logout() async {
     await _auth.signOut();
     //after logout, navigate to login screen
-    Navigator.pushReplacementNamed(context, '/login');
+    Navigator.pushReplacementNamed(context, '/');
   }
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const LoginScreen();
+    }
+
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(

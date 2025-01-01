@@ -22,6 +22,7 @@ class IsyFitApp extends StatelessWidget {
     return MaterialApp(
       title: 'IsyFit',
       theme: ThemeData(
+        primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
       initialRoute: '/',

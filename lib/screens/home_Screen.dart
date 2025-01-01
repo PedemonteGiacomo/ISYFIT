@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:isyfit/screens/login_screen.dart';
 import 'pt_dashboard.dart';
 import 'client_dashboard.dart';
 
@@ -12,7 +13,7 @@ class HomeScreen extends StatelessWidget {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const Center(child: Text('No user found. Please log in.'));
+      return const LoginScreen();
     }
 
     return FutureBuilder<DocumentSnapshot>(
