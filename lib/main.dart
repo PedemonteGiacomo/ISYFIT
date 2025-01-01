@@ -1,70 +1,78 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/medical_history_screen.dart';
-import 'screens/training_records_screen.dart';
-import 'screens/account_screen.dart';
-import 'widgets/navigation_bar.dart' as navbar;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
-void main() {
+import 'screens/login_screen.dart';
+import 'screens/base_screen.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(IsyFitApp());
+  runApp(const IsyFitApp());
 }
 
 class IsyFitApp extends StatelessWidget {
+  const IsyFitApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'IsyFit',
       theme: ThemeData(
-        primaryColor: Colors.blue,
-        primaryColorDark: Colors.blue[700],
-        primaryColorLight: Colors.blue[100],
         primarySwatch: Colors.blue,
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: Colors.blueGrey, // Set the secondary color
-          onPrimary: Colors.white, // Color for text/icons on primary
-        ),
-      textTheme: TextTheme()      ),
-      home: MainLayout(),
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => BaseScreen(),
+        '/login': (context) => const LoginScreen(),
+        // Add other routes here
+      },
     );
   }
 }
 
-class MainLayout extends StatefulWidget {
-  @override
-  _MainLayoutState createState() => _MainLayoutState();
-}
-
-class _MainLayoutState extends State<MainLayout> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    PTDashboard(),
-    MedicalHistoryScreen(),
-    TrainingRecordsScreen(),
-    AccountScreen(),
-  ];
-
+class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("IsyFit"),
-        centerTitle: true,
-      ),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: navbar.NavigationBar(
-        currentIndex: _currentIndex,
-        onIndexChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasData) {
+          return RoleBasedRedirect(); // Redirect based on role
+        } else {
+          return const LoginScreen(); // Show login page
+        }
+      },
+    );
+  }
+}
+
+class RoleBasedRedirect extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const LoginScreen();
+    }
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return const LoginScreen(); // Redirect to login if user data is invalid
+        } else {
+          final role = snapshot.data!.get('role');
+          return const BaseScreen(); // All dashboards handled within BaseScreen
+        }
+      },
     );
   }
 }

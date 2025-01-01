@@ -4,16 +4,20 @@ class NavigationBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onIndexChanged;
 
-  NavigationBar({required this.currentIndex, required this.onIndexChanged});
+  const NavigationBar({
+    required this.currentIndex,
+    required this.onIndexChanged,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onIndexChanged,
-      backgroundColor: Theme.of(context).primaryColorLight, // Use primary color
-      selectedItemColor: Theme.of(context).primaryColorDark, // Use secondary color
-      unselectedItemColor: Theme.of(context).colorScheme.secondary, // Use primary color dark
+      backgroundColor: Theme.of(context).primaryColorLight,
+      selectedItemColor: Theme.of(context).primaryColorDark,
+      unselectedItemColor: Theme.of(context).colorScheme.secondary,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
