@@ -4,9 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:isyfit/screens/base_screen.dart';
 import 'login_screen.dart';
 
 class AccountScreen extends StatefulWidget {
+  const AccountScreen({Key? key}) : super(key: key);
+
   @override
   _AccountScreenState createState() => _AccountScreenState();
 }
@@ -17,8 +20,15 @@ class _AccountScreenState extends State<AccountScreen> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String? _name;
+  String? _surname;
   String? _email;
+  String? _phone;
+  String? _vat;
+  String? _legalInfo;
+  DateTime? _dateOfBirth;
   String? _profileImageUrl;
+
+  bool _isEditMode = false;
 
   @override
   void initState() {
@@ -32,11 +42,18 @@ class _AccountScreenState extends State<AccountScreen> {
       if (user != null) {
         final userDoc = await _firestore.collection('users').doc(user.uid).get();
         final data = userDoc.data();
-        setState(() {
-          _name = data != null && data.containsKey('name') ? data['name'] : 'Anonymous';
-          _email = user.email ?? 'No Email';
-          _profileImageUrl = data != null && data.containsKey('profileImageUrl') ? data['profileImageUrl'] : null;
-        });
+        if (data != null) {
+          setState(() {
+            _name = data['name'];
+            _surname = data['surname'];
+            _email = user.email ?? 'No Email';
+            _phone = data['phone'];
+            _vat = data['vat'];
+            _legalInfo = data['legalInfo'];
+            _dateOfBirth = DateTime.tryParse(data['dateOfBirth'] ?? '');
+            _profileImageUrl = data['profileImageUrl'];
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -44,8 +61,6 @@ class _AccountScreenState extends State<AccountScreen> {
       );
     }
   }
-
-
 
   Future<void> _uploadProfilePicture() async {
     try {
@@ -57,7 +72,8 @@ class _AccountScreenState extends State<AccountScreen> {
         final user = _auth.currentUser;
 
         if (user != null) {
-          final storageRef = _storage.ref().child('profile_images/${user.uid}.jpg');
+          final storageRef =
+              _storage.ref().child('profile_images/${user.uid}.jpg');
           await storageRef.putFile(file);
 
           final downloadUrl = await storageRef.getDownloadURL();
@@ -83,18 +99,36 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _logout() async {
     await _auth.signOut();
-    //after logout, navigate to login screen
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const BaseScreen()),
+    );
+  }
+
+  Future<void> _saveChanges() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).update({
+          'name': _name,
+          'surname': _surname,
+          'phone': _phone,
+          if (_vat != null) 'vat': _vat,
+          if (_legalInfo != null) 'legalInfo': _legalInfo,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving changes: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const LoginScreen();
-    }
-
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -103,128 +137,160 @@ class _AccountScreenState extends State<AccountScreen> {
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Text(
-                'My Profile',
-                style: textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
 
-              // Avatar and Welcome Text
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: _uploadProfilePicture,
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: _profileImageUrl != null
-                          ? NetworkImage(_profileImageUrl!)
-                          : const AssetImage('assets/avatar_placeholder.png') as ImageProvider,
-                      backgroundColor: Colors.grey[200],
+            // Profile Header with Logout Icon
+            Card(
+              elevation: 4,
+              margin: const EdgeInsets.all(16.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _uploadProfilePicture,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _profileImageUrl != null
+                            ? NetworkImage(_profileImageUrl!)
+                            : const AssetImage('assets/avatar_placeholder.png')
+                                as ImageProvider,
+                        backgroundColor: Colors.grey[200],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome, ${_name ?? 'Loading...'}',
-                          style: textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '$_email',
-                          style: textTheme.bodyMedium,
-                        ),
-                      ],
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, ${_name ?? 'Loading...'}',
+                            style: textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            _email ?? 'No Email',
+                            style: textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    IconButton(
+                      onPressed: _logout,
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 30),
+            ),
 
-              // Account Details Form
-              Text(
-                'Account Information',
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            // Account Information
+            Card(
+              elevation: 4,
+              margin: const EdgeInsets.all(16.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: TextEditingController(text: _name),
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                onChanged: (value) {
-                  _name = value;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: TextEditingController(text: _email),
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Actions Section
-              Text(
-                'Actions',
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Column(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // Save changes to Firestore
-                      if (_auth.currentUser != null) {
-                        _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-                          'name': _name,
+                  ListTile(
+                    title: Text(
+                      'Account Information',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(_isEditMode ? Icons.check : Icons.edit),
+                      onPressed: () {
+                        if (_isEditMode) {
+                          _saveChanges();
+                        }
+                        setState(() {
+                          _isEditMode = !_isEditMode;
                         });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile updated!')),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Save Changes'),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _logout,
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Logout'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      },
                     ),
+                  ),
+                  const Divider(),
+                  _buildField(
+                    label: 'Name',
+                    value: _name,
+                    isEditable: _isEditMode,
+                    onChanged: (value) => _name = value,
+                  ),
+                  _buildField(
+                    label: 'Surname',
+                    value: _surname,
+                    isEditable: _isEditMode,
+                    onChanged: (value) => _surname = value,
+                  ),
+                  _buildField(
+                    label: 'Phone',
+                    value: _phone,
+                    isEditable: _isEditMode,
+                    onChanged: (value) => _phone = value,
+                  ),
+                  if (_vat != null)
+                    _buildField(
+                      label: 'VAT/P.IVA',
+                      value: _vat,
+                      isEditable: _isEditMode,
+                      onChanged: (value) => _vat = value,
+                    ),
+                  if (_legalInfo != null)
+                    _buildField(
+                      label: 'Legal Info',
+                      value: _legalInfo,
+                      isEditable: _isEditMode,
+                      maxLines: 3,
+                      onChanged: (value) => _legalInfo = value,
+                    ),
+                  _buildNonEditableField(
+                    label: 'Date of Birth',
+                    value: _dateOfBirth != null
+                        ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
+                        : 'Not available',
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildField({
+    required String label,
+    required String? value,
+    required bool isEditable,
+    required ValueChanged<String> onChanged,
+    int maxLines = 1,
+  }) {
+    return ListTile(
+      title: Text(label),
+      subtitle: isEditable
+          ? TextField(
+              controller: TextEditingController(text: value),
+              maxLines: maxLines,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              onChanged: onChanged,
+            )
+          : Text(value ?? 'Not available'),
+    );
+  }
+
+  Widget _buildNonEditableField({required String label, required String value}) {
+    return ListTile(
+      title: Text(label),
+      subtitle: Text(value),
     );
   }
 }

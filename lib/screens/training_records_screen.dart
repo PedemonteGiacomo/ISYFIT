@@ -65,7 +65,8 @@ class TrainingRecordsScreen extends StatelessWidget {
                         subtitle: 'Focus: Strength Training',
                         icon: Icons.person,
                         onTap: () {
-                          Navigator.pushNamed(context, '/client-training-detail');
+                          Navigator.pushNamed(
+                              context, '/client-training-detail');
                         },
                       ),
                       _buildListTile(
@@ -73,7 +74,8 @@ class TrainingRecordsScreen extends StatelessWidget {
                         subtitle: 'Focus: Cardio',
                         icon: Icons.person,
                         onTap: () {
-                          Navigator.pushNamed(context, '/client-training-detail');
+                          Navigator.pushNamed(
+                              context, '/client-training-detail');
                         },
                       ),
                       _buildListTile(
@@ -81,7 +83,8 @@ class TrainingRecordsScreen extends StatelessWidget {
                         subtitle: 'Focus: Flexibility',
                         icon: Icons.person,
                         onTap: () {
-                          Navigator.pushNamed(context, '/client-training-detail');
+                          Navigator.pushNamed(
+                              context, '/client-training-detail');
                         },
                       ),
                     ],
