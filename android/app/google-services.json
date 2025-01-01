@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069724920406",
+    "project_id": "isyfit",
+    "storage_bucket": "isyfit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069724920406:android:2dc70be396ecf0d46829f7",
+        "android_client_info": {
+          "package_name": "com.isyfit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKIrhmiKqQmO9all3gQlNLQBC2kapHP8Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

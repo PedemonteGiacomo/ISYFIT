@@ -1,4 +1,4 @@
-package com.example.isyfit
+package com.isyfit.app
 
 import io.flutter.embedding.android.FlutterActivity
 

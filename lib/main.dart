@@ -4,8 +4,13 @@ import 'screens/medical_history_screen.dart';
 import 'screens/training_records_screen.dart';
 import 'screens/account_screen.dart';
 import 'widgets/navigation_bar.dart' as navbar;
-
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(IsyFitApp());
 }
 
@@ -23,7 +28,7 @@ class IsyFitApp extends StatelessWidget {
           secondary: Colors.blueGrey, // Set the secondary color
           onPrimary: Colors.white, // Color for text/icons on primary
         ),
-      ),
+      textTheme: TextTheme()      ),
       home: MainLayout(),
     );
   }
@@ -38,7 +43,7 @@ class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreen(),
+    PTDashboard(),
     MedicalHistoryScreen(),
     TrainingRecordsScreen(),
     AccountScreen(),
@@ -49,6 +54,7 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       appBar: AppBar(
         title: Text("IsyFit"),
+        centerTitle: true,
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: navbar.NavigationBar(
