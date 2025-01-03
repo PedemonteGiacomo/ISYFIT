@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class MedicalHistoryScreen extends StatefulWidget {
   const MedicalHistoryScreen({Key? key}) : super(key: key);
@@ -209,16 +211,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Column(
-            children: [
-              const Text('No documents uploaded yet.'),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => _uploadFile(context),
-                icon: const Icon(Icons.upload_file),
-                label: const Text('Upload Document'),
-              ),
-            ],
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                const Text('No documents uploaded yet.'),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => _uploadFile(context),
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Upload Document'),
+                ),
+              ],
+            ),
           );
         }
 
@@ -226,51 +231,43 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         final visibleDocs =
             showAllDocuments ? documents : documents.take(3).toList();
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Medical Documents',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-                childAspectRatio: 1.2, // Adjust the aspect ratio here
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Medical Documents',
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              itemCount: visibleDocs.length,
-              itemBuilder: (context, index) {
-                final doc = visibleDocs[index];
-                final icon = _getFileTypeIcon(doc['fileType']);
-                return Card(
-                  elevation: 2,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Icon(icon, size: 40, color: Colors.blue),
-                        ),
+              const SizedBox(height: 16),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visibleDocs.length,
+                itemBuilder: (context, index) {
+                  final doc = visibleDocs[index];
+                  final icon = _getFileTypeIcon(doc['fileType']);
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                        child: Icon(icon, color: Colors.blue),
                       ),
-                      Text(
+                      title: Text(
                         doc['fileName'],
                         overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      subtitle: Text(
+                        'Uploaded on: ${(doc['uploadedAt'] as Timestamp).toDate().toString().split(' ')[0]}',
                         style: const TextStyle(fontSize: 12),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      trailing: Wrap(
+                        spacing: 12, // space between two icons
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              _deleteDocument(context, doc);
-                            },
-                          ),
                           IconButton(
                             icon: const Icon(Icons.visibility,
                                 color: Colors.green),
@@ -279,33 +276,39 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                                   context, doc['downloadUrl'], doc['fileType']);
                             },
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              _deleteDocument(context, doc);
+                            },
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            if (documents.length > 3)
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    showAllDocuments = !showAllDocuments;
-                  });
+                    ),
+                  );
                 },
-                child: Text(
-                  showAllDocuments
-                      ? 'Show Less Documents'
-                      : 'Show All Documents',
-                ),
               ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => _uploadFile(context),
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Upload More Documents'),
-            ),
-          ],
+              if (documents.length > 3)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAllDocuments = !showAllDocuments;
+                    });
+                  },
+                  child: Text(
+                    showAllDocuments
+                        ? 'Show Less Documents'
+                        : 'Show All Documents',
+                  ),
+                ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _uploadFile(context),
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Upload More Documents'),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -550,24 +553,66 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   }
 }
 
-class PDFViewScreen extends StatelessWidget {
+class PDFViewScreen extends StatefulWidget {
   final String pdfUrl;
 
   const PDFViewScreen({Key? key, required this.pdfUrl}) : super(key: key);
 
   @override
+  _PDFViewScreenState createState() => _PDFViewScreenState();
+}
+
+class _PDFViewScreenState extends State<PDFViewScreen> {
+  String? localFilePath;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _downloadAndLoadPDF();
+  }
+
+  Future<void> _downloadAndLoadPDF() async {
+    try {
+      // Get the temporary directory of the device
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/temp_pdf.pdf';
+
+      // Download the file from the provided URL
+      final response = await http.get(Uri.parse(widget.pdfUrl));
+      if (response.statusCode == 200) {
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Set the local file path and update the UI
+        setState(() {
+          localFilePath = filePath;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to download PDF');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading PDF: $e')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Document View'),
+        title: const Text('PDF Viewer'),
       ),
-      body: PDFView(
-        filePath: pdfUrl,
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : PDFView(
+              filePath: localFilePath!,
+            ),
     );
   }
 }
-
 class ImageViewScreen extends StatelessWidget {
   final String imageUrl;
 
