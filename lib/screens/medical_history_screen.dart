@@ -565,6 +565,11 @@ class PDFViewScreen extends StatefulWidget {
 class _PDFViewScreenState extends State<PDFViewScreen> {
   String? localFilePath;
   bool isLoading = true;
+  int totalPages = 0;
+  int currentPage = 0;
+  bool showControls = false;
+
+  late PDFViewController pdfController;
 
   @override
   void initState() {
@@ -574,17 +579,14 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
 
   Future<void> _downloadAndLoadPDF() async {
     try {
-      // Get the temporary directory of the device
       final directory = await getTemporaryDirectory();
       final filePath = '${directory.path}/temp_pdf.pdf';
 
-      // Download the file from the provided URL
       final response = await http.get(Uri.parse(widget.pdfUrl));
       if (response.statusCode == 200) {
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
 
-        // Set the local file path and update the UI
         setState(() {
           localFilePath = filePath;
           isLoading = false;
@@ -599,20 +601,175 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
     }
   }
 
+  void _toggleControls() {
+    setState(() {
+      showControls = !showControls;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('PDF Viewer'),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : PDFView(
-              filePath: localFilePath!,
+        actions: [
+          if (!isLoading)
+            GestureDetector(
+              onTap: _toggleControls,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    'Page ${currentPage + 1} of $totalPages',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
             ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Container(
+                  margin: const EdgeInsets.all(16), // Margin outside the border
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.grey, // Border color
+                      width: 2, // Border width
+                    ),
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                  ),
+                  padding:
+                      const EdgeInsets.all(16), // Padding inside the border
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10), // Clipping corners
+                    child: PDFView(
+                      filePath: localFilePath!,
+                      enableSwipe: true,
+                      swipeHorizontal: true,
+                      autoSpacing: true,
+                      pageFling: true,
+                      fitEachPage: true,
+                      onRender: (pages) {
+                        setState(() {
+                          totalPages = pages!;
+                        });
+                      },
+                      onViewCreated: (PDFViewController controller) {
+                        pdfController = controller;
+                      },
+                      onPageChanged: (page, _) {
+                        setState(() {
+                          currentPage = page!;
+                        });
+                      },
+                      onError: (error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: $error')),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+          if (showControls) _buildControls(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildControls() {
+    return Positioned(
+      bottom: 20,
+      left: 20,
+      right: 20,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Go to page:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  width: 100,
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Page',
+                    ),
+                    onSubmitted: (value) {
+                      final page = int.tryParse(value);
+                      if (page != null && page > 0 && page <= totalPages) {
+                        pdfController.setPage(page - 1);
+                        setState(() {
+                          currentPage = page - 1;
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Invalid page number')),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (currentPage > 0) {
+                      pdfController.setPage(currentPage - 1);
+                      setState(() {
+                        currentPage--;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Previous'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (currentPage < totalPages - 1) {
+                      pdfController.setPage(currentPage + 1);
+                      setState(() {
+                        currentPage++;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
 class ImageViewScreen extends StatelessWidget {
   final String imageUrl;
 
@@ -625,7 +782,48 @@ class ImageViewScreen extends StatelessWidget {
         title: const Text('Document View'),
       ),
       body: Center(
-        child: Image.network(imageUrl),
+        child: Container(
+          margin: const EdgeInsets.all(16), // Margin outside the border
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.grey, // Border color
+              width: 2, // Border width
+            ),
+            borderRadius: BorderRadius.circular(12), // Rounded corners
+            //boxShadow: [
+            //   BoxShadow(
+            //     color: Colors.black.withOpacity(0.2), // Shadow color
+            //     blurRadius: 6, // Shadow blur radius
+            //     offset: const Offset(0, 3), // Shadow offset
+            //   ),
+            // ],
+          ),
+          padding: const EdgeInsets.all(16), // Padding inside the border
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10), // Clipping corners
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain, // Ensure the image fits well
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child; // Display image when fully loaded
+                }
+                return const Center(
+                  child:
+                      CircularProgressIndicator(), // Show a loader while the image is loading
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                ); // Display an error message if the image fails to load
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
