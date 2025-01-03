@@ -24,6 +24,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
       wakeTime = _parseTime(widget.data['wake_time']);
     }
     feelsEnergetic = widget.data['energetic'] == 'Yes';
+    widget.data['energetic'] = 'No'; // Default value
   }
 
   TimeOfDay _parseTime(String time) {
@@ -133,6 +134,9 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () {
                             if (sleepTime != null && wakeTime != null) {
+                              if (!feelsEnergetic) {
+                                widget.data['energetic'] = 'No';
+                              }
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

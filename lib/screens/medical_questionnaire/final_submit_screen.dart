@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/medical_history_screen.dart';
 import 'package:isyfit/widgets/navigation_bar.dart' as navbar;
 
@@ -181,18 +182,18 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
           .set(widget.data);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data saved successfully!')),
+        const SnackBar(content: Text('Data saved successfully!'), backgroundColor: Colors.green,),
       );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => Scaffold(
-        body: const MedicalHistoryScreen(),
-        bottomNavigationBar: navbar.NavigationBar(
-          currentIndex: 1,
-          onIndexChanged: (index) {
-            // Handle navigation based on the index
-          },
-        ),
+        body: const BaseScreen(),
+        // bottomNavigationBar: navbar.NavigationBar(
+        //   currentIndex: 1,
+        //   onIndexChanged: (index) {
+        //     // Handle navigation based on the index
+        //   },
+        // ),
           ),
         ),
       );

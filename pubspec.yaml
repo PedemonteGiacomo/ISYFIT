@@ -38,10 +38,12 @@ dependencies:
   firebase_auth: ^5.3.4
   cloud_firestore: ^5.6.0
   firebase_storage: ^12.3.7
+  firebase_app_check: ^0.3.1
   image_picker: ^1.1.2
   dropdown_button2: ^2.0.0
   animated_text_kit: ^4.2.1
   shared_preferences: ^2.3.5	
+  file_picker: ^8.1.7
 
 dev_dependencies:
   flutter_test:

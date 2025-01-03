@@ -19,8 +19,11 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
   @override
   void initState() {
     super.initState();
-    drinksAlcohol = widget.data['drinks_alcohol'] == 'Yes';
-    smokes = widget.data['smokes'] == 'Yes';
+    // Default values for toggle switches
+    widget.data['alcohol'] = 'No';
+    widget.data['smokes'] = 'No';
+
+    // Initialize controllers if details are available
     alcoholDetailsController.text = widget.data['alcohol_details'] ?? '';
     smokingDetailsController.text = widget.data['smoking_details'] ?? '';
   }
@@ -82,7 +85,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           onChanged: (value) {
                             setState(() {
                               drinksAlcohol = value;
-                              widget.data['alcohol'] = value ? 'Yes' : 'No';                             
+                              widget.data['alcohol'] = value ? 'Yes' : 'No';
                               if (!value) {
                                 alcoholDetailsController.clear();
                                 widget.data['alcohol_details'] = null;
@@ -135,6 +138,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
                                 _formKey.currentState?.save();
+                                // Ensure 'No' is set for any unselected toggle
+                                if (!drinksAlcohol) widget.data['alcohol'] = 'No';
+                                if (!smokes) widget.data['smokes'] = 'No';
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
