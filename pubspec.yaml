@@ -44,6 +44,7 @@ dependencies:
   animated_text_kit: ^4.2.1
   shared_preferences: ^2.3.5	
   file_picker: ^8.1.7
+  flutter_pdfview: ^1.4.0 
 
 dev_dependencies:
   flutter_test:
