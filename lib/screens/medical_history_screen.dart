@@ -81,7 +81,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
       if (fileBytes == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to read file. Please try again.')),
+          const SnackBar(
+              content: Text('Unable to read file. Please try again.')),
         );
         return;
       }
@@ -103,7 +104,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
       final fileName = file.name;
 
-      // Check if a file with the same name already exists
       final existingFiles = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -112,7 +112,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           .get();
 
       if (existingFiles.docs.isNotEmpty) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('File "$fileName" already exists.')),
         );
@@ -142,7 +142,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         const SnackBar(content: Text('File uploaded successfully!')),
       );
 
-      // Refresh the documents
       setState(() {
         medicalDocuments = _fetchDocuments();
       });
@@ -154,57 +153,52 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Future<void> _deleteDocument(
-      BuildContext context, Map<String, dynamic> doc) async {
-    try {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not logged in.')),
-        );
-        return;
-      }
-
-      // Delete the document from Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref('medical_documents/${user.uid}/${doc['fileName']}');
-      await storageRef.delete();
-
-      // Delete the document metadata from Firestore
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('medical_documents')
-          .where('fileName', isEqualTo: doc['fileName'])
-          .get();
-
-      for (final doc in querySnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document deleted successfully!')),
-      );
-
-      // Refresh the documents
-      setState(() {
-        medicalDocuments = _fetchDocuments();
-      });
-    } catch (e) {
-      Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting document: $e')),
-      );
-    }
+  Widget _buildDataCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withOpacity(0.2),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDocumentsSection(BuildContext context) {
@@ -229,7 +223,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         }
 
         final documents = snapshot.data!;
-        final visibleDocs = showAllDocuments ? documents : documents.take(3).toList();
+        final visibleDocs =
+            showAllDocuments ? documents : documents.take(3).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,23 +233,59 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               'Medical Documents',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 8),
-            ...visibleDocs.map((doc) => ListTile(
-                  leading: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      _deleteDocument(context, doc);
-                    },
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+                childAspectRatio: 1.2, // Adjust the aspect ratio here
+              ),
+              itemCount: visibleDocs.length,
+              itemBuilder: (context, index) {
+                final doc = visibleDocs[index];
+                final icon = _getFileTypeIcon(doc['fileType']);
+                return Card(
+                  elevation: 2,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Icon(icon, size: 40, color: Colors.blue),
+                        ),
+                      ),
+                      Text(
+                        doc['fileName'],
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              _deleteDocument(context, doc);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.visibility,
+                                color: Colors.green),
+                            onPressed: () {
+                              _viewDocument(
+                                  context, doc['downloadUrl'], doc['fileType']);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  title: Text(doc['fileName']),
-                  subtitle: Text('Uploaded at: ${doc['uploadedAt'].toDate()}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.visibility),
-                    onPressed: () {
-                      _viewDocument(context, doc['downloadUrl'], doc['fileType']);
-                    },
-                  ),
-                )),
+                );
+              },
+            ),
             if (documents.length > 3)
               TextButton(
                 onPressed: () {
@@ -263,7 +294,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   });
                 },
                 child: Text(
-                  showAllDocuments ? 'Show Less Documents' : 'Show All Documents',
+                  showAllDocuments
+                      ? 'Show Less Documents'
+                      : 'Show All Documents',
                 ),
               ),
             const SizedBox(height: 16),
@@ -278,68 +311,68 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medical History Dashboard'),
-        centerTitle: true,
-      ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: medicalHistory,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('No data available.'));
-          }
-          final data = snapshot.data!;
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  ..._buildMedicalHistorySections(data),
-                  const Divider(thickness: 1.5),
-                  const SizedBox(height: 16),
-                  _buildDocumentsSection(context),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+  IconData _getFileTypeIcon(String? fileType) {
+    switch (fileType) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      case 'docx':
+        return Icons.description;
+      default:
+        return Icons.insert_drive_file;
+    }
   }
 
-  List<Widget> _buildMedicalHistorySections(Map<String, dynamic> data) {
-    return [
-      Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: _buildDataCard(
-              title: 'Height',
-              value: '${data['height']} cm',
-              icon: Icons.height,
-              color: Colors.blue,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 1,
-            child: _buildDataCard(
-              title: 'Weight',
-              value: '${data['weight']} kg',
-              icon: Icons.monitor_weight,
-              color: Colors.green,
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 16),
-    ];
+  Future<void> _deleteDocument(
+      BuildContext context, Map<String, dynamic> doc) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in.')),
+        );
+        return;
+      }
+
+      final storageRef = FirebaseStorage.instance
+          .ref('medical_documents/${user.uid}/${doc['fileName']}');
+      await storageRef.delete();
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('medical_documents')
+          .where('fileName', isEqualTo: doc['fileName'])
+          .get();
+
+      for (final doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document deleted successfully!')),
+      );
+
+      setState(() {
+        medicalDocuments = _fetchDocuments();
+      });
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting document: $e')),
+      );
+    }
   }
 
   void _viewDocument(BuildContext context, String url, String fileType) {
@@ -360,49 +393,158 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Widget _buildDataCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(color: color.withOpacity(0.5)),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Medical History Dashboard'),
+        centerTitle: true,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: color.withOpacity(0.2),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: medicalHistory,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text('No data available.'));
+          }
+          final data = snapshot.data!;
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // First Row: Measurements
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildDataCard(
+                              title: 'Height',
+                              value: '${data['height']} cm',
+                              icon: Icons.height,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Weight',
+                              value: '${data['weight']} kg',
+                              icon: Icons.monitor_weight,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Second Row: Lifestyle
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Drinks Alcohol',
+                              value: data['alcohol'] ?? 'N/A',
+                              icon: Icons.local_drink,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Smokes',
+                              value: data['smokes'] ?? 'N/A',
+                              icon: Icons.smoking_rooms,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Third Row: Sleep and Energy
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Sleep Time',
+                              value: data['sleep_time'] ?? 'N/A',
+                              icon: Icons.nights_stay,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Wake Time',
+                              value: data['wake_time'] ?? 'N/A',
+                              icon: Icons.wb_sunny,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Fourth Row: Training Goals
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildDataCard(
+                              title: 'Goals',
+                              value: data['goals'] ?? 'N/A',
+                              icon: Icons.fitness_center,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Training Days',
+                              value: (data['training_days'] as List).join(', '),
+                              icon: Icons.calendar_today,
+                              color: Colors.teal,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Fifth Row: Energetic
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildDataCard(
+                              title: 'Energetic',
+                              value: data['energetic'] ?? 'N/A',
+                              icon: Icons.battery_charging_full,
+                              color: Colors.yellow,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+                const Divider(thickness: 1.5),
+                const SizedBox(height: 16),
+                _buildDocumentsSection(context),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
