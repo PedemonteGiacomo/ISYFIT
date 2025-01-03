@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/base_screen.dart';
+import 'screens/medical_questionnaire/questionnaire_screen.dart';
+import 'screens/medical_history_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,15 +29,84 @@ class IsyFitApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => BaseScreen(),
+        '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        // Add other routes here
+        '/base': (context) => const BaseScreen(),
+        '/questionnaire': (context) => const QuestionnaireScreen(),
+        '/medical_history_dashboard': (context) => const MedicalHistoryScreen(),
       },
     );
   }
 }
 
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Navigate after the splash duration
+    Future.delayed(const Duration(seconds: 4), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthGate(),
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fetch MediaQuery values in build method
+    final double width = MediaQuery.of(context).size.width * 0.7;
+    final double height = MediaQuery.of(context).size.height * 0.3;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo
+            Image.asset(
+              'assets/images/ISYFIT_LOGO.jpg',
+              width: width,
+              height: height,
+            ),
+            const SizedBox(height: 40),
+
+            // Animated Text
+            AnimatedTextKit(
+              animatedTexts: [
+                TypewriterAnimatedText(
+                  'Fitness, in your pocket.',
+                  textStyle: const TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                  speed: const Duration(milliseconds: 100),
+                ),
+              ],
+              isRepeatingAnimation: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class AuthGate extends StatelessWidget {
+  const AuthGate({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -44,34 +115,9 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasData) {
-          return RoleBasedRedirect(); // Redirect based on role
+          return const BaseScreen();
         } else {
-          return const LoginScreen(); // Show login page
-        }
-      },
-    );
-  }
-}
-
-class RoleBasedRedirect extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const LoginScreen();
-    }
-
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-          return const LoginScreen(); // Redirect to login if user data is invalid
-        } else {
-          final role = snapshot.data!.get('role');
-          return const BaseScreen(); // All dashboards handled within BaseScreen
+          return const LoginScreen();
         }
       },
     );

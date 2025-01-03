@@ -1,170 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_screen.dart';
+import 'package:isyfit/screens/medical_questionnaire/questionnaire_screen.dart';
 
 class MedicalHistoryScreen extends StatelessWidget {
+  const MedicalHistoryScreen({Key? key}) : super(key: key);
+
+  Future<Map<String, dynamic>?> _fetchMedicalHistory() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('medical_history')
+        .doc(user.uid)
+        .get();
+    return doc.data();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const LoginScreen();
-    }
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medical History'),
+        title: const Text('Medical History Dashboard'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView( // Fix for overflow
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: _fetchMedicalHistory(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const QuestionnaireScreen();
+          }
+          final data = snapshot.data!;
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // First Row: Measurements
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildDataCard(
+                        title: 'Height',
+                        value: '${data['height']} cm',
+                        icon: Icons.height,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Weight',
+                        value: '${data['weight']} kg',
+                        icon: Icons.monitor_weight,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Second Row: Lifestyle
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Drinks Alcohol',
+                        value: data['drinks_alcohol'] ?? 'N/A',
+                        icon: Icons.local_drink,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Smokes',
+                        value: data['smokes'] ?? 'N/A',
+                        icon: Icons.smoking_rooms,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Third Row: Sleep and Energy
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Sleep Time',
+                        value: data['sleep_time'] ?? 'N/A',
+                        icon: Icons.nights_stay,
+                        color: Colors.indigo,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Wake Time',
+                        value: data['wake_time'] ?? 'N/A',
+                        icon: Icons.wb_sunny,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Fourth Row: Training Goals
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildDataCard(
+                        title: 'Goals',
+                        value: data['goals'] ?? 'N/A',
+                        icon: Icons.fitness_center,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: _buildDataCard(
+                        title: 'Training Days',
+                        value: (data['training_days'] as List).join(', '),
+                        icon: Icons.calendar_today,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDataCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // Title Section
-              _buildSectionTitle('Overview'),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Keep track of your clients’ medical history to ensure their safety during training sessions.',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Use this section to review, add, or update important medical information.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
+              CircleAvatar(
+                backgroundColor: color.withOpacity(0.2),
+                child: Icon(icon, color: color),
               ),
-              const SizedBox(height: 20),
-
-              // Recent Records Section
-              _buildSectionTitle('Recent Medical Records'),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildListTile(
-                        title: 'John Doe - Updated: Dec 29, 2024',
-                        icon: Icons.person,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/client-medical-detail');
-                        },
-                      ),
-                      _buildListTile(
-                        title: 'Jane Smith - Updated: Dec 28, 2024',
-                        icon: Icons.person,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/client-medical-detail');
-                        },
-                      ),
-                      _buildListTile(
-                        title: 'Tom Brown - Updated: Dec 27, 2024',
-                        icon: Icons.person,
-                        onTap: () {
-                          Navigator.pushNamed(context, '/client-medical-detail');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Actions Section
-              _buildSectionTitle('Actions'),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildActionButton(
-                        label: 'Add New Medical Record',
-                        icon: Icons.add_circle_outline,
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/add-medical-record');
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _buildActionButton(
-                        label: 'Search Medical Records',
-                        icon: Icons.search,
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/search-medical-records');
-                        },
-                      ),
-                    ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListTile({
-    required String title,
-    required IconData icon,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, size: 32),
-      title: Text(title, style: const TextStyle(fontSize: 16)),
-      trailing: const Icon(Icons.arrow_forward),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildActionButton({
-    required String label,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton.icon(
-      icon: Icon(icon, size: 20),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      onPressed: onPressed,
     );
   }
 }
