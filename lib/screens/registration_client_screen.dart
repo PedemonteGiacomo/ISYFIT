@@ -18,6 +18,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _ptEmailController = TextEditingController();
 
   String? _selectedCountryCode;
   DateTime? _selectedDate;
@@ -25,6 +26,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
   bool _emailFieldTouched = false;
+  bool isSolo = true;
 
   // Password requirements
   bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
@@ -42,7 +44,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must agree to the terms and conditions to register.'),
+          content:
+              Text('You must agree to the terms and conditions to register.'),
         ),
       );
       return;
@@ -62,34 +65,70 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     });
 
     try {
+      // Create user account
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Save client information in Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
+      // Prepare data for Firestore
+      final Map<String, dynamic> clientData = {
         'role': 'Client',
         'email': _emailController.text,
         'name': _nameController.text,
         'surname': _surnameController.text,
         'phone': '$_selectedCountryCode ${_phoneController.text}',
         'dateOfBirth': _selectedDate?.toIso8601String(),
-      });
+        'isSolo': isSolo,
+      };
 
-      // Redirect to Client Dashboard
+      if (!isSolo) {
+        // Fetch the PT by email
+        final ptQuery = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: _ptEmailController.text.trim())
+            .where('role', isEqualTo: 'PT')
+            .get();
+
+        if (ptQuery.docs.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No PT found with this email.')),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+
+        final ptDoc = ptQuery.docs.first;
+        final ptId = ptDoc.id;
+
+        // Add the PT ID to the client data
+        clientData['supervisorPT'] = ptId;
+
+        // Add the client ID to the PT's clients array
+        await FirebaseFirestore.instance.collection('users').doc(ptId).update({
+          'clients': FieldValue.arrayUnion([userCredential.user!.uid])
+        });
+      }
+
+      // Save client information in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set(clientData);
+
+      // Redirect to BaseScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const BaseScreen()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred during registration. Please try again.'),
+        SnackBar(
+          content: Text(
+              'An error occurred during registration. Please try again.\nError: $e'),
         ),
       );
     } finally {
@@ -128,8 +167,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildPasswordRequirement('At least 8 characters', _hasMinLength),
-            _buildPasswordRequirement('At least one uppercase letter', _hasUppercase),
-            _buildPasswordRequirement('At least one lowercase letter', _hasLowercase),
+            _buildPasswordRequirement(
+                'At least one uppercase letter', _hasUppercase),
+            _buildPasswordRequirement(
+                'At least one lowercase letter', _hasLowercase),
             _buildPasswordRequirement('At least one number', _hasNumber),
             _buildPasswordRequirement(
                 'At least one special character', _hasSpecialChar),
@@ -407,6 +448,45 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
+                      // Toggle for SOLO or Assign PT
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              title: Text("Go SOLO"),
+                              value: true,
+                              groupValue: isSolo,
+                              onChanged: (value) {
+                                setState(() {
+                                  isSolo = value!;
+                                });
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              title: Text("Assign a PT"),
+                              value: false,
+                              groupValue: isSolo,
+                              onChanged: (value) {
+                                setState(() {
+                                  isSolo = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+// PT Email Field (conditionally shown)
+                      if (!isSolo)
+                        TextField(
+                          controller: _ptEmailController,
+                          decoration: InputDecoration(
+                            labelText: 'PT Email',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
 
                       // Register Button
                       _isLoading

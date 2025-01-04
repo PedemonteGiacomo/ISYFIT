@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'medical_history_screen.dart';
+import 'medical_history/medical_history_screen.dart';
 import 'training_records_screen.dart';
 import 'account_screen.dart';
 import '../widgets/navigation_bar.dart' as NavigationBar;
