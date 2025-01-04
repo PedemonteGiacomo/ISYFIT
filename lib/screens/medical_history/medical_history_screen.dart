@@ -5,14 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'package:isyfit/widgets/data_card.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // Add intl dependency for date formatting
+import 'package:intl/intl.dart'; // For date formatting if needed
 
 int calculateAge(String? dateOfBirth) {
   if (dateOfBirth == null) return 0; // Default to 0 if dateOfBirth is null
@@ -40,6 +39,13 @@ class MedicalHistoryScreen extends StatefulWidget {
 class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   late Future<Map<String, dynamic>?> medicalHistory;
   late Future<List<Map<String, dynamic>>> medicalDocuments;
+
+  // For controlling the scroll
+  final ScrollController _scrollController = ScrollController();
+
+  // Tracks whether to show the arrow
+  bool _showArrow = true;
+
   bool showAllDocuments = false;
 
   @override
@@ -263,117 +269,185 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Widget _buildDocumentsSection(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: medicalDocuments,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                const Text('No documents uploaded yet.'),
+Widget _buildDocumentsSection(BuildContext context) {
+  return FutureBuilder<List<Map<String, dynamic>>>(
+    future: medicalDocuments,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      // We'll wrap both scenarios ("no docs" / "has docs")
+      // in one container with a "data card" style:
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          // Card-like decoration to match your data cards
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.blueGrey.withOpacity(0.05), // Soft color
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: Colors.blueGrey.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Left-align
+            children: [
+              // 1) Header Row: Icon + "Medical Documents"
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.blueGrey.withOpacity(0.2),
+                    child: Icon(
+                      Icons.folder_special,
+                      color: Colors.blueGrey.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Medical Documents',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // 2) Check if documents exist or not
+              if (!snapshot.hasData || snapshot.data!.isEmpty) ...[
+                // === NO DOCUMENTS BRANCH ===
+                const Text(
+                  'No documents uploaded yet.',
+                  style: TextStyle(fontSize: 16),
+                ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () => _uploadFile(context),
                   icon: const Icon(Icons.upload_file),
                   label: const Text('Upload Document'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final documents = snapshot.data!;
-        final visibleDocs =
-            showAllDocuments ? documents : documents.take(3).toList();
-
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Medical Documents',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: visibleDocs.length,
-                itemBuilder: (context, index) {
-                  final doc = visibleDocs[index];
-                  final icon = _getFileTypeIcon(doc['fileType']);
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue.withOpacity(0.1),
-                        child: Icon(icon, color: Colors.blue),
-                      ),
-                      title: Text(
-                        doc['fileName'],
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        'Uploaded on: '
-                        '${(doc['uploadedAt'] as Timestamp).toDate().toString().split(' ')[0]}',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      trailing: Wrap(
-                        spacing: 12, // space between two icons
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.visibility,
-                                color: Colors.green),
-                            onPressed: () {
-                              _viewDocument(
-                                  context, doc['downloadUrl'], doc['fileType']);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              _deleteDocument(context, doc);
-                            },
-                          ),
-                        ],
-                      ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12.0,
+                      horizontal: 16.0,
                     ),
-                  );
-                },
-              ),
-              if (documents.length > 3)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      showAllDocuments = !showAllDocuments;
-                    });
-                  },
-                  child: Text(
-                    showAllDocuments
-                        ? 'Show Less Documents'
-                        : 'Show All Documents',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                   ),
                 ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => _uploadFile(context),
-                icon: const Icon(Icons.upload_file),
-                label: const Text('Upload More Documents'),
-              ),
+              ] else ...[
+                // === DOCUMENTS EXIST BRANCH ===
+                _buildDocumentsList(context, snapshot.data!),
+              ],
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
+/// A helper widget that returns the ListView of documents + "Upload More", etc.
+Widget _buildDocumentsList(
+  BuildContext context,
+  List<Map<String, dynamic>> docs,
+) {
+  final documents = docs;
+  final visibleDocs = showAllDocuments ? documents : documents.take(3).toList();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: visibleDocs.length,
+        itemBuilder: (context, index) {
+          final doc = visibleDocs[index];
+          final icon = _getFileTypeIcon(doc['fileType']);
+          final uploadDate = (doc['uploadedAt'] as Timestamp?)
+              ?.toDate()
+              .toString()
+              .split(' ')[0] ?? 'N/A';
+
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blue.withOpacity(0.1),
+                child: Icon(icon, color: Colors.blue),
+              ),
+              title: Text(
+                doc['fileName'],
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14),
+              ),
+              subtitle: Text(
+                'Uploaded on: $uploadDate',
+                style: const TextStyle(fontSize: 12),
+              ),
+              trailing: Wrap(
+                spacing: 12, // space between the icons
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.visibility, color: Colors.green),
+                    onPressed: () {
+                      _viewDocument(context, doc['downloadUrl'], doc['fileType']);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _deleteDocument(context, doc);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      // "Show All" or "Show Less"
+      if (documents.length > 3)
+        TextButton(
+          onPressed: () {
+            setState(() {
+              showAllDocuments = !showAllDocuments;
+            });
+          },
+          child: Text(
+            showAllDocuments ? 'Show Less Documents' : 'Show All Documents',
+          ),
+        ),
+      const SizedBox(height: 16),
+
+      // "Upload More" button
+      ElevatedButton.icon(
+        onPressed: () => _uploadFile(context),
+        icon: const Icon(Icons.upload_file),
+        label: const Text('Upload More Documents'),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+            vertical: 12.0,
+            horizontal: 16.0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -392,156 +466,242 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             return const QuestionnaireScreen();
           }
           final data = snapshot.data!;
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // ----- Data Cards Section -----
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+
+          return Stack(
+            children: [
+              // 1) Listen to scroll events, to know when user scrolls
+              NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification is ScrollUpdateNotification) {
+                    // Hide the arrow once scrolled at least 50 px
+                    if (notification.metrics.pixels > 50 && _showArrow) {
+                      setState(() {
+                        _showArrow = false;
+                      });
+                    }
+                    // Show the arrow again if scrolled back to the top
+                    if (notification.metrics.pixels <= 50 && !_showArrow) {
+                      setState(() {
+                        _showArrow = true;
+                      });
+                    }
+                  }
+                  return true;
+                },
+                child: SingleChildScrollView(
+                  controller: _scrollController,
                   child: Column(
                     children: [
-                      // 1st Row: Age / Height / Weight
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Age',
-                              value: data.containsKey('dateOfBirth')
-                                  ? '${calculateAge(data['dateOfBirth'])} yrs'
-                                  : 'N/A',
-                              icon: Icons.calendar_today,
-                              color: Colors.blueGrey,
+                      // ----- Data Cards Section -----
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // 1st Row: Age / Height / Weight
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Age',
+                                    value: data.containsKey('dateOfBirth')
+                                        ? '${calculateAge(data['dateOfBirth'])} yrs'
+                                        : 'N/A',
+                                    icon: Icons.calendar_today,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Height',
+                                    value: '${data['height']} cm',
+                                    icon: Icons.height,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Weight',
+                                    value: '${data['weight']} kg',
+                                    icon: Icons.monitor_weight,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Height',
-                              value: '${data['height']} cm',
-                              icon: Icons.height,
-                              color: Colors.blue,
+                            const SizedBox(height: 16),
+                            // 2nd Row: Drinks Alcohol / Smokes
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Drinks Alcohol',
+                                    value: data['alcohol'] ?? 'N/A',
+                                    icon: Icons.local_drink,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Smokes',
+                                    value: data['smokes'] ?? 'N/A',
+                                    icon: Icons.smoking_rooms,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Weight',
-                              value: '${data['weight']} kg',
-                              icon: Icons.monitor_weight,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // 2nd Row: Drinks Alcohol / Smokes
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Drinks Alcohol',
-                              value: data['alcohol'] ?? 'N/A',
-                              icon: Icons.local_drink,
-                              color: Colors.orange,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Smokes',
-                              value: data['smokes'] ?? 'N/A',
-                              icon: Icons.smoking_rooms,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // 3rd Row: Sleep Time / Wake Time
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Sleep Time',
-                              value: data['sleep_time'] ?? 'N/A',
-                              icon: Icons.nights_stay,
-                              color: Colors.indigo,
+                            // 3rd Row: Sleep Time / Wake Time
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Sleep Time',
+                                    value: data['sleep_time'] ?? 'N/A',
+                                    icon: Icons.nights_stay,
+                                    color: Colors.indigo,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Wake Time',
+                                    value: data['wake_time'] ?? 'N/A',
+                                    icon: Icons.wb_sunny,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Wake Time',
-                              value: data['wake_time'] ?? 'N/A',
-                              icon: Icons.wb_sunny,
-                              color: Colors.amber,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // 4th Row: Goals / Training Days
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: DataCard(
-                              title: 'Goals',
-                              value: data['goals'] ?? 'N/A',
-                              icon: Icons.fitness_center,
-                              color: Colors.purple,
+                            // 4th Row: Goals / Training Days
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: DataCard(
+                                    title: 'Goals',
+                                    value: data['goals'] ?? 'N/A',
+                                    icon: Icons.fitness_center,
+                                    color: Colors.purple,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Training Days',
+                                    value: (data['training_days'] as List)
+                                        .join(', '),
+                                    icon: Icons.calendar_today,
+                                    color: Colors.teal,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Training Days',
-                              value: (data['training_days'] as List).join(', '),
-                              icon: Icons.calendar_today,
-                              color: Colors.teal,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // 5th Row: Energetic
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: DataCard(
-                              title: 'Energetic',
-                              value: data['energetic'] ?? 'N/A',
-                              icon: Icons.battery_charging_full,
-                              color: Colors.yellow,
+                            // 5th Row: Energetic
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: DataCard(
+                                    title: 'Energetic',
+                                    value: data['energetic'] ?? 'N/A',
+                                    icon: Icons.battery_charging_full,
+                                    color: Colors.yellow,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 32),
+
+                      // ----- Documents Section -----
+                      _buildDocumentsSection(context),
                     ],
                   ),
                 ),
-                const Divider(thickness: 1.5),
-                const SizedBox(height: 16),
+              ),
 
-                // ----- Documents Section -----
-                _buildDocumentsSection(context),
-              ],
-            ),
+              // 2) The animated arrow, only visible if _showArrow == true
+              if (_showArrow)
+                const Positioned(
+                  bottom: 16,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: _AnimatedDownArrow(),
+                  ),
+                ),
+            ],
           );
         },
       ),
+    );
+  }
+}
+
+// A small widget that bounces the arrow up/down
+class _AnimatedDownArrow extends StatefulWidget {
+  const _AnimatedDownArrow({Key? key}) : super(key: key);
+
+  @override
+  __AnimatedDownArrowState createState() => __AnimatedDownArrowState();
+}
+
+class __AnimatedDownArrowState extends State<_AnimatedDownArrow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true); // makes it go up and down
+    _animation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _animation.value),
+          child: const Icon(
+            Icons.arrow_downward,
+            color: Colors.grey,
+            size: 32,
+          ),
+        );
+      },
     );
   }
 }
