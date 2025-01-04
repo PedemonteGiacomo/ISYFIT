@@ -478,7 +478,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                         ],
                       ),
 
-// PT Email Field (conditionally shown)
+                      // PT Email Field (conditionally shown)
                       if (!isSolo)
                         TextField(
                           controller: _ptEmailController,
@@ -487,6 +487,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             border: OutlineInputBorder(),
                           ),
                         ),
+                      const SizedBox(height: 16),
 
                       // Register Button
                       _isLoading

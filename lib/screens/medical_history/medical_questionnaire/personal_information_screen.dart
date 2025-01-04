@@ -17,6 +17,8 @@ class _PersonalInformationScreenState
   String? surname;
   String? email;
   String? phone;
+  String? dateOfBirth;
+  String? role;
 
   bool isLoading = true;
 
@@ -41,6 +43,8 @@ class _PersonalInformationScreenState
           name = data?['name'];
           surname = data?['surname'];
           phone = data?['phone'];
+          dateOfBirth = data?['dateOfBirth'];
+          role = data?['role'];
           isLoading = false;
         });
       }
@@ -124,16 +128,36 @@ class _PersonalInformationScreenState
                             child: _buildFieldWithIcon(
                             'Email', email ?? 'N/A', Icons.email_outlined),
                           ),
-                          const SizedBox(width: 16),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const SizedBox(width: 16),
+                        Row(
+                          children: [
                           Expanded(
                             flex: 1,
                             child: _buildFieldWithIcon(
                             'Phone', phone ?? 'N/A', Icons.phone_outlined),
                           ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildFieldWithIcon(
+                            'Date of Birth', dateOfBirth ?? 'N/A', Icons.calendar_today),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: _buildFieldWithIcon(
+                            'Role', role ?? 'N/A', role == 'PT' ? Icons.medical_services : Icons.person),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
                       // Next Button
                       SizedBox(
                         width: MediaQuery.of(context).size.width * 0.5, // 75% width button
@@ -147,6 +171,8 @@ class _PersonalInformationScreenState
                                     'surname': surname,
                                     'email': email,
                                     'phone': phone,
+                                    'dateOfBirth': dateOfBirth,
+                                    'role': role,
                                   }
                                 ),
                                 ),

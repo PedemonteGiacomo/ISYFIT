@@ -8,10 +8,27 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
-import 'package:isyfit/screens/medical_questionnaire/questionnaire_screen.dart';
+import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'package:isyfit/widgets/data_card.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // Add intl dependency for date formatting
+
+int calculateAge(String? dateOfBirth) {
+  if (dateOfBirth == null) return 0; // Default to 0 if dateOfBirth is null
+  try {
+    DateTime dob = DateTime.parse(dateOfBirth);
+    DateTime today = DateTime.now();
+    int age = today.year - dob.year;
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+    return age;
+  } catch (e) {
+    return 0; // Default to 0 if parsing fails
+  }
+}
 
 class MedicalHistoryScreen extends StatefulWidget {
   const MedicalHistoryScreen({Key? key}) : super(key: key);
@@ -128,8 +145,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         return;
       }
 
-      final storageRef =
-          FirebaseStorage.instance.ref('medical_documents/${user.uid}/$fileName');
+      final storageRef = FirebaseStorage.instance
+          .ref('medical_documents/${user.uid}/$fileName');
 
       final uploadTask = storageRef.putData(fileBytes);
       final snapshot = await uploadTask.whenComplete(() => null);
@@ -383,11 +400,23 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // 1st Row: Height / Weight
+                      // 1st Row: Age / Height / Weight
                       Row(
                         children: [
                           Expanded(
-                            flex: 2,
+                            flex: 1,
+                            child: DataCard(
+                              title: 'Age',
+                              value: data.containsKey('dateOfBirth')
+                                  ? '${calculateAge(data['dateOfBirth'])} yrs'
+                                  : 'N/A',
+                              icon: Icons.calendar_today,
+                              color: Colors.blueGrey,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
                             child: DataCard(
                               title: 'Height',
                               value: '${data['height']} cm',
@@ -408,7 +437,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-
                       // 2nd Row: Drinks Alcohol / Smokes
                       Row(
                         children: [

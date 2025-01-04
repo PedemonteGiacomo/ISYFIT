@@ -108,7 +108,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         onTimeSelected: (time) {
                           setState(() {
                             wakeTime = time;
-                            widget.data['wake_time'] = '${time.hour}:${time.minute}';
+                            widget.data['wake_time'] = '${time.format(context)}';
                           });
                         },
                       ),
