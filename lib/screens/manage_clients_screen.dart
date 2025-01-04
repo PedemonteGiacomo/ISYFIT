@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+// Import your adapted screens that accept clientUid
+import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
+import 'package:isyfit/screens/training_records_screen.dart';  // Example
+import 'package:isyfit/screens/account_screen.dart';            // Your updated AccountScreen
 
 class ManageClientsScreen extends StatefulWidget {
   const ManageClientsScreen({Key? key}) : super(key: key);
@@ -12,9 +16,11 @@ class ManageClientsScreen extends StatefulWidget {
 class _ManageClientsScreenState extends State<ManageClientsScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+
   bool _isAddingClient = false;
   String _searchQuery = "";
 
+  /// Add a new client by email (already existing in the system as a Client).
   Future<void> _addClient() async {
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -33,6 +39,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         throw Exception('User not authenticated.');
       }
 
+      // Query Firestore for a Client with the given email
       final clientQuery = await FirebaseFirestore.instance
           .collection('users')
           .where('email', isEqualTo: _emailController.text.trim())
@@ -49,7 +56,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       final clientDoc = clientQuery.docs.first;
       final clientId = clientDoc.id;
 
-      // Add the client to the PT's list
+      // Add the client to the PT's 'clients' array
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -57,7 +64,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         'clients': FieldValue.arrayUnion([clientId])
       });
 
-      // Update the client's supervisor field
+      // Update the client’s doc so they’re not solo, point to this PT
       await FirebaseFirestore.instance
           .collection('users')
           .doc(clientId)
@@ -83,6 +90,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     }
   }
 
+  /// Remove the client from this PT's list, and reset the client's doc to solo
   Future<void> _removeClient(String clientId) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -90,7 +98,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         throw Exception('User not authenticated.');
       }
 
-      // Remove the client from the PT's list
+      // Remove client from PT's array
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -98,7 +106,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         'clients': FieldValue.arrayRemove([clientId])
       });
 
-      // Remove the PT reference from the client's document
+      // Reset the client doc
       await FirebaseFirestore.instance
           .collection('users')
           .doc(clientId)
@@ -119,6 +127,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     }
   }
 
+  /// Show a dialog to enter the client's email
   void _showAddClientDialog() {
     showDialog(
       context: context,
@@ -129,9 +138,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             borderRadius: BorderRadius.circular(25.0),
           ),
           child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 400, // Reduce the width of the dialog
-            ),
+            constraints: const BoxConstraints(maxWidth: 400),
             padding: const EdgeInsets.all(20.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25.0),
@@ -191,7 +198,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     prefixIcon: const Icon(Icons.email_outlined),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.indigo.withOpacity(0.8),
+                        color: Colors.indigoAccent,
                         width: 2.0,
                       ),
                     ),
@@ -199,7 +206,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Action Buttons with Equal Width
+                // Action Buttons
                 Row(
                   children: [
                     Expanded(
@@ -223,11 +230,10 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          Navigator.pop(context);
+                          Navigator.pop(context); // close the dialog
                           await _addClient();
                         },
-                        icon: const Icon(Icons.person_add_alt,
-                            color: Colors.white),
+                        icon: const Icon(Icons.person_add_alt, color: Colors.white),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigoAccent,
                           foregroundColor: Colors.white,
@@ -249,8 +255,91 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     );
   }
 
+  /// Show the popup with Medical, Fitness, Info for the chosen client
+  void _showClientOptions(BuildContext context, String clientUid, String clientEmail) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.person, color: Colors.blue),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  clientEmail,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1) Medical
+                ListTile(
+                  leading: const Icon(Icons.medical_services, color: Colors.red),
+                  title: const Text('Medical'),
+                  subtitle: const Text('View medical history & documents'),
+                  onTap: () {
+                    Navigator.pop(context); // close dialog
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                // 2) Fitness
+                ListTile(
+                  leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                  title: const Text('Fitness'),
+                  subtitle: const Text('View training records'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(),
+                // 3) Info
+                ListTile(
+                  leading: const Icon(Icons.info, color: Colors.blue),
+                  title: const Text('Information'),
+                  subtitle: const Text('View personal data & profile'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AccountScreen(clientUid: clientUid),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Clients'),
@@ -264,7 +353,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             onPressed: _showAddClientDialog,
             child: const Icon(Icons.add),
           ),
-          const SizedBox(height: 8), // Add spacing between button and text
+          const SizedBox(height: 8),
           const Text(
             'Add New Client',
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
@@ -273,6 +362,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       ),
       body: Column(
         children: [
+          // Search bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -290,58 +380,61 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             ),
           ),
           const Divider(),
+          // Display the PT’s clients
           Expanded(
             child: FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser!.uid)
-                  .get(),
+              future: currentUser == null
+                  ? null
+                  : FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(currentUser.uid)
+                      .get(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 if (!snapshot.hasData || snapshot.data == null) {
-                  return const Center(
-                    child: Text('No data found.'),
-                  );
+                  return const Center(child: Text('No data found.'));
                 }
 
+                // The PT doc
                 final ptData = snapshot.data!.data() as Map<String, dynamic>;
                 final clientIds = ptData['clients'] as List<dynamic>? ?? [];
 
                 if (clientIds.isEmpty) {
-                  return const Center(
-                    child: Text('No clients to manage.'),
-                  );
+                  return const Center(child: Text('No clients to manage.'));
                 }
 
+                // Build a list of all clients
                 return ListView.builder(
                   itemCount: clientIds.length,
                   itemBuilder: (context, index) {
+                    final clientId = clientIds[index];
                     return FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance
                           .collection('users')
-                          .doc(clientIds[index])
+                          .doc(clientId)
                           .get(),
                       builder: (context, clientSnapshot) {
                         if (!clientSnapshot.hasData) {
                           return const SizedBox.shrink();
                         }
-
                         final clientData =
                             clientSnapshot.data!.data() as Map<String, dynamic>;
 
-                        // Apply search filter
+                        // Filter by search query
                         final clientName =
-                            '${clientData['name']} ${clientData['surname']}';
+                            '${clientData['name'] ?? ''} ${clientData['surname'] ?? ''}';
                         if (!clientName.toLowerCase().contains(_searchQuery)) {
                           return const SizedBox.shrink();
                         }
 
+                        // Build the client tile
                         return Card(
                           margin: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 4.0),
+                            horizontal: 8.0,
+                            vertical: 4.0,
+                          ),
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: NetworkImage(
@@ -351,14 +444,20 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                               onBackgroundImageError: (_, __) =>
                                   const Icon(Icons.person),
                             ),
-                            title: Text(
-                              '${clientData['name']?.isNotEmpty == true ? clientData['name'] : ''} ${clientData['surname']?.isNotEmpty == true ? clientData['surname'] : ''}',
-                            ),
-                            subtitle: Text(clientData['email']),
+                            title: Text(clientName.trim()),
+                            subtitle: Text(clientData['email'] ?? 'No Email'),
+                            onTap: () {
+                              // Show the popup with Medical, Fitness, Info
+                              _showClientOptions(
+                                context,
+                                clientSnapshot.data!.id,
+                                clientData['email'] ?? '',
+                              );
+                            },
                             trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle,
-                                  color: Colors.red),
-                              onPressed: () => _removeClient(clientIds[index]),
+                              icon:
+                                  const Icon(Icons.remove_circle, color: Colors.red),
+                              onPressed: () => _removeClient(clientId),
                             ),
                           ),
                         );

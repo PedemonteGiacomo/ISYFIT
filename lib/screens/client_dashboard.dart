@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:isyfit/screens/login_screen.dart';
 
 class ClientDashboard extends StatelessWidget {
   const ClientDashboard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    // Immediately return LoginScreen if no user is signed in
+    if (user == null) {
+      return const LoginScreen();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Client Dashboard'),
@@ -15,7 +23,7 @@ class ClientDashboard extends StatelessWidget {
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
             .collection('users')
-            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .doc(user.uid)
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
