@@ -47,7 +47,8 @@ dependencies:
   flutter_pdfview: ^1.4.0 
   path_provider: ^2.1.5
   http: ^1.2.2
-  intl: ^0.20.1 
+  intl: ^0.20.1
+  fl_chart: ^0.70.0
 
 dev_dependencies:
   flutter_test:

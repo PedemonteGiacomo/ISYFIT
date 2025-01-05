@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Import your adapted screens that accept clientUid
+import 'package:isyfit/screens/measurements_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
-import 'package:isyfit/screens/training_records_screen.dart';  // Example
-import 'package:isyfit/screens/account_screen.dart';            // Your updated AccountScreen
+import 'package:isyfit/screens/training_records_screen.dart';  
+import 'package:isyfit/screens/account_screen.dart';
 
 class ManageClientsScreen extends StatefulWidget {
   const ManageClientsScreen({Key? key}) : super(key: key);
@@ -324,6 +324,20 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => AccountScreen(clientUid: clientUid),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.straighten, color: Colors.green),
+                  title: const Text('Measurements'),
+                  subtitle: const Text('Manage body measurements'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MeasurementsScreen(clientUid: clientUid),
                       ),
                     );
                   },

@@ -277,3 +277,14 @@
    - Release an alpha/beta for a small group of users.
 
 ---
+
+# How to run on emulated devices
+
+## Android Tablet (Chrome):
+
+### Connect to device
+   adb connect 192.168.1.135
+   connected to 192.168.1.135:5555
+
+### Run in the device
+   flutter run -d 192.168.1.135:5555

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/login_screen.dart';
-
+import 'package:isyfit/screens/measurements_screen.dart';
 import 'manage_clients_screen.dart';
 // Import the screens that accept clientUid:
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
@@ -50,89 +50,105 @@ class PTDashboard extends StatelessWidget {
   }
 
   /// Show a popup dialog with “Medical”, “Training”, and “Info” for the chosen client
-  void _showClientOptions(
-    BuildContext context, {
-    required String clientUid,
-    required String clientEmail,
-  }) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          title: Row(
+void _showClientOptions(
+  BuildContext context, {
+  required String clientUid,
+  required String clientEmail,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.person, color: Colors.blue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                clientEmail,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.person, color: Colors.blue),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  clientEmail,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
+              // 1) Medical
+              ListTile(
+                leading: const Icon(Icons.medical_services, color: Colors.red),
+                title: const Text('Medical'),
+                subtitle: const Text('View medical history & documents'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              // 2) Training
+              ListTile(
+                leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                title: const Text('Training'),
+                subtitle: const Text('View training records'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              // 3) Info
+              ListTile(
+                leading: const Icon(Icons.info, color: Colors.blue),
+                title: const Text('Information'),
+                subtitle: const Text('View personal data & profile'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AccountScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              // 4) Measurements (NEW)
+              ListTile(
+                leading: const Icon(Icons.straighten, color: Colors.green),
+                title: const Text('Measurements'),
+                subtitle: const Text('Manage body measurements'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MeasurementsScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 1) Medical
-                ListTile(
-                  leading: const Icon(Icons.medical_services, color: Colors.red),
-                  title: const Text('Medical'),
-                  subtitle: const Text('View medical history & documents'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(),
-                // 2) Fitness
-                ListTile(
-                  leading: const Icon(Icons.fitness_center, color: Colors.orange),
-                  title: const Text('Training'),
-                  subtitle: const Text('View training records'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(),
-                // 3) Info
-                ListTile(
-                  leading: const Icon(Icons.info, color: Colors.blue),
-                  title: const Text('Information'),
-                  subtitle: const Text('View personal data & profile'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AccountScreen(clientUid: clientUid),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   /// Compute card width based on number of clients
   double _computeCardWidth(int numClients, double screenWidth) {
