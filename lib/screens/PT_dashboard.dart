@@ -137,11 +137,11 @@ class PTDashboard extends StatelessWidget {
   /// Compute card width based on number of clients
   double _computeCardWidth(int numClients, double screenWidth) {
     if (numClients == 1) {
-      return screenWidth * 0.45;
+      return screenWidth * 0.4;
     } else if (numClients == 2) {
       return screenWidth * 0.3;
     } else {
-      return screenWidth * 0.23;
+      return screenWidth * 0.22;
     }
   }
 
