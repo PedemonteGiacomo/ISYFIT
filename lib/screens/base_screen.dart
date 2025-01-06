@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/screens/measurements_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'medical_history/medical_history_screen.dart';
 import 'training_records_screen.dart';
@@ -14,13 +16,21 @@ class BaseScreen extends StatefulWidget {
 
 class _BaseScreenState extends State<BaseScreen> {
   int _currentIndex = 0;
+  String clientid = FirebaseAuth.instance.currentUser!.uid;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    MedicalHistoryScreen(),
-    TrainingRecordsScreen(),
-    AccountScreen(),
-  ];
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      TrainingRecordsScreen(),
+      MedicalHistoryScreen(),
+      MeasurementsScreen(clientUid: clientid),
+      AccountScreen(),
+    ];
+  }
 
   void _onTabChanged(int index) {
     setState(() {

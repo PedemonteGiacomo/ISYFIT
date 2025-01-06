@@ -19,23 +19,27 @@ class NavigationBar extends StatelessWidget {
       selectedItemColor: Theme.of(context).primaryColorDark,
       unselectedItemColor: Theme.of(context).colorScheme.secondary,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.medical_services),
-          label: 'Medical History',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.fitness_center),
-          label: 'Training',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.account_circle_rounded),
-          label: 'Account',
-        ),
-      ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: "Training",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle_outline),
+            label: "Fit-Check",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.straighten),
+            label: "Measurements",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Account",
+          ),
+        ],
     );
   }
 }

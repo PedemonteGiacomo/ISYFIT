@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements_screen.dart';
 import 'manage_clients_screen.dart';
-// Import the screens that accept clientUid:
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/training_records_screen.dart';
 import 'package:isyfit/screens/account_screen.dart';
@@ -12,7 +11,20 @@ import 'package:isyfit/screens/account_screen.dart';
 class PTDashboard extends StatelessWidget {
   const PTDashboard({Key? key}) : super(key: key);
 
-  /// Fetch up to 3 "top clients" from Firestore
+  /// Fetch logged-in user's name
+  Future<String> _fetchUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return "User";
+    }
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    return userDoc.data()?['name'] ?? "User";
+  }
+
+  /// Fetch the last 3 clients
   Future<List<Map<String, dynamic>>> _fetchClients() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
@@ -29,9 +41,8 @@ class PTDashboard extends StatelessWidget {
       return [];
     }
 
-    // Take the first 3 from the array
     final clientIds = (ptData['clients'] as List<dynamic>).take(3).toList();
-    final List<Map<String, dynamic>> clients = [];
+    List<Map<String, dynamic>> clients = [];
 
     for (String clientId in clientIds) {
       final clientDoc = await FirebaseFirestore.instance
@@ -41,7 +52,6 @@ class PTDashboard extends StatelessWidget {
 
       if (clientDoc.exists) {
         final clientData = clientDoc.data() as Map<String, dynamic>;
-        // Add doc ID if needed
         clientData['uid'] = clientId;
         clients.add(clientData);
       }
@@ -49,41 +59,29 @@ class PTDashboard extends StatelessWidget {
     return clients;
   }
 
-  /// Show a popup dialog with “Medical”, “Training”, and “Info” for the chosen client
-void _showClientOptions(
-  BuildContext context, {
-  required String clientUid,
-  required String clientEmail,
-}) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.person, color: Colors.blue),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                clientEmail,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
+  /// Show popup with 4 options
+  void _showClientOptions(
+    BuildContext context, {
+    required String clientUid,
+    required String clientName,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: Text(
+            clientName,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 1) Medical
               ListTile(
                 leading: const Icon(Icons.medical_services, color: Colors.red),
                 title: const Text('Medical'),
-                subtitle: const Text('View medical history & documents'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -94,28 +92,23 @@ void _showClientOptions(
                   );
                 },
               ),
-              const Divider(),
-              // 2) Training
               ListTile(
                 leading: const Icon(Icons.fitness_center, color: Colors.orange),
                 title: const Text('Training'),
-                subtitle: const Text('View training records'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          TrainingRecordsScreen(clientUid: clientUid),
                     ),
                   );
                 },
               ),
-              const Divider(),
-              // 3) Info
               ListTile(
                 leading: const Icon(Icons.info, color: Colors.blue),
-                title: const Text('Information'),
-                subtitle: const Text('View personal data & profile'),
+                title: const Text('Info'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -126,201 +119,111 @@ void _showClientOptions(
                   );
                 },
               ),
-              const Divider(),
-              // 4) Measurements (NEW)
               ListTile(
                 leading: const Icon(Icons.straighten, color: Colors.green),
                 title: const Text('Measurements'),
-                subtitle: const Text('Manage body measurements'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MeasurementsScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          MeasurementsScreen(clientUid: clientUid),
                     ),
                   );
                 },
               ),
             ],
           ),
-        ),
-      );
-    },
-  );
-}
-
-  /// Compute card width based on number of clients
-  double _computeCardWidth(int numClients, double screenWidth) {
-    if (numClients == 1) {
-      return screenWidth * 0.4;
-    } else if (numClients == 2) {
-      return screenWidth * 0.3;
-    } else {
-      return screenWidth * 0.22;
-    }
-  }
-
-  /// Build a single "client" card with a gradient
-  Widget _buildClientCard({
-    required BuildContext context,
-    required Map<String, dynamic> clientData,
-    required double cardWidth,
-    required double cardHeight,
-  }) {
-    final clientName = clientData['name'] ?? '';
-    final clientEmail = clientData['email'] ?? '';
-    final profileImageUrl =
-        clientData['profileImageUrl'] ?? 'https://via.placeholder.com/150';
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      elevation: 4,
-      child: Container(
-        width: cardWidth,
-        height: cardHeight,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade100, Colors.blue.shade300],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(profileImageUrl),
-                radius: 30,
-                onBackgroundImageError: (_, __) => const Icon(Icons.person),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                clientName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                clientEmail,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final clientUid = clientData['uid'] as String? ?? '';
-                  _showClientOptions(
-                    context,
-                    clientUid: clientUid,
-                    clientEmail: clientEmail,
-                  );
-                },
-                icon: const Icon(Icons.manage_accounts, size: 16),
-                label: const Text(
-                  'Manage',
-                  style: TextStyle(fontSize: 13),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue.shade800,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  /// "Manage All Clients" card
-  Widget _buildManageAllCard(BuildContext context, double cardWidth, double cardHeight) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      elevation: 4,
-      child: Container(
-        width: cardWidth,
-        height: cardHeight,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          gradient: LinearGradient(
-            colors: [Colors.green.shade100, Colors.green.shade300],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20.0),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ManageClientsScreen(),
-              ),
-            );
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.group,
-                size: 40,
-                color: Colors.white,
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Manage All Clients',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.white,
+  Widget _buildClientList(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchClients(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Text(
+              "No clients available",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
+
+        final clients = snapshot.data!;
+        return Column(
+          children: [
+            ...clients.map((client) {
+              final clientName = client['name'] ?? 'Unknown';
+              final isPaying = client['isPaying'] ?? false;
+
+              return InkWell(
+                onTap: () {
+                  _showClientOptions(
+                    context,
+                    clientUid: client['uid'],
+                    clientName: clientName,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        child: Text(
+                          clientName.isNotEmpty
+                              ? clientName[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        backgroundColor: Colors.blue.shade400,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          clientName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: isPaying ? Colors.green : Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 8),
-              Icon(
-                Icons.arrow_forward,
-                size: 24,
-                color: Colors.white,
-              ),
-            ],
-          ),
-        ),
-      ),
+              );
+            }).toList(),
+            const SizedBox(height: 12),
+            
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // If the user is null, return the LoginScreen
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const LoginScreen();
-    }
-
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -328,113 +231,118 @@ void _showClientOptions(
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Title row
-            Row(
-              children: [
-                Text(
-                  'Your Top Clients',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FutureBuilder<String>(
+            future: _fetchUserName(),
+            builder: (context, snapshot) {
+              final userName =
+                  snapshot.connectionState == ConnectionState.done &&
+                          snapshot.hasData
+                      ? snapshot.data!
+                      : "User";
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.grey.shade300,
+                        child: const Icon(
+                          Icons.person,
+                          size: 30,
+                          color: Colors.white,
+                        ),
                       ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _fetchClients(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 32),
-                        const Text(
-                          "You don't have clients",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
+                      const SizedBox(width: 16),
+                      Text(
+                        "Welcome $userName",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 20),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ManageClientsScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Clients'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 24,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Search and actions
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: TextField(
+                  //         decoration: InputDecoration(
+                  //           hintText: "Search...",
+                  //           prefixIcon: const Icon(Icons.search),
+                  //           border: OutlineInputBorder(
+                  //             borderRadius: BorderRadius.circular(12.0),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 8),
+                  //     ElevatedButton.icon(
+                  //       onPressed: () {},
+                  //       icon: const Icon(Icons.add),
+                  //       label: const Text("Add New"),
+                  //     ),
+                  //     const SizedBox(width: 8),
+                  //     ElevatedButton(
+                  //       onPressed: () {},
+                  //       child: const Text("Filter"),
+                  //     ),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 16),
+
+                  
+                    Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                      "Recent Clients",
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  );
-                }
-
-                final clients = snapshot.data!;
-                final cardWidth = _computeCardWidth(clients.length, screenWidth);
-                const cardHeight = 220.0;
-
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Show up to 3 client cards
-                    ...clients.map((client) {
-                      return GestureDetector(
-                        onTap: () {
-                          final clientUid = client['uid'] as String? ?? '';
-                          final clientEmail = client['email'] ?? 'No Email';
-                          _showClientOptions(
-                            context,
-                            clientUid: clientUid,
-                            clientEmail: clientEmail,
-                          );
-                        },
-                        child: _buildClientCard(
-                          context: context,
-                          clientData: client,
-                          cardWidth: cardWidth,
-                          cardHeight: cardHeight,
-                        ),
-                      );
-                    }).toList(),
-
-                    // "Manage All Clients" card
-                    GestureDetector(
-                      onTap: () {
+                      ),
+                      ElevatedButton(
+                      onPressed: () {
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ManageClientsScreen(),
-                          ),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ManageClientsScreen(),
+                        ),
                         );
                       },
-                      child: _buildManageAllCard(context, cardWidth, cardHeight),
+                      child: const Text("View All"),
+                      ),
+                    ],
                     ),
-                  ],
-                );
-              },
-            ),
-          ],
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: screenHeight * 0.4,
+                    ),
+                    child: SingleChildScrollView(
+                      child: _buildClientList(context),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Weekly Checks Placeholder
+                  // const Divider(thickness: 1.5),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "All Weekly Checks",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
