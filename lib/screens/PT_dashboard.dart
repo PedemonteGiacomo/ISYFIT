@@ -64,6 +64,7 @@ class PTDashboard extends StatelessWidget {
     BuildContext context, {
     required String clientUid,
     required String clientName,
+    required String clientSurname,
   }) {
     showDialog(
       context: context,
@@ -73,7 +74,7 @@ class PTDashboard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.0),
           ),
           title: Text(
-            clientName,
+            clientName + " " + clientSurname,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -162,6 +163,7 @@ class PTDashboard extends StatelessWidget {
           children: [
             ...clients.map((client) {
               final clientName = client['name'] ?? 'Unknown';
+              final clientSurname = client['surname'] ?? 'Unknown';
               final isPaying = client['isPaying'] ?? false;
 
               return InkWell(
@@ -170,6 +172,7 @@ class PTDashboard extends StatelessWidget {
                     context,
                     clientUid: client['uid'],
                     clientName: clientName,
+                    clientSurname: clientSurname,
                   );
                 },
                 child: Padding(
@@ -180,19 +183,20 @@ class PTDashboard extends StatelessWidget {
                         radius: 20,
                         child: Text(
                           clientName.isNotEmpty
-                              ? clientName[0].toUpperCase()
+                              ? clientName[0].toUpperCase() + clientSurname[0].toUpperCase()
                               : 'U',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
+                          
                         ),
                         backgroundColor: Colors.blue.shade400,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          clientName,
+                          clientName + " " + clientSurname,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -200,14 +204,26 @@ class PTDashboard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: isPaying ? Colors.green : Colors.red,
-                          shape: BoxShape.circle,
+                        Column(
+                        children: [
+                          Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: isPaying ? Colors.green : Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                          isPaying ? 'Paying' : 'Not Paying',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isPaying ? Colors.green : Colors.red,
+                          ),
+                          ),
+                        ],
                         ),
-                      ),
                     ],
                   ),
                 ),
