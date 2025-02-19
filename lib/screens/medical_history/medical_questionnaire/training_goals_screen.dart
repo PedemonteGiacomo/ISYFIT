@@ -12,18 +12,37 @@ class TrainingGoalsScreen extends StatefulWidget {
 class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final List<String> selectedDays = [];
+
   final TextEditingController goalsController = TextEditingController();
+  final TextEditingController sportExpController = TextEditingController();
+  final TextEditingController gymExpController = TextEditingController();
+  final TextEditingController otherPTExpController = TextEditingController();
+  final TextEditingController preferredTimeController = TextEditingController();
+
+  int timesPerWeek = 3; // or default 2, etc.
 
   @override
   void initState() {
     super.initState();
+    // existing
     goalsController.text = widget.data['goals'] ?? '';
     selectedDays.addAll(widget.data['training_days'] ?? []);
+
+    // new
+    sportExpController.text = widget.data['sportExperience'] ?? '';
+    gymExpController.text = widget.data['gymExperience'] ?? '';
+    otherPTExpController.text = widget.data['otherPTExperience'] ?? '';
+    preferredTimeController.text = widget.data['preferredTime'] ?? '';
+    timesPerWeek = widget.data['timesPerWeek'] ?? 3;
   }
 
   @override
   void dispose() {
     goalsController.dispose();
+    sportExpController.dispose();
+    gymExpController.dispose();
+    otherPTExpController.dispose();
+    preferredTimeController.dispose();
     super.dispose();
   }
 
@@ -64,22 +83,53 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Define your training goals and preferred workout days to help us plan the best program for you.',
+                          'Define your training goals and additional details to help us plan the best program for you.',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
 
-                        // Training Goals
+                        // 1) Esperienze sportive dilettantistiche/professionistiche
+                        _buildTextInput(
+                          'Esperienze sportive?',
+                          'Dilettantistiche, professionistiche, etc.',
+                          sportExpController,
+                          (value) => widget.data['sportExperience'] = value,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 2) Hai già esperienza in sala pesi?
+                        _buildTextInput(
+                          'Esperienza sala pesi?',
+                          'Se sì, quanto tempo fa e per quanto?',
+                          gymExpController,
+                          (value) => widget.data['gymExperience'] = value,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 3) Esperienza con altri PT?
+                        _buildTextInput(
+                          'Altri Personal Trainer in passato?',
+                          'Come ti sei trovato?',
+                          otherPTExpController,
+                          (value) => widget.data['otherPTExperience'] = value,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 4) Quante volte a settimana?
+                        _buildTimesPerWeekDropdown(),
+                        const SizedBox(height: 24),
+
+                        // 5) Goals
                         _buildTextInput(
                           'What are your training goals?',
-                          'Describe your goals (e.g., fitness, strength, etc.)',
+                          'E.g., fitness, strength, hypertrophy, etc.',
                           goalsController,
                           (value) => widget.data['goals'] = value,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                        // Preferred Training Days
+                        // 6) Preferred Training Days
                         _buildToggleButtonGroup(
                           label: 'Preferred training days',
                           options: [
@@ -95,6 +145,15 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                           onChanged: (values) =>
                               widget.data['training_days'] = values,
                         ),
+                        const SizedBox(height: 16),
+
+                        // 7) Orario preferito
+                        _buildTextInput(
+                          'Orario preferito',
+                          'Mattina? Pomeriggio? Sera?',
+                          preferredTimeController,
+                          (value) => widget.data['preferredTime'] = value,
+                        ),
                         const SizedBox(height: 32),
 
                         // Next Button
@@ -104,6 +163,9 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
                                 _formKey.currentState?.save();
+                                // Save the timesPerWeek also
+                                widget.data['timesPerWeek'] = timesPerWeek;
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -138,16 +200,20 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     );
   }
 
-  Widget _buildTextInput(String label, String hint, TextEditingController controller,
-      Function(String) onSaved) {
+  Widget _buildTextInput(
+    String label,
+    String hint,
+    TextEditingController controller,
+    Function(String) onSaved,
+  ) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8.0),
@@ -155,23 +221,21 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                Text(label,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 TextFormField(
                   controller: controller,
                   decoration: InputDecoration(
                     hintText: hint,
                     border: InputBorder.none,
                     isDense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 8.0),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                   ),
                   onSaved: (value) => onSaved(value ?? ''),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'This field is required'
-                      : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'This field is required' : null,
+                  minLines: 1,
+                  maxLines: 3,
                 ),
               ],
             ),
@@ -215,9 +279,35 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
               selectedColor: Colors.blue.shade100,
               backgroundColor: Colors.grey.shade200,
               labelStyle: TextStyle(
-                  color: isSelected ? Colors.blue : Colors.black),
+                color: isSelected ? Colors.blue : Colors.black,
+              ),
             );
           }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimesPerWeekDropdown() {
+    return Row(
+      children: [
+        const Icon(Icons.calendar_month, color: Colors.blue),
+        const SizedBox(width: 12),
+        const Text('Quante volte a settimana?'),
+        const SizedBox(width: 16),
+        DropdownButton<int>(
+          value: timesPerWeek,
+          items: [1, 2, 3, 4, 5, 6, 7].map((count) {
+            return DropdownMenuItem<int>(
+              value: count,
+              child: Text('$count'),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              timesPerWeek = val ?? 3;
+            });
+          },
         ),
       ],
     );

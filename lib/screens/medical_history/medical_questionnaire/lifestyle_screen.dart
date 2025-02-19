@@ -12,27 +12,78 @@ class LifestyleScreen extends StatefulWidget {
 class _LifestyleScreenState extends State<LifestyleScreen> {
   bool drinksAlcohol = false;
   bool smokes = false;
+  bool fixedWorkShifts = false;
+  bool spineJointMuscleIssues = false;
+  bool injuriesOrSurgery = false;
+  bool pathologies = false;
+  bool asthmatic = false;
+
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController alcoholDetailsController = TextEditingController();
   final TextEditingController smokingDetailsController = TextEditingController();
+  final TextEditingController waterIntakeController = TextEditingController();
+  final TextEditingController spineJointMuscleDetailsController = TextEditingController();
+  final TextEditingController injuriesOrSurgeryDetailsController = TextEditingController();
+  final TextEditingController pathologiesDetailsController = TextEditingController();
+  final TextEditingController breakfastDetailsController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Default values for toggle switches
-    widget.data['alcohol'] = 'No';
-    widget.data['smokes'] = 'No';
+    widget.data['alcohol'] = widget.data['alcohol'] ?? 'No';
+    widget.data['smokes'] = widget.data['smokes'] ?? 'No';
+    widget.data['fixedWorkShifts'] = widget.data['fixedWorkShifts'] ?? 'No';
+    widget.data['waterIntake'] = widget.data['waterIntake'] ?? '';
+    widget.data['spineJointMuscleIssues'] = widget.data['spineJointMuscleIssues'] ?? 'No';
+    widget.data['injuriesOrSurgery'] = widget.data['injuriesOrSurgery'] ?? 'No';
+    widget.data['pathologies'] = widget.data['pathologies'] ?? 'No';
+    widget.data['asthmatic'] = widget.data['asthmatic'] ?? 'No';
+    widget.data['breakfast'] = widget.data['breakfast'] ?? 'No';
 
-    // Initialize controllers if details are available
     alcoholDetailsController.text = widget.data['alcohol_details'] ?? '';
     smokingDetailsController.text = widget.data['smoking_details'] ?? '';
+    waterIntakeController.text = widget.data['waterIntake'];
+    spineJointMuscleDetailsController.text = widget.data['spineJointMuscleDetails'] ?? '';
+    injuriesOrSurgeryDetailsController.text = widget.data['injuriesOrSurgeryDetails'] ?? '';
+    pathologiesDetailsController.text = widget.data['pathologiesDetails'] ?? '';
+    breakfastDetailsController.text = widget.data['breakfastDetails'] ?? '';
   }
 
   @override
   void dispose() {
     alcoholDetailsController.dispose();
     smokingDetailsController.dispose();
+    waterIntakeController.dispose();
+    spineJointMuscleDetailsController.dispose();
+    injuriesOrSurgeryDetailsController.dispose();
+    pathologiesDetailsController.dispose();
     super.dispose();
+  }
+
+  Widget _buildToggleOption({
+    required String label,
+    required bool value,
+    required IconData icon,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SwitchListTile(
+      title: Text(label),
+      value: value,
+      secondary: Icon(icon),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildTextInput(String label, TextEditingController controller, ValueChanged<String> onChanged) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      onChanged: onChanged,
+    );
   }
 
   @override
@@ -61,23 +112,33 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Header Section
-                        const Icon(Icons.local_drink_outlined, size: 64, color: Colors.blue),
+                        const Icon(Icons.medical_services_outlined, size: 64, color: Colors.blue),
                         const SizedBox(height: 16),
                         Text(
-                          'Lifestyle',
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          'Lifestyle and Medical History',
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Provide details about your lifestyle habits to help us tailor the best plan for you.',
+                          'Provide lifestyle and medical details to help us tailor the best plan for you.',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
 
-                        // Do you drink alcohol?
+                        _buildToggleOption(
+                          label: 'Are your work shifts fixed?',
+                          value: fixedWorkShifts,
+                          icon: Icons.schedule_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              fixedWorkShifts = value;
+                              widget.data['fixedWorkShifts'] = value ? 'Yes' : 'No';
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 24),
+
                         _buildToggleOption(
                           label: 'Do you drink alcohol?',
                           value: drinksAlcohol,
@@ -86,25 +147,18 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             setState(() {
                               drinksAlcohol = value;
                               widget.data['alcohol'] = value ? 'Yes' : 'No';
-                              if (!value) {
-                                alcoholDetailsController.clear();
-                                widget.data['alcohol_details'] = null;
-                              }
+                              if (!value) alcoholDetailsController.clear();
                             });
                           },
                         ),
-                        const SizedBox(height: 16),
-                        // Alcohol details
                         if (drinksAlcohol)
                           _buildTextInput(
                             'If yes, how much?',
-                            'Enter details',
                             alcoholDetailsController,
                             (value) => widget.data['alcohol_details'] = value,
                           ),
                         const SizedBox(height: 24),
 
-                        // Do you smoke?
                         _buildToggleOption(
                           label: 'Do you smoke?',
                           value: smokes,
@@ -113,53 +167,121 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             setState(() {
                               smokes = value;
                               widget.data['smokes'] = value ? 'Yes' : 'No';
-                              if (!value) {
-                                smokingDetailsController.clear();
-                                widget.data['smoking_details'] = null;
-                              }
+                              if (!value) smokingDetailsController.clear();
                             });
                           },
                         ),
-                        const SizedBox(height: 16),
-                        // Smoking details
                         if (smokes)
                           _buildTextInput(
                             'If yes, how much?',
-                            'Enter details',
                             smokingDetailsController,
                             (value) => widget.data['smoking_details'] = value,
                           ),
+                        const SizedBox(height: 24),
+                        // make this having a bottle icon that could range from 0.5 to 5 with 0.5 increments
+                        _buildTextInput(
+                          'How much water do you drink daily?',
+                          waterIntakeController,
+                          (value) => widget.data['waterIntake'] = value,
+                        ),
+                        const SizedBox(height: 24),
+
+                        _buildToggleOption(
+                          label: 'Do you have spine, joint, or muscle issues?',
+                          value: spineJointMuscleIssues,
+                          icon: Icons.accessibility_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              spineJointMuscleIssues = value;
+                              widget.data['spineJointMuscleIssues'] = value ? 'Yes' : 'No';
+                              if (!value) spineJointMuscleDetailsController.clear();
+                            });
+                          },
+                        ),
+                        if (spineJointMuscleIssues)
+                          _buildTextInput(
+                            'Describe the issue:',
+                            spineJointMuscleDetailsController,
+                            (value) => widget.data['spineJointMuscleIssuesDetails'] = value,
+                          ),
+                        const SizedBox(height: 24),
+
+                        _buildToggleOption(
+                          label: 'Have you had any injuries or surgery?',
+                          value: injuriesOrSurgery,
+                          icon: Icons.healing_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              injuriesOrSurgery = value;
+                              widget.data['injuriesOrSurgery'] = value ? 'Yes' : 'No';
+                              if (!value) injuriesOrSurgeryDetailsController.clear();
+                            });
+                          },
+                        ),
+                        if (injuriesOrSurgery)
+                          _buildTextInput(
+                            'Describe your injury/surgery:',
+                            injuriesOrSurgeryDetailsController,
+                            (value) => widget.data['injuriesOrSurgeryDetails'] = value,
+                          ),
+                        const SizedBox(height: 24),
+
+                        _buildToggleOption(
+                          label: 'Do you have any pathologies?',
+                          value: pathologies,
+                          icon: Icons.local_hospital_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              pathologies = value;
+                              widget.data['pathologies'] = value ? 'Yes' : 'No';
+                              if (!value) pathologiesDetailsController.clear();
+                            });
+                          },
+                        ),
+                        if (pathologies)
+                          _buildTextInput(
+                            'Describe the pathology:',
+                            pathologiesDetailsController,
+                            (value) => widget.data['pathologiesDetails'] = value,
+                          ),
+                        const SizedBox(height: 24),
+
+                        _buildToggleOption(
+                          label: 'Are you asthmatic?',
+                          value: asthmatic,
+                          icon: Icons.air_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              asthmatic = value;
+                              widget.data['asthmatic'] = value ? 'Yes' : 'No';
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        _buildToggleOption(
+                          label: 'Do you have breakfast daily?',
+                          value: widget.data['breakfast'] == 'Yes',
+                          icon: Icons.breakfast_dining_outlined,
+                          onChanged: (value) {
+                            setState(() {
+                              widget.data['breakfast'] = value ? 'Yes' : 'No';
+                              if (!value) breakfastDetailsController.clear();
+                            });
+                          },
+                        ),
+
                         const SizedBox(height: 32),
 
-                        // Next Button
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.75, // 75% width button
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                _formKey.currentState?.save();
-                                // Ensure 'No' is set for any unselected toggle
-                                if (!drinksAlcohol) widget.data['alcohol'] = 'No';
-                                if (!smokes) widget.data['smokes'] = 'No';
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SleepEnergyScreen(data: widget.data),
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.arrow_forward, color: Colors.white),
-                            label: const Text('Next'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: theme.primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SleepEnergyScreen(data: widget.data),
                               ),
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
+                            );
+                          },
+                          child: const Text('Next'),
                         ),
                       ],
                     ),
@@ -170,87 +292,6 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildToggleOption({
-    required String label,
-    required bool value,
-    required IconData icon,
-    required Function(bool) onChanged,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                Switch(
-                  value: value,
-                  onChanged: onChanged,
-                  activeColor: Colors.blue,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextInput(
-    String label,
-    String hint,
-    TextEditingController controller,
-    Function(String) onSaved,
-  ) {
-    return Row(
-      children: [
-        const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                TextFormField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                  onSaved: (value) => onSaved(value ?? ''),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'This field is required' : null,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

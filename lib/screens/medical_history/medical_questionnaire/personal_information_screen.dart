@@ -11,14 +11,14 @@ class PersonalInformationScreen extends StatefulWidget {
       _PersonalInformationScreenState();
 }
 
-class _PersonalInformationScreenState
-    extends State<PersonalInformationScreen> {
+class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   String? name;
   String? surname;
   String? email;
   String? phone;
   String? dateOfBirth;
   String? role;
+  String? profession; // <-- ADDED for the question: "Che professione?"
 
   bool isLoading = true;
 
@@ -45,6 +45,7 @@ class _PersonalInformationScreenState
           phone = data?['phone'];
           dateOfBirth = data?['dateOfBirth'];
           role = data?['role'];
+          profession = data?['profession']; // Attempt to retrieve from Firestore
           isLoading = false;
         });
       }
@@ -104,40 +105,25 @@ class _PersonalInformationScreenState
                       ),
                       const SizedBox(height: 24),
 
-                        // Form Fields
-                        Row(
-                          children: [
+                      // Form Fields
+                      Row(
+                        children: [
                           Expanded(
                             flex: 1,
                             child: _buildFieldWithIcon(
-                            'Name', name ?? 'N/A', Icons.badge_outlined),
+                              'Name',
+                              name ?? 'N/A',
+                              Icons.badge_outlined,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             flex: 1,
                             child: _buildFieldWithIcon(
-                            'Surname', surname ?? 'N/A', Icons.person_outline),
-                          ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                          Expanded(
-                            flex: 1,
-                            child: _buildFieldWithIcon(
-                            'Email', email ?? 'N/A', Icons.email_outlined),
-                          ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const SizedBox(width: 16),
-                        Row(
-                          children: [
-                          Expanded(
-                            flex: 1,
-                            child: _buildFieldWithIcon(
-                            'Phone', phone ?? 'N/A', Icons.phone_outlined),
+                              'Surname',
+                              surname ?? 'N/A',
+                              Icons.person_outline,
+                            ),
                           ),
                         ],
                       ),
@@ -147,47 +133,94 @@ class _PersonalInformationScreenState
                           Expanded(
                             flex: 1,
                             child: _buildFieldWithIcon(
-                            'Date of Birth', dateOfBirth ?? 'N/A', Icons.calendar_today),
+                              'Email',
+                              email ?? 'N/A',
+                              Icons.email_outlined,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const SizedBox(width: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildFieldWithIcon(
+                              'Phone',
+                              phone ?? 'N/A',
+                              Icons.phone_outlined,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: _buildFieldWithIcon(
+                              'Date of Birth',
+                              dateOfBirth ?? 'N/A',
+                              Icons.calendar_today,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             flex: 1,
                             child: _buildFieldWithIcon(
-                            'Role', role ?? 'N/A', role == 'PT' ? Icons.medical_services : Icons.person),
+                              'Role',
+                              role ?? 'N/A',
+                              role == 'PT' ? Icons.medical_services : Icons.person,
+                            ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      // ADDED: Profession
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildFieldWithIcon(
+                              'Profession',
+                              profession ?? 'N/A',
+                              Icons.work_outline,
+                            ),
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 32),
                       // Next Button
                       SizedBox(
                         width: MediaQuery.of(context).size.width * 0.5, // 75% width button
                         child: ElevatedButton.icon(
                           onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PhysicalMeasurementsScreen(data: {
-                                    'name': name,
-                                    'surname': surname,
-                                    'email': email,
-                                    'phone': phone,
-                                    'dateOfBirth': dateOfBirth,
-                                    'role': role,
-                                  }
-                                ),
-                                ),
-                              );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PhysicalMeasurementsScreen(data: {
+                                  'name': name,
+                                  'surname': surname,
+                                  'email': email,
+                                  'phone': phone,
+                                  'dateOfBirth': dateOfBirth,
+                                  'role': role,
+                                  'profession': profession, // pass this forward
+                                }),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.arrow_forward, color: Colors.white),
                           label: const Text('Next'),
-                            style: ElevatedButton.styleFrom(
+                          style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: theme.primaryColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             foregroundColor: Colors.white, // Set text color to white
-                            ),
+                          ),
                         ),
                       ),
                     ],

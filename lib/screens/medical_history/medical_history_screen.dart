@@ -5,24 +5,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/intl.dart';
+
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
-import 'package:isyfit/widgets/data_card.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // For date formatting if needed
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
+import 'package:isyfit/widgets/data_card.dart';
 
-/// Helper function to calculate age from a date string
+/// A helper function to parse and calculate the user’s age from a dateOfBirth string.
 int calculateAge(String? dateOfBirth) {
   if (dateOfBirth == null) return 0;
   try {
     final dob = DateTime.parse(dateOfBirth);
     final today = DateTime.now();
     int age = today.year - dob.year;
-    if (today.month < dob.month ||
-        (today.month == dob.month && today.day < dob.day)) {
+    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
       age--;
     }
     return age;
@@ -32,39 +33,30 @@ int calculateAge(String? dateOfBirth) {
 }
 
 class MedicalHistoryScreen extends StatefulWidget {
-  /// If `clientUid` is non-null, we load that client’s data (PT perspective).
-  /// If `clientUid` is null, we load the currently logged-in user’s data.
+  /// If [clientUid] is non-null, a PT is viewing a client’s medical data.
+  /// If [clientUid] is null, we load the current logged-in user’s data.
   final String? clientUid;
 
-  const MedicalHistoryScreen({
-    Key? key,
-    this.clientUid,
-  }) : super(key: key);
+  const MedicalHistoryScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
   _MedicalHistoryScreenState createState() => _MedicalHistoryScreenState();
 }
 
 class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
-  /// Future for the medical_history doc
+  /// The main medical_history doc for the target user
   late Future<Map<String, dynamic>?> medicalHistory;
 
-  /// Future for the list of medical_documents
+  /// A list of uploaded documents (PDFs/images) for the user
   late Future<List<Map<String, dynamic>>> medicalDocuments;
 
-  /// If a PT is viewing a client, we also fetch that client’s name+email
+  /// If a PT is viewing a client, fetch that client’s minimal profile
   late Future<Map<String, dynamic>?> clientProfile;
 
-  // For controlling the scroll
   final ScrollController _scrollController = ScrollController();
-
-  // Tracks whether to show the down arrow icon
   bool _showArrow = true;
-
-  // Whether to show all documents or just 3
   bool showAllDocuments = false;
 
-  /// True if this is a PT viewing someone else's data (clientUid != null)
   bool get isPTView => widget.clientUid != null;
 
   @override
@@ -77,16 +69,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// Returns `widget.clientUid` if provided, else the current user's UID
+  /// If PT is viewing, use [clientUid], else the current user’s uid
   String? get targetUid {
-    if (widget.clientUid != null) {
-      return widget.clientUid;
-    }
-    final user = FirebaseAuth.instance.currentUser;
-    return user?.uid;
+    if (widget.clientUid != null) return widget.clientUid;
+    return FirebaseAuth.instance.currentUser?.uid;
   }
 
-  /// Fetch the medical_history doc for the target user
   Future<Map<String, dynamic>?> _fetchMedicalHistory() async {
     final uid = targetUid;
     if (uid == null) return null;
@@ -97,7 +85,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     return doc.data();
   }
 
-  /// Fetch the `medical_documents` for the target user
   Future<List<Map<String, dynamic>>> _fetchDocuments() async {
     final uid = targetUid;
     if (uid == null) return [];
@@ -117,75 +104,63 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }).toList();
   }
 
-  /// If PT is viewing a client, fetch that client's name and email
   Future<Map<String, dynamic>?> _fetchClientProfile() async {
     final uid = targetUid;
     if (uid == null) return null;
-    final docSnap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
+    final docSnap =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     return docSnap.data();
   }
 
-  /// Upload a file if this is the user themself or if you want to allow a PT
   Future<void> _uploadFile(BuildContext context) async {
+    final uid = targetUid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No target user found.')),
+      );
+      return;
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
+    );
+    if (result == null || result.files.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No file selected.')),
+      );
+      return;
+    }
+    final file = result.files.single;
+    Uint8List? fileBytes = file.bytes;
+
+    if (fileBytes == null && file.path != null) {
+      final fileFromPath = File(file.path!);
+      fileBytes = await fileFromPath.readAsBytes();
+    }
+    if (fileBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to read file. Please try again.')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     try {
-      final uid = targetUid;
-      if (uid == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No target user found.')),
-        );
-        return;
-      }
-
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
-      );
-
-      if (result == null || result.files.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No file selected.')),
-        );
-        return;
-      }
-
-      final file = result.files.single;
-      Uint8List? fileBytes = file.bytes;
-
-      // If user picks a file from path, read it
-      if (fileBytes == null && file.path != null) {
-        final fileFromPath = File(file.path!);
-        fileBytes = await fileFromPath.readAsBytes();
-      }
-
-      if (fileBytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to read file. Please try again.'),
-          ),
-        );
-        return;
-      }
-
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
       final fileName = file.name;
-
-      // Check if file already exists in Firestore
+      // Check if file already exists
       final existingFiles = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .collection('medical_documents')
           .where('fileName', isEqualTo: fileName)
           .get();
-
       if (existingFiles.docs.isNotEmpty) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,12 +170,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       }
 
       // Upload to Firebase Storage
-      final storageRef = FirebaseStorage.instance.ref('medical_documents/$uid/$fileName');
-      final uploadTask = storageRef.putData(fileBytes);
-      final snapshot = await uploadTask.whenComplete(() => null);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
+      final storageRef =
+          FirebaseStorage.instance.ref('medical_documents/$uid/$fileName');
+      await storageRef.putData(fileBytes);
+      final downloadUrl = await storageRef.getDownloadURL();
 
-      // Add doc in "users/{uid}/medical_documents"
+      // Add doc in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -217,7 +192,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         const SnackBar(content: Text('File uploaded successfully!')),
       );
 
-      // Refresh docs
+      // Refresh
       setState(() {
         medicalDocuments = _fetchDocuments();
       });
@@ -229,31 +204,28 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// Decide if you want to hide the delete icon if isPTView == true
   Future<void> _deleteDocument(BuildContext context, Map<String, dynamic> doc) async {
-    try {
-      final uid = targetUid;
-      if (uid == null) return;
+    final uid = targetUid;
+    if (uid == null) return;
 
-      // If PT is viewing, do not allow delete
-      if (isPTView) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PT cannot delete this document.')),
-        );
-        return;
-      }
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
+    if (isPTView) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PT cannot delete this document.')),
       );
+      return;
+    }
 
-      // Delete from Storage
-      final storageRef = FirebaseStorage.instance.ref('medical_documents/$uid/${doc['fileName']}');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final storageRef =
+          FirebaseStorage.instance.ref('medical_documents/$uid/${doc['fileName']}');
       await storageRef.delete();
 
-      // Delete from Firestore
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -269,7 +241,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Document deleted successfully!')),
       );
-
       setState(() {
         medicalDocuments = _fetchDocuments();
       });
@@ -281,26 +252,20 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// View a document (PDF or Image)
   void _viewDocument(BuildContext context, String url, String fileType) {
     if (fileType == 'pdf') {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => PDFViewScreen(pdfUrl: url),
-        ),
+        MaterialPageRoute(builder: (_) => PDFViewScreen(pdfUrl: url)),
       );
     } else {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => ImageViewScreen(imageUrl: url),
-        ),
+        MaterialPageRoute(builder: (_) => ImageViewScreen(imageUrl: url)),
       );
     }
   }
 
-  /// Get the appropriate icon for the file type
   IconData _getFileTypeIcon(String fileType) {
     switch (fileType) {
       case 'pdf':
@@ -316,21 +281,16 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// Build a small header with the client’s name/email if PT is viewing
   Widget _buildClientHeader(BuildContext context, Map<String, dynamic> data) {
     final name = data['name'] ?? 'Unknown Name';
     final email = data['email'] ?? 'No Email';
-
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: Colors.deepPurple.shade100,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.deepPurple.shade100, width: 1),
       ),
       child: Row(
         children: [
@@ -354,10 +314,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.deepPurple.shade400,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.deepPurple.shade400),
                 ),
               ],
             ),
@@ -367,7 +324,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// Builds the documents section with a "card" style, or says "No docs" if empty
   Widget _buildDocumentsSection(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: medicalDocuments,
@@ -375,33 +331,25 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
         return Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Container(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.blueGrey.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12.0),
-              border: Border.all(
-                color: Colors.blueGrey.withOpacity(0.2),
-                width: 1,
-              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blueGrey.withOpacity(0.2), width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header: Icon + "Medical Documents"
+                // Title
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.blueGrey.withOpacity(0.2),
-                      child: Icon(
-                        Icons.folder_special,
-                        color: Colors.blueGrey.shade700,
-                        size: 24,
-                      ),
+                      child: Icon(Icons.folder_special, color: Colors.blueGrey.shade700),
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -413,32 +361,20 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 if (!snapshot.hasData || snapshot.data!.isEmpty) ...[
-                  const Text(
-                    'No documents uploaded yet.',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  const Text('No documents uploaded yet.', style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 16),
-                  // Possibly block a PT from uploading
-                  if (!isPTView) ...[
+                  if (!isPTView)
                     ElevatedButton.icon(
                       onPressed: () => _uploadFile(context),
                       icon: const Icon(Icons.upload_file),
                       label: const Text('Upload Document'),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12.0,
-                          horizontal: 16.0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
-                  ],
                 ] else ...[
-                  // Documents exist
                   _buildDocumentsList(context, snapshot.data!),
                 ],
               ],
@@ -451,7 +387,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
   Widget _buildDocumentsList(BuildContext context, List<Map<String, dynamic>> docs) {
     final visibleDocs = showAllDocuments ? docs : docs.take(3).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -462,18 +397,16 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           itemBuilder: (context, index) {
             final doc = visibleDocs[index];
             final icon = _getFileTypeIcon(doc['fileType'] ?? '');
-            final uploadDate = (doc['uploadedAt'] as Timestamp?)
-                    ?.toDate()
-                    .toString()
-                    .split(' ')[0] ??
-                'N/A';
+            final timestamp = doc['uploadedAt'] as Timestamp?;
+            final uploadDate = timestamp != null
+                ? DateFormat.yMMMd().format(timestamp.toDate())
+                : 'N/A';
 
-            // If isPTView => hide delete
             return Card(
               elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
                 leading: CircleAvatar(
@@ -485,27 +418,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 14),
                 ),
-                subtitle: Text(
-                  'Uploaded on: $uploadDate',
-                  style: const TextStyle(fontSize: 12),
-                ),
+                subtitle: Text('Uploaded on: $uploadDate', style: const TextStyle(fontSize: 12)),
                 trailing: Wrap(
-                  spacing: 12, // space between icons
+                  spacing: 12,
                   children: [
-                    // Everyone can view
                     IconButton(
                       icon: const Icon(Icons.visibility, color: Colors.green),
-                      onPressed: () {
-                        _viewDocument(context, doc['downloadUrl'] ?? '', doc['fileType'] ?? '');
-                      },
+                      onPressed: () => _viewDocument(context,
+                          doc['downloadUrl'] ?? '', doc['fileType'] ?? ''),
                     ),
-                    // Only show "delete" if not PT
                     if (!isPTView)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _deleteDocument(context, doc);
-                        },
+                        onPressed: () => _deleteDocument(context, doc),
                       ),
                   ],
                 ),
@@ -513,7 +438,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             );
           },
         ),
-        // "Show All" or "Show Less"
         if (docs.length > 3)
           TextButton(
             onPressed: () {
@@ -521,58 +445,41 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 showAllDocuments = !showAllDocuments;
               });
             },
-            child: Text(
-              showAllDocuments ? 'Show Less Documents' : 'Show All Documents',
-            ),
+            child: Text(showAllDocuments ? 'Show Less Documents' : 'Show All Documents'),
           ),
         const SizedBox(height: 16),
-
-        // Possibly block a PT from uploading more
         if (!isPTView)
           ElevatedButton.icon(
-            onPressed: () {
-              _uploadFile(context);
-            },
+            onPressed: () => _uploadFile(context),
             icon: const Icon(Icons.upload_file),
             label: const Text('Upload More Documents'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: 12.0,
-                horizontal: 16.0,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
       ],
     );
   }
 
-  /// If no medical_history data:
-  /// - If isPTView => show "No Medical Data Found" with "Return to Clients"
-  /// - Else => return the QuestionnaireScreen
   Widget _buildNoMedicalHistoryForUser() {
-    // If user has no data => just return the questionnaire immediately
+    // Just go to the questionnaire
     return const QuestionnaireScreen();
   }
 
   Widget _buildNoMedicalHistoryForPT() {
-    // If PT, show "No data found" with a return button
     return Center(
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
             child: Card(
               elevation: 4,
               color: Colors.orange.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Container(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -597,15 +504,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     ElevatedButton.icon(
                       icon: const Icon(Icons.arrow_back),
                       label: const Text('Return to Clients'),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange.shade800,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
@@ -618,40 +521,82 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
+  /// Reusable method to create a bold sub-header within the content
+  Widget _buildSectionHeader(String title, IconData icon, {Color? color}) {
+    final effectiveColor = color ?? Colors.blueGrey;
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: effectiveColor, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              color: effectiveColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A small grouping for displaying a single piece of data
+  Widget _buildDataLine({
+    required String label,
+    required String value,
+    IconData? icon,
+    Color? color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: color ?? Colors.blueGrey, size: 18),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool doProfile = isPTView;
-    final User? user = FirebaseAuth.instance.currentUser;
-
-    // Return LoginScreen if no user is logged in
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const LoginScreen();
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medical History Dashboard'),
+        title: const Text('Your Anamnesis'),
         centerTitle: true,
       ),
-      body: doProfile
-          ? // PT is viewing a client
-          FutureBuilder<Map<String, dynamic>?>(
+      body: isPTView
+          ? FutureBuilder<Map<String, dynamic>?>(
               future: clientProfile,
               builder: (context, snapshotProfile) {
                 if (snapshotProfile.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final profileData = snapshotProfile.data;
-
                 return FutureBuilder<Map<String, dynamic>?>(
                   future: medicalHistory,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
-
                     if (!snapshot.hasData || snapshot.data == null) {
-                      // No medical history doc for PT
                       return Column(
                         children: [
                           if (profileData != null)
@@ -660,397 +605,296 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                         ],
                       );
                     }
-
                     final data = snapshot.data!;
-                    return Stack(
-                      children: [
-                        NotificationListener<ScrollNotification>(
-                          onNotification: (notification) {
-                            if (notification is ScrollUpdateNotification) {
-                              if (notification.metrics.pixels > 50 && _showArrow) {
-                                setState(() {
-                                  _showArrow = false;
-                                });
-                              }
-                              if (notification.metrics.pixels <= 50 && !_showArrow) {
-                                setState(() {
-                                  _showArrow = true;
-                                });
-                              }
-                            }
-                            return true;
-                          },
-                          child: SingleChildScrollView(
-                            controller: _scrollController,
-                            child: Column(
-                              children: [
-                                if (profileData != null)
-                                  _buildClientHeader(context, profileData),
-                                // Data Cards
-                                Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    children: [
-                                      // Age / Height / Weight
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Age',
-                                              value: data.containsKey('dateOfBirth')
-                                                  ? '${calculateAge(data['dateOfBirth'])} yrs'
-                                                  : 'N/A',
-                                              icon: Icons.calendar_today,
-                                              color: Colors.blueGrey,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Height',
-                                              value: data['height'] != null
-                                                  ? '${data['height']} cm'
-                                                  : 'N/A',
-                                              icon: Icons.height,
-                                              color: Colors.blue,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Weight',
-                                              value: data['weight'] != null
-                                                  ? '${data['weight']} kg'
-                                                  : 'N/A',
-                                              icon: Icons.monitor_weight,
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Drinks Alcohol / Smokes
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Drinks Alcohol',
-                                              value: data['alcohol'] ?? 'N/A',
-                                              icon: Icons.local_drink,
-                                              color: Colors.orange,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Smokes',
-                                              value: data['smokes'] ?? 'N/A',
-                                              icon: Icons.smoking_rooms,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Sleep Time / Wake Time
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Sleep Time',
-                                              value: data['sleep_time'] ?? 'N/A',
-                                              icon: Icons.nights_stay,
-                                              color: Colors.indigo,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Wake Time',
-                                              value: data['wake_time'] ?? 'N/A',
-                                              icon: Icons.wb_sunny,
-                                              color: Colors.amber,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Goals / Training Days
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 2,
-                                            child: DataCard(
-                                              title: 'Goals',
-                                              value: data['goals'] ?? 'N/A',
-                                              icon: Icons.fitness_center,
-                                              color: Colors.purple,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Training Days',
-                                              value: data['training_days'] != null
-                                                  ? (data['training_days'] as List).join(', ')
-                                                  : 'N/A',
-                                              icon: Icons.calendar_today,
-                                              color: Colors.teal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Energetic
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: DataCard(
-                                              title: 'Energetic',
-                                              value: data['energetic'] ?? 'N/A',
-                                              icon: Icons.battery_charging_full,
-                                              color: Colors.yellow,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 32),
-                                // Documents
-                                _buildDocumentsSection(context),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (_showArrow)
-                          const Positioned(
-                            bottom: 16,
-                            left: 0,
-                            right: 0,
-                            child: Center(
-                              child: _AnimatedDownArrow(),
-                            ),
-                          ),
-                      ],
-                    );
+                    return _buildMainContent(data, profileData);
                   },
                 );
               },
             )
-          : // If it's the user's own data
-          FutureBuilder<Map<String, dynamic>?>(
+          : FutureBuilder<Map<String, dynamic>?>(
               future: medicalHistory,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                // If no medical history => show QuestionnaireScreen
                 if (!snapshot.hasData || snapshot.data == null) {
-                  // Immediately go to the questionnaire for the user
+                  // If no data, go to the questionnaire
                   return const QuestionnaireScreen();
                 }
-
-                // There's medical history => show the normal layout
                 final data = snapshot.data!;
-                return Stack(
-                  children: [
-                    NotificationListener<ScrollNotification>(
-                      onNotification: (notification) {
-                        if (notification is ScrollUpdateNotification) {
-                          if (notification.metrics.pixels > 50 && _showArrow) {
-                            setState(() {
-                              _showArrow = false;
-                            });
-                          }
-                          if (notification.metrics.pixels <= 50 && !_showArrow) {
-                            setState(() {
-                              _showArrow = true;
-                            });
-                          }
-                        }
-                        return true;
-                      },
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  // Age / Height / Weight
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Age',
-                                          value: data.containsKey('dateOfBirth')
-                                              ? '${calculateAge(data['dateOfBirth'])} yrs'
-                                              : 'N/A',
-                                          icon: Icons.calendar_today,
-                                          color: Colors.blueGrey,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Height',
-                                          value: data['height'] != null
-                                              ? '${data['height']} cm'
-                                              : 'N/A',
-                                          icon: Icons.height,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Weight',
-                                          value: data['weight'] != null
-                                              ? '${data['weight']} kg'
-                                              : 'N/A',
-                                          icon: Icons.monitor_weight,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Drinks Alcohol / Smokes
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Drinks Alcohol',
-                                          value: data['alcohol'] ?? 'N/A',
-                                          icon: Icons.local_drink,
-                                          color: Colors.orange,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Smokes',
-                                          value: data['smokes'] ?? 'N/A',
-                                          icon: Icons.smoking_rooms,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Sleep Time / Wake Time
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Sleep Time',
-                                          value: data['sleep_time'] ?? 'N/A',
-                                          icon: Icons.nights_stay,
-                                          color: Colors.indigo,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Wake Time',
-                                          value: data['wake_time'] ?? 'N/A',
-                                          icon: Icons.wb_sunny,
-                                          color: Colors.amber,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Goals / Training Days
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: DataCard(
-                                          title: 'Goals',
-                                          value: data['goals'] ?? 'N/A',
-                                          icon: Icons.fitness_center,
-                                          color: Colors.purple,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Training Days',
-                                          value: data['training_days'] != null
-                                              ? (data['training_days'] as List).join(', ')
-                                              : 'N/A',
-                                          icon: Icons.calendar_today,
-                                          color: Colors.teal,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Energetic
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: DataCard(
-                                          title: 'Energetic',
-                                          value: data['energetic'] ?? 'N/A',
-                                          icon: Icons.battery_charging_full,
-                                          color: Colors.yellow,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            // Documents
-                            _buildDocumentsSection(context),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_showArrow)
-                      const Positioned(
-                        bottom: 16,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: _AnimatedDownArrow(),
-                        ),
-                      ),
-                  ],
-                );
+                return _buildMainContent(data, null);
               },
             ),
     );
   }
+
+  /// The main method for building the entire "medical history" layout
+  Widget _buildMainContent(Map<String, dynamic> data, Map<String, dynamic>? profileData) {
+    return Stack(
+      children: [
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollUpdateNotification) {
+              if (notification.metrics.pixels > 50 && _showArrow) {
+                setState(() {
+                  _showArrow = false;
+                });
+              }
+              if (notification.metrics.pixels <= 50 && !_showArrow) {
+                setState(() {
+                  _showArrow = true;
+                });
+              }
+            }
+            return true;
+          },
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                if (isPTView && profileData != null)
+                  _buildClientHeader(context, profileData),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildAllDataSections(context, data),
+                ),
+                _buildDocumentsSection(context),
+              ],
+            ),
+          ),
+        ),
+        if (_showArrow)
+          const Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Center(child: _AnimatedDownArrow()),
+          ),
+      ],
+    );
+  }
+
+  /// Build all data sections in a single column: personal info, measures, etc.
+  Widget _buildAllDataSections(BuildContext context, Map<String, dynamic> data) {
+    final ageStr = data.containsKey('dateOfBirth')
+        ? '${calculateAge(data['dateOfBirth'])} yrs'
+        : 'N/A';
+    final profession = data['profession'] ?? 'N/A';
+    final phone = data['phone'] ?? 'N/A';
+    final injuriesOrSurgery = data['injuriesOrSurgery'] ?? 'N/A';
+    final injuriesOrSurgeryDetails = data['injuriesOrSurgeryDetails'] ?? 'N/A';
+    final spineJointMuscleIssues = data['spineJointMuscleIssues'] ?? 'N/A';
+    final spineJointMuscleDetails = data['spineJointMuscleIssuesDetails'] ?? 'N/A';
+    final pathologies = data['pathologies'] ?? 'N/A';
+    final pathologiesDetails = data['pathologiesDetails'] ?? 'N/A';
+    final asthmatic = data['asthmatic'] ?? 'N/A';
+    final water = data['waterIntake'] ?? 'N/A';
+    final breakfast = data['breakfast'] ?? 'N/A';
+    final trainingDays = data['training_days'] is List
+        ? (data['training_days'] as List).join(', ')
+        : (data['training_days'] ?? 'N/A').toString();
+    final sportsExperience = data['sportExperience'] ?? 'N/A';
+    final ptExperience = data['otherPTExperience'] ?? 'N/A';
+    final fixedShifts = data['fixedWorkShifts'] ?? 'N/A'; // yes or no
+    final gymExperience = data['gymExperience'] ?? 'N/A';
+    final preferredTime = data['preferredTime'] ?? 'N/A';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          /// SECTION: Personal Info
+          _buildSectionHeader('Personal Info', Icons.person_pin, color: Colors.blueGrey),
+          _buildDataLine(
+            label: 'Name',
+            value: data['name'] ?? 'N/A',
+            icon: Icons.person,
+            color: Colors.blueGrey,
+          ),
+          _buildDataLine(
+            label: 'Surname',
+            value: data['surname'] ?? 'N/A',
+            icon: Icons.person_outline,
+            color: Colors.blueGrey,
+          ),
+          _buildDataLine(
+            label: 'Age',
+            value: ageStr,
+            icon: Icons.cake,
+            color: Colors.blueGrey,
+          ),
+          _buildDataLine(
+            label: 'Phone',
+            value: phone,
+            icon: Icons.phone,
+            color: Colors.blueGrey,
+          ),
+          _buildDataLine(
+            label: 'Profession',
+            value: profession,
+            icon: Icons.work_outline,
+            color: Colors.blueGrey,
+          ),
+
+          /// SECTION: Physical Measurements
+          _buildSectionHeader('Physical Measurements', Icons.straighten, color: Colors.blue),
+          _buildDataLine(
+            label: 'Height',
+            value: data['height'] != null ? '${data['height']} cm' : 'N/A',
+            icon: Icons.height_outlined,
+            color: Colors.blue,
+          ),
+          _buildDataLine(
+            label: 'Weight',
+            value: data['weight'] != null ? '${data['weight']} kg' : 'N/A',
+            icon: Icons.monitor_weight_outlined,
+            color: Colors.blue,
+          ),
+
+          /// SECTION: Lifestyle & Sleep
+          _buildSectionHeader('Lifestyle & Sleep', Icons.local_drink, color: Colors.orange),
+          _buildDataLine(
+            label: 'Alcohol?',
+            value: data['alcohol'] ?? 'N/A',
+            icon: Icons.local_bar_outlined,
+            color: Colors.orange,
+          ),
+          if (data['alcohol_details'] != null && data['alcohol_details'].toString().isNotEmpty)
+            _buildDataLine(
+              label: 'Alcohol Details',
+              value: data['alcohol_details'] ?? '',
+              icon: Icons.details_outlined,
+              color: Colors.orange,
+            ),
+          _buildDataLine(
+            label: 'Smokes?',
+            value: data['smokes'] ?? 'N/A',
+            icon: Icons.smoking_rooms_outlined,
+            color: Colors.red,
+          ),
+          if (data['smoking_details'] != null && data['smoking_details'].toString().isNotEmpty)
+            _buildDataLine(
+              label: 'Smoking Details',
+              value: data['smoking_details'] ?? '',
+              icon: Icons.description_outlined,
+              color: Colors.red,
+            ),
+          _buildDataLine(
+            label: 'Water Intake',
+            value: water,
+            icon: Icons.water_drop_outlined,
+            color: Colors.lightBlue,
+          ),
+          _buildDataLine(
+            label: 'Sleep Time',
+            value: data['sleep_time'] ?? 'N/A',
+            icon: Icons.nights_stay_outlined,
+            color: Colors.indigo,
+          ),
+          _buildDataLine(
+            label: 'Wake Time',
+            value: data['wake_time'] ?? 'N/A',
+            icon: Icons.wb_sunny_outlined,
+            color: Colors.amber,
+          ),
+          _buildDataLine(
+            label: 'Feels Energetic?',
+            value: data['energetic'] ?? 'N/A',
+            icon: Icons.battery_charging_full_outlined,
+            color: Colors.yellow[700],
+          ),
+          _buildDataLine(
+            label: 'Breakfast (typical)',
+            value: breakfast,
+            icon: Icons.free_breakfast_outlined,
+            color: Colors.brown[300],
+          ),
+
+          /// SECTION: Health & Injury History
+          _buildSectionHeader('Health & Injury History', Icons.health_and_safety, color: Colors.redAccent),
+          _buildDataLine(
+            label: 'Spine, Joint, or Muscle Issues',
+            value: spineJointMuscleIssues,
+            icon: Icons.accessibility_new_outlined,
+            color: Colors.redAccent,
+          ),
+          _buildDataLine(
+            label: 'Any Injuries or Surgery',
+            value: injuriesOrSurgery,
+            icon: Icons.local_hospital_outlined,
+            color: Colors.redAccent,
+          ),
+          if (injuriesOrSurgery == 'Yes' && injuriesOrSurgeryDetails != 'N/A')
+            _buildDataLine(
+              label: 'Injuries/Surgery Details',
+              value: injuriesOrSurgeryDetails,
+              icon: Icons.details_outlined,
+              color: Colors.redAccent,
+            ),
+          _buildDataLine(
+            label: 'Any Pathologies',
+            value: pathologies,
+            icon: Icons.warning_amber_outlined,
+            color: Colors.redAccent,
+          ),
+          if (pathologies != 'N/A' && pathologiesDetails != 'N/A')
+            _buildDataLine(
+              label: 'Pathologies Details',
+              value: pathologiesDetails,
+              icon: Icons.details_outlined,
+              color: Colors.redAccent,
+            ),
+          _buildDataLine(
+            label: 'Asthmatic Subject?',
+            value: asthmatic,
+            icon: Icons.air_outlined,
+            color: Colors.redAccent,
+          ),
+
+          /// SECTION: Training Experience & Goals
+          _buildSectionHeader('Training Experience & Goals', Icons.fitness_center, color: Colors.purple),
+          _buildDataLine(
+            label: 'Sports Experience',
+            value: sportsExperience,
+            icon: Icons.sports_soccer_outlined,
+            color: Colors.purple,
+          ),
+          _buildDataLine(
+            label: 'Past Personal Trainer Exp.',
+            value: ptExperience,
+            icon: Icons.person_pin_outlined,
+            color: Colors.purple,
+          ),
+          _buildDataLine(
+            label: 'Fixed Shifts at Work?',
+            value: fixedShifts,
+            icon: Icons.schedule_outlined,
+            color: Colors.deepPurpleAccent,
+          ),
+          _buildDataLine(
+            label: 'Goals',
+            value: data['goals'] ?? 'N/A',
+            icon: Icons.flag_outlined,
+            color: Colors.purple,
+          ),
+          _buildDataLine(
+            label: 'Training Days',
+            value: trainingDays,
+            icon: Icons.calendar_today_outlined,
+            color: Colors.teal,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// A small widget that bounces the arrow up/down
+/// A small widget that bounces the arrow up/down if user hasn’t scrolled yet
 class _AnimatedDownArrow extends StatefulWidget {
-  const _AnimatedDownArrow({Key? key}) : super(key: key);
+  const _AnimatedDownArrow();
 
   @override
   __AnimatedDownArrowState createState() => __AnimatedDownArrowState();
@@ -1067,12 +911,9 @@ class __AnimatedDownArrowState extends State<_AnimatedDownArrow>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
-    )..repeat(reverse: true); // up and down
+    )..repeat(reverse: true);
     _animation = Tween<double>(begin: 0, end: 10).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
 
@@ -1089,11 +930,7 @@ class __AnimatedDownArrowState extends State<_AnimatedDownArrow>
       builder: (_, __) {
         return Transform.translate(
           offset: Offset(0, _animation.value),
-          child: const Icon(
-            Icons.arrow_downward,
-            color: Colors.grey,
-            size: 32,
-          ),
+          child: const Icon(Icons.arrow_downward, color: Colors.grey, size: 32),
         );
       },
     );

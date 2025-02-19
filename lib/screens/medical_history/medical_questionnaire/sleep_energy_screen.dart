@@ -23,8 +23,12 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     if (widget.data['wake_time'] != null) {
       wakeTime = _parseTime(widget.data['wake_time']);
     }
-    feelsEnergetic = widget.data['energetic'] == 'Yes';
-    widget.data['energetic'] = 'No'; // Default value
+    // If 'energetic' is "Yes", we set the toggle to true. Otherwise default "No".
+    feelsEnergetic = (widget.data['energetic'] == 'Yes');
+    // If not "Yes", set it to "No"
+    if (widget.data['energetic'] == null) {
+      widget.data['energetic'] = 'No';
+    }
   }
 
   TimeOfDay _parseTime(String time) {
@@ -108,7 +112,8 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         onTimeSelected: (time) {
                           setState(() {
                             wakeTime = time;
-                            widget.data['wake_time'] = '${time.format(context)}';
+                            // example storing as "HH:MM"
+                            widget.data['wake_time'] = '${time.hour}:${time.minute}';
                           });
                         },
                       ),
@@ -133,22 +138,19 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         width: MediaQuery.of(context).size.width * 0.75, // 75% width button
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            if (sleepTime != null && wakeTime != null) {
-                              if (!feelsEnergetic) {
-                                widget.data['energetic'] = 'No';
-                              }
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      TrainingGoalsScreen(data: widget.data),
-                                ),
-                              );
-                            } else {
+                            if (sleepTime == null || wakeTime == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Please select your sleep and wake-up times.')),
                               );
+                              return;
                             }
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TrainingGoalsScreen(data: widget.data),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.arrow_forward, color: Colors.white),
                           label: const Text('Next'),
