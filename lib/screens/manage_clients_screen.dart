@@ -100,61 +100,144 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   void _showAddClientDialog() {
     showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (context) => Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25.0)),
-              // ... (rest of the dialog code remains unchanged)
-            ));
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Client Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _addClient();
+                },
+                child: const Text("Add Client"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
+  /// Updated: Show popup options for a client
   void _showClientOptions(
-      BuildContext context, String clientUid, String clientEmail) {
+    BuildContext context,
+    String clientUid,
+    String clientName,
+    String clientSurname,
+  ) {
     showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          // ... (rest of the dialog code remains unchanged)
-        ));
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _searchController.dispose();
-    super.dispose();
+          title: Text(
+            '$clientName $clientSurname',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.medical_services, color: Colors.red),
+                title: const Text('Medical'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                title: const Text('Training'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: Colors.blue),
+                title: const Text('Info'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AccountScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.straighten, color: Colors.green),
+                title: const Text('Measurements'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MeasurementsScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildClientList(List<dynamic> clientIds) {
     return ListView.builder(
-        itemCount: clientIds.length,
-        itemBuilder: (context, index) {
-          final clientId = clientIds[index];
-          return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(clientId)
-                  .get(),
-              builder: (context, clientSnapshot) {
-                if (clientSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const ListTile(title: LinearProgressIndicator());
-                }
-                if (!clientSnapshot.hasData || clientSnapshot.data == null) {
-                  return const SizedBox.shrink();
-                }
-                final clientData =
+      itemCount: clientIds.length,
+      itemBuilder: (context, index) {
+        final clientId = clientIds[index];
+        return FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .doc(clientId)
+              .get(),
+          builder: (context, clientSnapshot) {
+            if (clientSnapshot.connectionState == ConnectionState.waiting) {
+              return const ListTile(title: LinearProgressIndicator());
+            }
+            if (!clientSnapshot.hasData || clientSnapshot.data == null) {
+              return const SizedBox.shrink();
+            }
+            final clientData =
                 clientSnapshot.data!.data() as Map<String, dynamic>;
-                final clientName =
-                    '${clientData['name'] ?? ''} ${clientData['surname'] ?? ''}';
-
-                if (!clientName.toLowerCase().contains(_searchQuery)) {
-                  return const SizedBox.shrink();
-                }
-                return _buildClientTile(clientData, clientSnapshot.data!.id);
-              });
-        });
+            final clientName = clientData['name'] ?? 'Unknown';
+            final clientSurname = clientData['surname'] ?? 'Unknown';
+            if (!('$clientName $clientSurname').toLowerCase().contains(_searchQuery)) {
+              return const SizedBox.shrink();
+            }
+            return _buildClientTile(clientData, clientSnapshot.data!.id);
+          },
+        );
+      },
+    );
   }
 
   Widget _buildClientTile(Map<String, dynamic> clientData, String clientUid) {
@@ -167,10 +250,18 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           ),
           onBackgroundImageError: (_, __) => const Icon(Icons.person),
         ),
-        title: Text('${clientData['name'] ?? ''} ${clientData['surname'] ?? ''}'),
+        title: Text(
+          '${clientData['name'] ?? ''} ${clientData['surname'] ?? ''}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(clientData['email'] ?? 'No Email'),
-        onTap: () =>
-            _showClientOptions(context, clientUid, clientData['email'] ?? ''),
+        onTap: () => _showClientOptions(
+          context,
+          clientUid,
+          clientData['name'] ?? 'Unknown',
+          clientData['surname'] ?? 'Unknown',
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.remove_circle, color: Colors.red),
           onPressed: () => _removeClient(clientUid),
@@ -178,7 +269,6 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       ),
     );
   }
-
 
   Widget _buildPaymentsTable(List<dynamic> clientIds) {
     return FutureBuilder<Map<String, Map<String, dynamic>>>(
@@ -190,7 +280,6 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-
         final paymentDataMap = snapshot.data!;
         return _buildEditableDataTable(paymentDataMap, clientIds);
       },
@@ -212,7 +301,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     return paymentDataMap;
   }
 
-  Widget _buildEditableDataTable(Map<String, Map<String, dynamic>> paymentDataMap, List<dynamic> clientIds) {
+  Widget _buildEditableDataTable(
+      Map<String, Map<String, dynamic>> paymentDataMap, List<dynamic> clientIds) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
@@ -232,7 +322,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             return DataRow(cells: [
               DataCell(FutureBuilder<String>(
                   future: clientNameFuture,
-                  builder: (context, nameSnapshot) => Text(nameSnapshot.data ?? 'Loading...'))),
+                  builder: (context, nameSnapshot) =>
+                      Text(nameSnapshot.data ?? 'Loading...'))),
               DataCell(_buildEditableField(clientId, 'amount', paymentData['amount'])),
               DataCell(_buildEditableDateField(clientId, 'date', paymentData['date'])),
               DataCell(_buildEditableField(clientId, 'method', paymentData['method'])),
@@ -249,29 +340,28 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   Widget _buildEditableField(String documentId, String field, dynamic value) {
     return TextFormField(
-        initialValue: value?.toString() ?? '',
-        onChanged: (newValue) =>
-            _updatePaymentField(documentId, field, newValue),
-        decoration: const InputDecoration(border: InputBorder.none));
+      initialValue: value?.toString() ?? '',
+      onChanged: (newValue) => _updatePaymentField(documentId, field, newValue),
+      decoration: const InputDecoration(border: InputBorder.none),
+    );
   }
 
-  Widget _buildEditableDateField(
-      String documentId, String field, Timestamp? value) {
+  Widget _buildEditableDateField(String documentId, String field, Timestamp? value) {
     final formattedDate =
         value != null ? DateFormat('yyyy-MM-dd').format(value.toDate()) : '';
     return TextFormField(
-        initialValue: formattedDate,
-        onChanged: (newValue) {
-          try {
-            final newDate = DateFormat('yyyy-MM-dd').parse(newValue);
-            _updatePaymentField(
-                documentId, field, Timestamp.fromDate(newDate));
-          } catch (_) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Invalid date format. Use yyyy-MM-dd')));
-          }
-        },
-        decoration: const InputDecoration(border: InputBorder.none));
+      initialValue: formattedDate,
+      onChanged: (newValue) {
+        try {
+          final newDate = DateFormat('yyyy-MM-dd').parse(newValue);
+          _updatePaymentField(documentId, field, Timestamp.fromDate(newDate));
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Invalid date format. Use yyyy-MM-dd')));
+        }
+      },
+      decoration: const InputDecoration(border: InputBorder.none),
+    );
   }
 
   void _updatePaymentField(String paymentId, String field, dynamic newValue) {
@@ -284,9 +374,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         .set({field: newValue}, SetOptions(merge: true));
   }
 
-
   Future<String> _getClientNameFromUid(String clientUid) async {
-    final userSnapshot = await FirebaseFirestore.instance.collection('users').doc(clientUid).get();
+    final userSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(clientUid).get();
     if (userSnapshot.exists) {
       final userData = userSnapshot.data() as Map<String, dynamic>;
       return '${userData['name'] ?? ''} ${userData['surname'] ?? ''}';
@@ -294,41 +384,51 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     return 'Unknown Client';
   }
 
-
   void _editPayment(String clientId) {
-    // Implement your edit logic here, using clientId to identify the client
+    // Implement your edit logic here
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Manage Clients'),
-          centerTitle: true,
-          actions: [
-            Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Switch(
-                        value: _showPayments,
-                        onChanged: (newValue) =>
-                            setState(() => _showPayments = newValue))))
-          ]),
+        title: const Text('Manage Clients'),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Switch(
+                value: _showPayments,
+                onChanged: (newValue) => setState(() => _showPayments = newValue),
+              ),
+            ),
+          )
+        ],
+      ),
       floatingActionButton: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-                onPressed: _showAddClientDialog, child: const Icon(Icons.add)),
-            const SizedBox(height: 8),
-            const Text('Add New Client',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))
-          ]),
-      body: Column(children: [
-        Padding(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+              onPressed: _showAddClientDialog, child: const Icon(Icons.add)),
+          const SizedBox(height: 8),
+          const Text('Add New Client',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
                 controller: _searchController,
@@ -337,45 +437,49 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 decoration: const InputDecoration(
                     labelText: 'Search Clients',
                     prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder()))),
-        const SizedBox(height: 8),
-        Padding(
+                    border: OutlineInputBorder())),
+          ),
+          const SizedBox(height: 8),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [Text(_showPayments ? 'Payments' : 'Manage Clients')])),
-        const Divider(),
-        Expanded(
+                children: [Text(_showPayments ? 'Payments' : 'Manage Clients')]),
+          ),
+          const Divider(),
+          Expanded(
             child: FutureBuilder<DocumentSnapshot>(
-          future: currentUser == null
-              ? null
-              : FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(currentUser.uid)
-                  .get(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data == null) {
-              return const Center(child: Text('No data found.'));
-            }
+              future: currentUser == null
+                  ? null
+                  : FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(currentUser.uid)
+                      .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return const Center(child: Text('No data found.'));
+                }
 
-            final ptData = snapshot.data!.data() as Map<String, dynamic>;
-            final clientIds = ptData['clients'] as List<dynamic>? ?? [];
+                final ptData = snapshot.data!.data() as Map<String, dynamic>;
+                final clientIds = ptData['clients'] as List<dynamic>? ?? [];
 
-            if (clientIds.isEmpty && !_showPayments) {
-              return const Center(child: Text('No clients to manage.'));
-            } else if (clientIds.isEmpty && _showPayments) {
-              return const Center(child: Text('No payment data available.'));
-            }
+                if (clientIds.isEmpty && !_showPayments) {
+                  return const Center(child: Text('No clients to manage.'));
+                } else if (clientIds.isEmpty && _showPayments) {
+                  return const Center(child: Text('No payment data available.'));
+                }
 
-            return _showPayments
-                ? _buildPaymentsTable(clientIds)
-                : _buildClientList(clientIds);
-          },
-        ))
-      ]),
+                return _showPayments
+                    ? _buildPaymentsTable(clientIds)
+                    : _buildClientList(clientIds);
+              },
+            ),
+          )
+        ],
+      ),
     );
   }
 }
