@@ -50,11 +50,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   /// A list of uploaded documents (PDFs/images) for the user
   late Future<List<Map<String, dynamic>>> medicalDocuments;
 
-  /// If a PT is viewing a client, fetch that client’s minimal profile
+  /// If a PT is viewing, fetch that client’s minimal profile
   late Future<Map<String, dynamic>?> clientProfile;
 
-  final ScrollController _scrollController = ScrollController();
-  bool _showArrow = true;
   bool showAllDocuments = false;
 
   bool get isPTView => widget.clientUid != null;
@@ -570,107 +568,41 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const LoginScreen();
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Anamnesis'),
-        centerTitle: true,
-      ),
-      body: isPTView
-          ? FutureBuilder<Map<String, dynamic>?>(
-              future: clientProfile,
-              builder: (context, snapshotProfile) {
-                if (snapshotProfile.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final profileData = snapshotProfile.data;
-                return FutureBuilder<Map<String, dynamic>?>(
-                  future: medicalHistory,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data == null) {
-                      return Column(
-                        children: [
-                          if (profileData != null)
-                            _buildClientHeader(context, profileData),
-                          Expanded(child: _buildNoMedicalHistoryForPT()),
-                        ],
-                      );
-                    }
-                    final data = snapshot.data!;
-                    return _buildMainContent(data, profileData);
-                  },
-                );
-              },
-            )
-          : FutureBuilder<Map<String, dynamic>?>(
-              future: medicalHistory,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data == null) {
-                  // If no data, go to the questionnaire
-                  return const QuestionnaireScreen();
-                }
-                final data = snapshot.data!;
-                return _buildMainContent(data, null);
-              },
-            ),
-    );
-  }
-
-  /// The main method for building the entire "medical history" layout
-  Widget _buildMainContent(Map<String, dynamic> data, Map<String, dynamic>? profileData) {
-    return Stack(
-      children: [
-        NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (notification is ScrollUpdateNotification) {
-              if (notification.metrics.pixels > 50 && _showArrow) {
-                setState(() {
-                  _showArrow = false;
-                });
-              }
-              if (notification.metrics.pixels <= 50 && !_showArrow) {
-                setState(() {
-                  _showArrow = true;
-                });
-              }
-            }
-            return true;
-          },
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
+  /// Build the tabbed content – one tab for all the medical history data,
+  /// and another for the documents section.
+  Widget _buildTabsContent(Map<String, dynamic> data, Map<String, dynamic>? profileData) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          // If PT view and profile data is available, show the header above the tabs
+          if (profileData != null) _buildClientHeader(context, profileData),
+          TabBar(
+            tabs: const [
+              Tab(text: 'History'),
+              Tab(text: 'Documents'),
+            ],
+            labelColor: Theme.of(context).primaryColor,
+            indicatorColor: Theme.of(context).primaryColor,
+            unselectedLabelColor: Colors.grey,
+          ),
+          Expanded(
+            child: TabBarView(
               children: [
-                if (isPTView && profileData != null)
-                  _buildClientHeader(context, profileData),
-                Padding(
+                // History tab: shows all the medical history sections
+                SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: _buildAllDataSections(context, data),
                 ),
-                _buildDocumentsSection(context),
+                // Documents tab: shows the medical documents section
+                SingleChildScrollView(
+                  child: _buildDocumentsSection(context),
+                ),
               ],
             ),
           ),
-        ),
-        if (_showArrow)
-          const Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: Center(child: _AnimatedDownArrow()),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -695,7 +627,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         : (data['training_days'] ?? 'N/A').toString();
     final sportsExperience = data['sportExperience'] ?? 'N/A';
     final ptExperience = data['otherPTExperience'] ?? 'N/A';
-    final fixedShifts = data['fixedWorkShifts'] ?? 'N/A'; // yes or no
+    final fixedShifts = data['fixedWorkShifts'] ?? 'N/A';
     final gymExperience = data['gymExperience'] ?? 'N/A';
     final preferredTime = data['preferredTime'] ?? 'N/A';
 
@@ -821,6 +753,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             icon: Icons.accessibility_new_outlined,
             color: Colors.redAccent,
           ),
+          if (spineJointMuscleIssues == 'Yes' && spineJointMuscleDetails != 'N/A')
+            _buildDataLine(
+              label: 'Spine/Joint/Muscle Details',
+              value: spineJointMuscleDetails,
+              icon: Icons.details_outlined,
+              color: Colors.redAccent,
+            ),
           _buildDataLine(
             label: 'Any Injuries or Surgery',
             value: injuriesOrSurgery,
@@ -886,8 +825,78 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             icon: Icons.calendar_today_outlined,
             color: Colors.teal,
           ),
+          _buildDataLine(
+            label: 'Gym Experience',
+            value: gymExperience,
+            icon: Icons.fitness_center,
+            color: Colors.purple,
+          ),
+          _buildDataLine(
+            label: 'Preferred Time',
+            value: preferredTime,
+            icon: Icons.access_time,
+            color: Colors.deepPurpleAccent,
+          ),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const LoginScreen();
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Your Anamnesis'),
+        centerTitle: true,
+      ),
+      body: isPTView
+          ? FutureBuilder<Map<String, dynamic>?>(
+              future: clientProfile,
+              builder: (context, snapshotProfile) {
+                if (snapshotProfile.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final profileData = snapshotProfile.data;
+                return FutureBuilder<Map<String, dynamic>?>(
+                  future: medicalHistory,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return Column(
+                        children: [
+                          if (profileData != null)
+                            _buildClientHeader(context, profileData),
+                          Expanded(child: _buildNoMedicalHistoryForPT()),
+                        ],
+                      );
+                    }
+                    final data = snapshot.data!;
+                    return _buildTabsContent(data, profileData);
+                  },
+                );
+              },
+            )
+          : FutureBuilder<Map<String, dynamic>?>(
+              future: medicalHistory,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data == null) {
+                  // If no data, go to the questionnaire
+                  return const QuestionnaireScreen();
+                }
+                final data = snapshot.data!;
+                return _buildTabsContent(data, null);
+              },
+            ),
     );
   }
 }

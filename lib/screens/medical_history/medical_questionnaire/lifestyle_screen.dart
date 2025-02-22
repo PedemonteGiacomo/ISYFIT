@@ -269,9 +269,14 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             });
                           },
                         ),
-
+                        if (widget.data['breakfast'] == 'Yes')
+                          _buildTextInput(
+                            'What do you have for breakfast?',
+                            breakfastDetailsController,
+                            (value) => widget.data['breakfastDetails'] = value,
+                          ),
                         const SizedBox(height: 32),
-
+                        
                         ElevatedButton(
                           onPressed: () {
                             Navigator.push(
