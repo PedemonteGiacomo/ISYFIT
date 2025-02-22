@@ -621,7 +621,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     final pathologiesDetails = data['pathologiesDetails'] ?? 'N/A';
     final asthmatic = data['asthmatic'] ?? 'N/A';
     final water = data['waterIntake'] ?? 'N/A';
-    final breakfast = data['breakfast'] ?? 'N/A';
+    var breakfast = data['breakfast'] ?? 'N/A';
+    if (breakfast == 'Yes' && data['breakfastDetails'] != null) {
+      breakfast += ' (${data['breakfastDetails']})';
+    }
     final trainingDays = data['training_days'] is List
         ? (data['training_days'] as List).join(', ')
         : (data['training_days'] ?? 'N/A').toString();
