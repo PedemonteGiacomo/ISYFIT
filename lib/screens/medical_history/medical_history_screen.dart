@@ -14,7 +14,6 @@ import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
-import 'package:isyfit/widgets/data_card.dart';
 
 /// A helper function to parse and calculate the user’s age from a dateOfBirth string.
 int calculateAge(String? dateOfBirth) {
@@ -23,7 +22,8 @@ int calculateAge(String? dateOfBirth) {
     final dob = DateTime.parse(dateOfBirth);
     final today = DateTime.now();
     int age = today.year - dob.year;
-    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
       age--;
     }
     return age;
@@ -202,16 +202,18 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Future<void> _deleteDocument(BuildContext context, Map<String, dynamic> doc) async {
+  Future<void> _deleteDocument(
+      BuildContext context, Map<String, dynamic> doc) async {
     final uid = targetUid;
     if (uid == null) return;
 
-    if (isPTView) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PT cannot delete this document.')),
-      );
-      return;
-    }
+    // Remove the PT-check here so both PT and clients can delete documents.
+    // if (isPTView) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('PT cannot delete this document.')),
+    //   );
+    //   return;
+    // }
 
     showDialog(
       context: context,
@@ -220,8 +222,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
 
     try {
-      final storageRef =
-          FirebaseStorage.instance.ref('medical_documents/$uid/${doc['fileName']}');
+      final storageRef = FirebaseStorage.instance
+          .ref('medical_documents/$uid/${doc['fileName']}');
       await storageRef.delete();
 
       final querySnapshot = await FirebaseFirestore.instance
@@ -279,283 +281,502 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Widget _buildClientHeader(BuildContext context, Map<String, dynamic> data) {
-    final name = data['name'] ?? 'Unknown Name';
-    final email = data['email'] ?? 'No Email';
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.deepPurple.shade100, width: 1),
-      ),
+  // Widget _buildClientHeader(BuildContext context, Map<String, dynamic> data) {
+  //   final name = data['name'] ?? 'Unknown Name';
+  //   final email = data['email'] ?? 'No Email';
+  //   return Container(
+  //     margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.deepPurple.shade50,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: Colors.deepPurple.shade100, width: 1),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         CircleAvatar(
+  //           radius: 24,
+  //           backgroundColor: Colors.deepPurple.shade100,
+  //           child: const Icon(Icons.person, color: Colors.white),
+  //         ),
+  //         const SizedBox(width: 12),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 name,
+  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                       fontWeight: FontWeight.bold,
+  //                       color: Colors.deepPurple.shade700,
+  //                     ),
+  //               ),
+  //               const SizedBox(height: 4),
+  //               Text(
+  //                 email,
+  //                 style: TextStyle(
+  //                     fontSize: 14, color: Colors.deepPurple.shade400),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  /// ---------------------------------------
+  /// DASHBOARD-STYLE UI BUILDERS
+  /// ---------------------------------------
+
+  Widget _buildDashboardHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.deepPurple.shade100,
-            child: const Icon(Icons.person, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade700,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  style: TextStyle(fontSize: 14, color: Colors.deepPurple.shade400),
-                ),
-              ],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [          
+          // If PT is viewing, show the client’s name
+          if (isPTView)
+            FutureBuilder<Map<String, dynamic>?>(
+              future: clientProfile,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox();
+                }
+                final profileData = snapshot.data;
+                if (profileData == null) return const SizedBox();
+                return Text(
+                  '${profileData['name']} ${profileData['surname'] ?? ''} (${profileData['email']})',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
             ),
+          // else show "Your anamnesis" for the user
+          if (!isPTView)
+            const Text(
+              'Your Anamnesis',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// A row of cards showing height, weight, and age at a glance
+  // Widget _buildQuickStatsRow(Map<String, dynamic> data) {
+  //   final height = data['height'] != null ? '${data['height']} cm' : 'N/A';
+  //   final weight = data['weight'] != null ? '${data['weight']} kg' : 'N/A';
+  //   final ageStr = data.containsKey('dateOfBirth')
+  //       ? '${calculateAge(data['dateOfBirth'])} yrs'
+  //       : 'N/A';
+
+  //   return SingleChildScrollView(
+  //     scrollDirection: Axis.horizontal,
+  //     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+  //     child: Row(
+  //       children: [
+  //         _buildInfoCard(icon: Icons.height, label: 'Height', value: height),
+  //         const SizedBox(width: 12),
+  //         _buildInfoCard(icon: Icons.monitor_weight, label: 'Weight', value: weight),
+  //         const SizedBox(width: 12),
+  //         _buildInfoCard(icon: Icons.cake_outlined, label: 'Age', value: ageStr),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Widget _buildInfoCard({
+  //   required IconData icon,
+  //   required String label,
+  //   required String value,
+  // }) {
+  //   return Container(
+  //     width: 120,
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.shade200,
+  //           blurRadius: 6,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         Icon(icon, color: Colors.blueAccent, size: 28),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           label,
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             color: Colors.grey.shade600,
+  //             fontWeight: FontWeight.w600,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Text(
+  //           value,
+  //           style: const TextStyle(
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  /// PERSONAL INFO TAB
+  Widget _buildPersonalInfoTab(Map<String, dynamic> data) {
+    final name = data['name'] ?? 'N/A';
+    final surname = data['surname'] ?? 'N/A';
+    final phone = data['phone'] ?? 'N/A';
+    final profession = data['profession'] ?? 'N/A';
+    final height = data['height'] != null ? '${data['height']} cm' : 'N/A';
+    final weight = data['weight'] != null ? '${data['weight']} kg' : 'N/A';
+    final ageStr = data.containsKey('dateOfBirth')
+        ? '${calculateAge(data['dateOfBirth'])} yrs'
+        : 'N/A';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Quick stats at the top
+          // _buildQuickStatsRow(data),
+          const SizedBox(height: 16),
+
+          // A card with personal details
+          _buildSectionCard(
+            title: 'Personal Details',
+            icon: Icons.person_pin,
+            children: [
+              _buildDataLine(label: 'Name', value: name),
+              _buildDataLine(label: 'Surname', value: surname),
+              _buildDataLine(label: 'Age', value: ageStr),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildSectionCard(
+            title: 'Contact Details',
+            icon: Icons.phone,
+            children: [
+              _buildDataLine(label: 'Phone', value: phone),
+              _buildDataLine(label: 'Profession', value: profession),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildSectionCard(
+            title: 'Physical Stats',
+            icon: Icons.accessibility,
+            children: [
+              _buildDataLine(label: 'Height', value: height),
+              _buildDataLine(label: 'Weight', value: weight),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDocumentsSection(BuildContext context) {
+  /// LIFESTYLE TAB
+  Widget _buildLifestyleTab(Map<String, dynamic> data) {
+    final alcohol = data['alcohol'] ?? 'N/A';
+    final alcoholDetails = data['alcohol_details'] ?? '';
+    final smokes = data['smokes'] ?? 'N/A';
+    final smokingDetails = data['smoking_details'] ?? '';
+    final waterIntake = data['waterIntake'] ?? 'N/A';
+    final sleepTime = data['sleep_time'] ?? 'N/A';
+    final wakeTime = data['wake_time'] ?? 'N/A';
+    final energetic = data['energetic'] ?? 'N/A';
+    var breakfast = data['breakfast'] ?? 'N/A';
+    if (breakfast == 'Yes' && data['breakfastDetails'] != null) {
+      breakfast += ' (${data['breakfastDetails']})';
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _buildSectionCard(
+            title: 'Lifestyle & Habits',
+            icon: Icons.local_drink,
+            children: [
+              _buildDataLine(label: 'Alcohol?', value: alcohol),
+              if (alcoholDetails.isNotEmpty)
+                _buildDataLine(label: 'Alcohol Details', value: alcoholDetails),
+              _buildDataLine(label: 'Smokes?', value: smokes),
+              if (smokingDetails.isNotEmpty)
+                _buildDataLine(label: 'Smoking Details', value: smokingDetails),
+              _buildDataLine(label: 'Water Intake', value: waterIntake),
+              _buildDataLine(label: 'Breakfast', value: breakfast),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSectionCard(
+            title: 'Sleep & Energy',
+            icon: Icons.nights_stay,
+            children: [
+              _buildDataLine(label: 'Sleep Time', value: sleepTime),
+              _buildDataLine(label: 'Wake Time', value: wakeTime),
+              _buildDataLine(label: 'Feels Energetic?', value: energetic),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// TRAINING TAB
+  Widget _buildTrainingTab(Map<String, dynamic> data) {
+    final injuriesOrSurgery = data['injuriesOrSurgery'] ?? 'N/A';
+    final injuriesOrSurgeryDetails = data['injuriesOrSurgeryDetails'] ?? 'N/A';
+    final spineIssues = data['spineJointMuscleIssues'] ?? 'N/A';
+    final spineDetails = data['spineJointMuscleIssuesDetails'] ?? 'N/A';
+    final pathologies = data['pathologies'] ?? 'N/A';
+    final pathologiesDetails = data['pathologiesDetails'] ?? 'N/A';
+    final asthmatic = data['asthmatic'] ?? 'N/A';
+
+    final sportsExperience = data['sportExperience'] ?? 'N/A';
+    final otherPTExperience = data['otherPTExperience'] ?? 'N/A';
+    final fixedShifts = data['fixedWorkShifts'] ?? 'N/A';
+    final goals = data['goals'] ?? 'N/A';
+    final gymExperience = data['gymExperience'] ?? 'N/A';
+    final trainingDays = data['training_days'] is List
+        ? (data['training_days'] as List).join(', ')
+        : (data['training_days'] ?? 'N/A').toString();
+    final preferredTime = data['preferredTime'] ?? 'N/A';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Injuries & Health card
+          _buildSectionCard(
+            title: 'Health & Injury History',
+            icon: Icons.health_and_safety,
+            children: [
+              _buildDataLine(
+                  label: 'Spine/Joint/Muscle Issues', value: spineIssues),
+              if (spineIssues == 'Yes' && spineDetails != 'N/A')
+                _buildDataLine(label: 'Details', value: spineDetails),
+              _buildDataLine(
+                  label: 'Injuries or Surgery', value: injuriesOrSurgery),
+              if (injuriesOrSurgery == 'Yes' &&
+                  injuriesOrSurgeryDetails != 'N/A')
+                _buildDataLine(
+                    label: 'Details', value: injuriesOrSurgeryDetails),
+              _buildDataLine(label: 'Pathologies', value: pathologies),
+              if (pathologies != 'N/A' && pathologiesDetails != 'N/A')
+                _buildDataLine(
+                    label: 'Pathologies Details', value: pathologiesDetails),
+              _buildDataLine(label: 'Asthmatic Subject?', value: asthmatic),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Training experience card
+          _buildSectionCard(
+            title: 'Training Experience & Goals',
+            icon: Icons.fitness_center,
+            children: [
+              _buildDataLine(
+                  label: 'Sports Experience', value: sportsExperience),
+              _buildDataLine(
+                  label: 'Other PT Experience', value: otherPTExperience),
+              _buildDataLine(label: 'Fixed Shifts?', value: fixedShifts),
+              _buildDataLine(label: 'Gym Experience', value: gymExperience),
+              _buildDataLine(label: 'Training Days', value: trainingDays),
+              _buildDataLine(label: 'Preferred Time', value: preferredTime),
+              _buildDataLine(label: 'Goals', value: goals),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// DOCUMENTS TAB
+  Widget _buildDocumentsTab(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: medicalDocuments,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+        final docs = snapshot.data ?? [];
+        if (docs.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('No documents uploaded yet.',
+                      style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 16),
+                  // Always show the Upload button
+                  ElevatedButton.icon(
+                    onPressed: () => _uploadFile(context),
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Upload Document'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final visibleDocs = showAllDocuments ? docs : docs.take(3).toList();
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blueGrey.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blueGrey.withOpacity(0.2), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.blueGrey.withOpacity(0.2),
-                      child: Icon(Icons.folder_special, color: Colors.blueGrey.shade700),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Medical Documents',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (!snapshot.hasData || snapshot.data!.isEmpty) ...[
-                  const Text('No documents uploaded yet.', style: TextStyle(fontSize: 16)),
-                  const SizedBox(height: 16),
-                  if (!isPTView)
-                    ElevatedButton.icon(
-                      onPressed: () => _uploadFile(context),
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Upload Document'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                ] else ...[
-                  _buildDocumentsList(context, snapshot.data!),
+          child: Column(
+            children: [
+              // Title + Upload button (always shown)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Medical Documents',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _uploadFile(context),
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Upload'),
+                  ),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              // Documents list
+              Expanded(
+                child: ListView.builder(
+                  itemCount: visibleDocs.length,
+                  itemBuilder: (context, index) {
+                    final doc = visibleDocs[index];
+                    final icon = _getFileTypeIcon(doc['fileType'] ?? '');
+                    final timestamp = doc['uploadedAt'] as Timestamp?;
+                    final uploadDate = timestamp != null
+                        ? DateFormat.yMMMd().format(timestamp.toDate())
+                        : 'N/A';
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue.withOpacity(0.1),
+                          child: Icon(icon, color: Colors.blue),
+                        ),
+                        title: Text(
+                          doc['fileName'] ?? '',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          'Uploaded on: $uploadDate',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: Wrap(
+                          spacing: 12,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.visibility,
+                                  color: Colors.green),
+                              onPressed: () => _viewDocument(
+                                context,
+                                doc['downloadUrl'] ?? '',
+                                doc['fileType'] ?? '',
+                              ),
+                            ),
+                            // Always show the delete button for PT and client alike.
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteDocument(context, doc),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Show more / Show less toggle
+              if (docs.length > 3)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAllDocuments = !showAllDocuments;
+                    });
+                  },
+                  child: Text(showAllDocuments
+                      ? 'Show Less Documents'
+                      : 'Show All Documents'),
+                ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildDocumentsList(BuildContext context, List<Map<String, dynamic>> docs) {
-    final visibleDocs = showAllDocuments ? docs : docs.take(3).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: visibleDocs.length,
-          itemBuilder: (context, index) {
-            final doc = visibleDocs[index];
-            final icon = _getFileTypeIcon(doc['fileType'] ?? '');
-            final timestamp = doc['uploadedAt'] as Timestamp?;
-            final uploadDate = timestamp != null
-                ? DateFormat.yMMMd().format(timestamp.toDate())
-                : 'N/A';
-
-            return Card(
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  child: Icon(icon, color: Colors.blue),
-                ),
-                title: Text(
-                  doc['fileName'] ?? '',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                subtitle: Text('Uploaded on: $uploadDate', style: const TextStyle(fontSize: 12)),
-                trailing: Wrap(
-                  spacing: 12,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.visibility, color: Colors.green),
-                      onPressed: () => _viewDocument(context,
-                          doc['downloadUrl'] ?? '', doc['fileType'] ?? ''),
-                    ),
-                    if (!isPTView)
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteDocument(context, doc),
-                      ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-        if (docs.length > 3)
-          TextButton(
-            onPressed: () {
-              setState(() {
-                showAllDocuments = !showAllDocuments;
-              });
-            },
-            child: Text(showAllDocuments ? 'Show Less Documents' : 'Show All Documents'),
-          ),
-        const SizedBox(height: 16),
-        if (!isPTView)
-          ElevatedButton.icon(
-            onPressed: () => _uploadFile(context),
-            icon: const Icon(Icons.upload_file),
-            label: const Text('Upload More Documents'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildNoMedicalHistoryForUser() {
-    // Just go to the questionnaire
-    return const QuestionnaireScreen();
-  }
-
-  Widget _buildNoMedicalHistoryForPT() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Card(
-              elevation: 4,
-              color: Colors.orange.shade50,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.warning, size: 48, color: Colors.orange.shade600),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No Medical Data Found',
-                      style: TextStyle(
-                        color: Colors.orange.shade800,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'This user has not yet provided any medical history.\n'
-                      'Please check back later, or ask the user to fill out their details.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Return to Clients'),
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.shade800,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+  /// Helper card layout for sections
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueGrey.shade100),
       ),
-    );
-  }
-
-  /// Reusable method to create a bold sub-header within the content
-  Widget _buildSectionHeader(String title, IconData icon, {Color? color}) {
-    final effectiveColor = color ?? Colors.blueGrey;
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: effectiveColor, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              color: effectiveColor,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Icon(icon, color: Colors.blueGrey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.blueGrey.shade800,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
+          const Divider(height: 20),
+          ...children,
         ],
       ),
     );
   }
 
-  /// A small grouping for displaying a single piece of data
-  Widget _buildDataLine({
-    required String label,
-    required String value,
-    IconData? icon,
-    Color? color,
-  }) {
+  Widget _buildDataLine({required String label, required String value}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          if (icon != null) ...[
-            Icon(icon, color: color ?? Colors.blueGrey, size: 18),
-            const SizedBox(width: 8),
-          ],
           Expanded(
             child: Text(
               label,
@@ -568,280 +789,96 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// Build the tabbed content – one tab for all the medical history data,
-  /// and another for the documents section.
-  Widget _buildTabsContent(Map<String, dynamic> data, Map<String, dynamic>? profileData) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          // If PT view and profile data is available, show the header above the tabs
-          if (profileData != null) _buildClientHeader(context, profileData),
-          TabBar(
-            tabs: const [
-              Tab(text: 'History'),
-              Tab(text: 'Documents'),
-            ],
-            labelColor: Theme.of(context).primaryColor,
-            indicatorColor: Theme.of(context).primaryColor,
-            unselectedLabelColor: Colors.grey,
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                // History tab: shows all the medical history sections
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildAllDataSections(context, data),
-                ),
-                // Documents tab: shows the medical documents section
-                SingleChildScrollView(
-                  child: _buildDocumentsSection(context),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  /// If no medical history for the user (non-PT), show the questionnaire
+  Widget _buildNoMedicalHistoryForUser() {
+    return const QuestionnaireScreen();
   }
 
-  /// Build all data sections in a single column: personal info, measures, etc.
-  Widget _buildAllDataSections(BuildContext context, Map<String, dynamic> data) {
-    final ageStr = data.containsKey('dateOfBirth')
-        ? '${calculateAge(data['dateOfBirth'])} yrs'
-        : 'N/A';
-    final profession = data['profession'] ?? 'N/A';
-    final phone = data['phone'] ?? 'N/A';
-    final injuriesOrSurgery = data['injuriesOrSurgery'] ?? 'N/A';
-    final injuriesOrSurgeryDetails = data['injuriesOrSurgeryDetails'] ?? 'N/A';
-    final spineJointMuscleIssues = data['spineJointMuscleIssues'] ?? 'N/A';
-    final spineJointMuscleDetails = data['spineJointMuscleIssuesDetails'] ?? 'N/A';
-    final pathologies = data['pathologies'] ?? 'N/A';
-    final pathologiesDetails = data['pathologiesDetails'] ?? 'N/A';
-    final asthmatic = data['asthmatic'] ?? 'N/A';
-    final water = data['waterIntake'] ?? 'N/A';
-    var breakfast = data['breakfast'] ?? 'N/A';
-    if (breakfast == 'Yes' && data['breakfastDetails'] != null) {
-      breakfast += ' (${data['breakfastDetails']})';
-    }
-    final trainingDays = data['training_days'] is List
-        ? (data['training_days'] as List).join(', ')
-        : (data['training_days'] ?? 'N/A').toString();
-    final sportsExperience = data['sportExperience'] ?? 'N/A';
-    final ptExperience = data['otherPTExperience'] ?? 'N/A';
-    final fixedShifts = data['fixedWorkShifts'] ?? 'N/A';
-    final gymExperience = data['gymExperience'] ?? 'N/A';
-    final preferredTime = data['preferredTime'] ?? 'N/A';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          /// SECTION: Personal Info
-          _buildSectionHeader('Personal Info', Icons.person_pin, color: Colors.blueGrey),
-          _buildDataLine(
-            label: 'Name',
-            value: data['name'] ?? 'N/A',
-            icon: Icons.person,
-            color: Colors.blueGrey,
-          ),
-          _buildDataLine(
-            label: 'Surname',
-            value: data['surname'] ?? 'N/A',
-            icon: Icons.person_outline,
-            color: Colors.blueGrey,
-          ),
-          _buildDataLine(
-            label: 'Age',
-            value: ageStr,
-            icon: Icons.cake,
-            color: Colors.blueGrey,
-          ),
-          _buildDataLine(
-            label: 'Phone',
-            value: phone,
-            icon: Icons.phone,
-            color: Colors.blueGrey,
-          ),
-          _buildDataLine(
-            label: 'Profession',
-            value: profession,
-            icon: Icons.work_outline,
-            color: Colors.blueGrey,
-          ),
-
-          /// SECTION: Physical Measurements
-          _buildSectionHeader('Physical Measurements', Icons.straighten, color: Colors.blue),
-          _buildDataLine(
-            label: 'Height',
-            value: data['height'] != null ? '${data['height']} cm' : 'N/A',
-            icon: Icons.height_outlined,
-            color: Colors.blue,
-          ),
-          _buildDataLine(
-            label: 'Weight',
-            value: data['weight'] != null ? '${data['weight']} kg' : 'N/A',
-            icon: Icons.monitor_weight_outlined,
-            color: Colors.blue,
-          ),
-
-          /// SECTION: Lifestyle & Sleep
-          _buildSectionHeader('Lifestyle & Sleep', Icons.local_drink, color: Colors.orange),
-          _buildDataLine(
-            label: 'Alcohol?',
-            value: data['alcohol'] ?? 'N/A',
-            icon: Icons.local_bar_outlined,
-            color: Colors.orange,
-          ),
-          if (data['alcohol_details'] != null && data['alcohol_details'].toString().isNotEmpty)
-            _buildDataLine(
-              label: 'Alcohol Details',
-              value: data['alcohol_details'] ?? '',
-              icon: Icons.details_outlined,
-              color: Colors.orange,
+  /// If no medical history for PT’s client, show a simple message
+  Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
+    return Column(
+      children: [
+        //if (profileData != null) _buildClientHeader(context, profileData),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Card(
+                    elevation: 4,
+                    color: Colors.orange.shade50,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.warning,
+                              size: 48, color: Colors.orange.shade600),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No Medical Data Found',
+                            style: TextStyle(
+                              color: Colors.orange.shade800,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This user has not yet provided any medical history.\n'
+                            'You can fill out the questionnaire for them or ask the user to do it.',
+                            textAlign: TextAlign.center,
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.black87),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.assignment_outlined),
+                            label: const Text('Fill Questionnaire'),
+                            onPressed: () {
+                              // Navigate to the questionnaire flow but pass the clientUid
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => QuestionnaireScreen(
+                                    clientUid: widget.clientUid,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text('Return to Clients'),
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade800,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          _buildDataLine(
-            label: 'Smokes?',
-            value: data['smokes'] ?? 'N/A',
-            icon: Icons.smoking_rooms_outlined,
-            color: Colors.red,
           ),
-          if (data['smoking_details'] != null && data['smoking_details'].toString().isNotEmpty)
-            _buildDataLine(
-              label: 'Smoking Details',
-              value: data['smoking_details'] ?? '',
-              icon: Icons.description_outlined,
-              color: Colors.red,
-            ),
-          _buildDataLine(
-            label: 'Water Intake',
-            value: water,
-            icon: Icons.water_drop_outlined,
-            color: Colors.lightBlue,
-          ),
-          _buildDataLine(
-            label: 'Sleep Time',
-            value: data['sleep_time'] ?? 'N/A',
-            icon: Icons.nights_stay_outlined,
-            color: Colors.indigo,
-          ),
-          _buildDataLine(
-            label: 'Wake Time',
-            value: data['wake_time'] ?? 'N/A',
-            icon: Icons.wb_sunny_outlined,
-            color: Colors.amber,
-          ),
-          _buildDataLine(
-            label: 'Feels Energetic?',
-            value: data['energetic'] ?? 'N/A',
-            icon: Icons.battery_charging_full_outlined,
-            color: Colors.yellow[700],
-          ),
-          _buildDataLine(
-            label: 'Breakfast (typical)',
-            value: breakfast,
-            icon: Icons.free_breakfast_outlined,
-            color: Colors.brown[300],
-          ),
-
-          /// SECTION: Health & Injury History
-          _buildSectionHeader('Health & Injury History', Icons.health_and_safety, color: Colors.redAccent),
-          _buildDataLine(
-            label: 'Spine, Joint, or Muscle Issues',
-            value: spineJointMuscleIssues,
-            icon: Icons.accessibility_new_outlined,
-            color: Colors.redAccent,
-          ),
-          if (spineJointMuscleIssues == 'Yes' && spineJointMuscleDetails != 'N/A')
-            _buildDataLine(
-              label: 'Spine/Joint/Muscle Details',
-              value: spineJointMuscleDetails,
-              icon: Icons.details_outlined,
-              color: Colors.redAccent,
-            ),
-          _buildDataLine(
-            label: 'Any Injuries or Surgery',
-            value: injuriesOrSurgery,
-            icon: Icons.local_hospital_outlined,
-            color: Colors.redAccent,
-          ),
-          if (injuriesOrSurgery == 'Yes' && injuriesOrSurgeryDetails != 'N/A')
-            _buildDataLine(
-              label: 'Injuries/Surgery Details',
-              value: injuriesOrSurgeryDetails,
-              icon: Icons.details_outlined,
-              color: Colors.redAccent,
-            ),
-          _buildDataLine(
-            label: 'Any Pathologies',
-            value: pathologies,
-            icon: Icons.warning_amber_outlined,
-            color: Colors.redAccent,
-          ),
-          if (pathologies != 'N/A' && pathologiesDetails != 'N/A')
-            _buildDataLine(
-              label: 'Pathologies Details',
-              value: pathologiesDetails,
-              icon: Icons.details_outlined,
-              color: Colors.redAccent,
-            ),
-          _buildDataLine(
-            label: 'Asthmatic Subject?',
-            value: asthmatic,
-            icon: Icons.air_outlined,
-            color: Colors.redAccent,
-          ),
-
-          /// SECTION: Training Experience & Goals
-          _buildSectionHeader('Training Experience & Goals', Icons.fitness_center, color: Colors.purple),
-          _buildDataLine(
-            label: 'Sports Experience',
-            value: sportsExperience,
-            icon: Icons.sports_soccer_outlined,
-            color: Colors.purple,
-          ),
-          _buildDataLine(
-            label: 'Past Personal Trainer Exp.',
-            value: ptExperience,
-            icon: Icons.person_pin_outlined,
-            color: Colors.purple,
-          ),
-          _buildDataLine(
-            label: 'Fixed Shifts at Work?',
-            value: fixedShifts,
-            icon: Icons.schedule_outlined,
-            color: Colors.deepPurpleAccent,
-          ),
-          _buildDataLine(
-            label: 'Goals',
-            value: data['goals'] ?? 'N/A',
-            icon: Icons.flag_outlined,
-            color: Colors.purple,
-          ),
-          _buildDataLine(
-            label: 'Training Days',
-            value: trainingDays,
-            icon: Icons.calendar_today_outlined,
-            color: Colors.teal,
-          ),
-          _buildDataLine(
-            label: 'Gym Experience',
-            value: gymExperience,
-            icon: Icons.fitness_center,
-            color: Colors.purple,
-          ),
-          _buildDataLine(
-            label: 'Preferred Time',
-            value: preferredTime,
-            icon: Icons.access_time,
-            color: Colors.deepPurpleAccent,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -852,97 +889,146 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       return const LoginScreen();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Anamnesis'),
-        centerTitle: true,
-      ),
-      body: isPTView
-          ? FutureBuilder<Map<String, dynamic>?>(
-              future: clientProfile,
-              builder: (context, snapshotProfile) {
-                if (snapshotProfile.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final profileData = snapshotProfile.data;
-                return FutureBuilder<Map<String, dynamic>?>(
-                  future: medicalHistory,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data == null) {
-                      return Column(
-                        children: [
-                          if (profileData != null)
-                            _buildClientHeader(context, profileData),
-                          Expanded(child: _buildNoMedicalHistoryForPT()),
-                        ],
-                      );
-                    }
-                    final data = snapshot.data!;
-                    return _buildTabsContent(data, profileData);
-                  },
+    // If we are a PT viewing a client’s data:
+    if (isPTView) {
+      return FutureBuilder<Map<String, dynamic>?>(
+        future: clientProfile,
+        builder: (context, snapshotProfile) {
+          if (snapshotProfile.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final profileData = snapshotProfile.data;
+
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: medicalHistory,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
                 );
-              },
-            )
-          : FutureBuilder<Map<String, dynamic>?>(
-              future: medicalHistory,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data == null) {
-                  // If no data, go to the questionnaire
-                  return const QuestionnaireScreen();
-                }
-                final data = snapshot.data!;
-                return _buildTabsContent(data, null);
-              },
+              }
+              // If no medical data for this client
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Medical History Dashboard'),
+                    centerTitle: true,
+                  ),
+                  body: _buildNoMedicalHistoryForPT(profileData),
+                );
+              }
+              final data = snapshot.data!;
+
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text('Medical History Dashboard'),
+                  centerTitle: true,
+                ),
+                body: Column(
+                  children: [
+                    _buildDashboardHeader(),
+                    //if (profileData != null) _buildClientHeader(context, profileData),
+                    Expanded(
+                      child: DefaultTabController(
+                        length: 4,
+                        child: Column(
+                          children: [
+                            TabBar(
+                              labelColor: Theme.of(context).primaryColor,
+                              unselectedLabelColor: Colors.grey,
+                              indicatorColor: Theme.of(context).primaryColor,
+                              tabs: const [
+                                Tab(text: 'Personal Info'),
+                                Tab(text: 'Lifestyle'),
+                                Tab(text: 'Training'),
+                                Tab(text: 'Documents'),
+                              ],
+                            ),
+                            Expanded(
+                              child: TabBarView(
+                                children: [
+                                  _buildPersonalInfoTab(data),
+                                  _buildLifestyleTab(data),
+                                  _buildTrainingTab(data),
+                                  _buildDocumentsTab(context),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    // If we are viewing our own data
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: medicalHistory,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        // If no data, show the questionnaire
+        if (!snapshot.hasData || snapshot.data == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Medical History Dashboard'),
+              centerTitle: true,
             ),
-    );
-  }
-}
-
-/// A small widget that bounces the arrow up/down if user hasn’t scrolled yet
-class _AnimatedDownArrow extends StatefulWidget {
-  const _AnimatedDownArrow();
-
-  @override
-  __AnimatedDownArrowState createState() => __AnimatedDownArrowState();
-}
-
-class __AnimatedDownArrowState extends State<_AnimatedDownArrow>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0, end: 10).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (_, __) {
-        return Transform.translate(
-          offset: Offset(0, _animation.value),
-          child: const Icon(Icons.arrow_downward, color: Colors.grey, size: 32),
+            body: _buildNoMedicalHistoryForUser(),
+          );
+        }
+        final data = snapshot.data!;
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Medical History Dashboard'),
+            centerTitle: true,
+          ),
+          body: Column(
+            children: [
+              _buildDashboardHeader(),
+              Expanded(
+                child: DefaultTabController(
+                  length: 4,
+                  child: Column(
+                    children: [
+                      TabBar(
+                        labelColor: Theme.of(context).primaryColor,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorColor: Theme.of(context).primaryColor,
+                        tabs: const [
+                          Tab(text: 'Personal Info'),
+                          Tab(text: 'Lifestyle'),
+                          Tab(text: 'Training'),
+                          Tab(text: 'Documents'),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _buildPersonalInfoTab(data),
+                            _buildLifestyleTab(data),
+                            _buildTrainingTab(data),
+                            _buildDocumentsTab(context),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

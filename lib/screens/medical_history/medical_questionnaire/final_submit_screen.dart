@@ -5,7 +5,13 @@ import 'package:isyfit/screens/base_screen.dart';
 
 class FinalSubmitScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  const FinalSubmitScreen({Key? key, required this.data}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const FinalSubmitScreen({
+    Key? key,
+    required this.data,
+    this.clientUid, // <-- Accept in constructor
+  }) : super(key: key);
 
   @override
   _FinalSubmitScreenState createState() => _FinalSubmitScreenState();
@@ -58,7 +64,7 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Summary of Data in Rows of Two
+                      // Summary of Data
                       _buildDataSummary(),
                       const SizedBox(height: 24),
 
@@ -113,7 +119,7 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
               child: _buildDataCard(entries[i]),
             ),
             if (i + 1 < entries.length)
-              const SizedBox(width: 16), // Space between cards
+              const SizedBox(width: 16),
             if (i + 1 < entries.length)
               Expanded(
                 child: _buildDataCard(entries[i + 1]),
@@ -121,12 +127,10 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
           ],
         ),
       );
-      rows.add(const SizedBox(height: 16)); // Space between rows
+      rows.add(const SizedBox(height: 16));
     }
 
-    return Column(
-      children: rows,
-    );
+    return Column(children: rows);
   }
 
   Widget _buildDataCard(MapEntry<String, dynamic> entry) {
@@ -174,25 +178,23 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
         throw Exception('User not logged in');
       }
 
+      // Decide which UID to use: the PT’s client or the logged-in user
+      final targetUid = widget.clientUid ?? user.uid;
+
       await FirebaseFirestore.instance
           .collection('medical_history')
-          .doc(user.uid)
+          .doc(targetUid)
           .set(widget.data);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data saved successfully!'), backgroundColor: Colors.green,),
+        const SnackBar(
+          content: Text('Data saved successfully!'),
+          backgroundColor: Colors.green,
+        ),
       );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => Scaffold(
-        body: const BaseScreen(),
-        // bottomNavigationBar: navbar.NavigationBar(
-        //   currentIndex: 1,
-        //   onIndexChanged: (index) {
-        //     // Handle navigation based on the index
-        //   },
-        // ),
-          ),
+          builder: (context) => const BaseScreen(),
         ),
       );
     } catch (e) {

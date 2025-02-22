@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'physical_measurements_screen.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
-  const PersonalInformationScreen({Key? key}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const PersonalInformationScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
   _PersonalInformationScreenState createState() =>
@@ -18,7 +20,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   String? phone;
   String? dateOfBirth;
   String? role;
-  String? profession; // <-- ADDED for the question: "Che professione?"
+  String? profession;
 
   bool isLoading = true;
 
@@ -28,31 +30,33 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     _loadUserData();
   }
 
+  /// If clientUid != null, load the data for that user. Otherwise, load current user’s data.
   Future<void> _loadUserData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
+      final userIdToLoad = widget.clientUid ?? user?.uid; 
+      if (userIdToLoad != null) {
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
-            .doc(user.uid)
+            .doc(userIdToLoad)
             .get();
         final data = userDoc.data();
 
         setState(() {
-          email = user.email;
+          email = data?['email'];
           name = data?['name'];
           surname = data?['surname'];
           phone = data?['phone'];
           dateOfBirth = data?['dateOfBirth'];
           role = data?['role'];
-          profession = data?['profession']; // Attempt to retrieve from Firestore
+          profession = data?['profession'];
           isLoading = false;
         });
+      } else {
+        setState(() => isLoading = false);
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading user data: $e')),
       );
@@ -99,7 +103,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'This section displays your personal details as stored in the system.',
+                        'This section displays personal details as stored in the system.',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
@@ -109,7 +113,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Name',
                               name ?? 'N/A',
@@ -118,7 +121,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Surname',
                               surname ?? 'N/A',
@@ -131,7 +133,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Email',
                               email ?? 'N/A',
@@ -141,11 +142,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const SizedBox(width: 16),
                       Row(
                         children: [
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Phone',
                               phone ?? 'N/A',
@@ -158,7 +157,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Date of Birth',
                               dateOfBirth ?? 'N/A',
@@ -167,7 +165,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            flex: 1,
                             child: _buildFieldWithIcon(
                               'Role',
                               role ?? 'N/A',
@@ -177,37 +174,39 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // ADDED: Profession
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Profession',
-                              profession ?? 'N/A',
-                              Icons.work_outline,
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   children: [
+                      //     Expanded(
+                      //       child: _buildFieldWithIcon(
+                      //         'Profession',
+                      //         profession ?? 'N/A',
+                      //         Icons.work_outline,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
 
                       const SizedBox(height: 32),
-                      // Next Button
+                      // Next Button -> Pass clientUid forward
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5, // 75% width button
+                        width: MediaQuery.of(context).size.width * 0.5,
                         child: ElevatedButton.icon(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PhysicalMeasurementsScreen(data: {
-                                  'name': name,
-                                  'surname': surname,
-                                  'email': email,
-                                  'phone': phone,
-                                  'dateOfBirth': dateOfBirth,
-                                  'role': role,
-                                  'profession': profession, // pass this forward
-                                }),
+                                builder: (context) => PhysicalMeasurementsScreen(
+                                  data: {
+                                    'name': name,
+                                    'surname': surname,
+                                    'email': email,
+                                    'phone': phone,
+                                    'dateOfBirth': dateOfBirth,
+                                    'role': role,
+                                    // 'profession': profession,
+                                  },
+                                  clientUid: widget.clientUid, // Pass forward
+                                ),
                               ),
                             );
                           },
@@ -219,7 +218,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            foregroundColor: Colors.white, // Set text color to white
+                            foregroundColor: Colors.white,
                           ),
                         ),
                       ),
@@ -249,20 +248,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
             ),

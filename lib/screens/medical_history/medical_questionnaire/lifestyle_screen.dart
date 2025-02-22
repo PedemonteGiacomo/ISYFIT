@@ -3,7 +3,13 @@ import 'sleep_energy_screen.dart';
 
 class LifestyleScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  const LifestyleScreen({Key? key, required this.data}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const LifestyleScreen({
+    Key? key,
+    required this.data,
+    this.clientUid, // <-- Accept in constructor
+  }) : super(key: key);
 
   @override
   _LifestyleScreenState createState() => _LifestyleScreenState();
@@ -44,7 +50,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     alcoholDetailsController.text = widget.data['alcohol_details'] ?? '';
     smokingDetailsController.text = widget.data['smoking_details'] ?? '';
     waterIntakeController.text = widget.data['waterIntake'];
-    spineJointMuscleDetailsController.text = widget.data['spineJointMuscleDetails'] ?? '';
+    spineJointMuscleDetailsController.text = widget.data['spineJointMuscleIssuesDetails'] ?? '';
     injuriesOrSurgeryDetailsController.text = widget.data['injuriesOrSurgeryDetails'] ?? '';
     pathologiesDetailsController.text = widget.data['pathologiesDetails'] ?? '';
     breakfastDetailsController.text = widget.data['breakfastDetails'] ?? '';
@@ -58,32 +64,8 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     spineJointMuscleDetailsController.dispose();
     injuriesOrSurgeryDetailsController.dispose();
     pathologiesDetailsController.dispose();
+    breakfastDetailsController.dispose();
     super.dispose();
-  }
-
-  Widget _buildToggleOption({
-    required String label,
-    required bool value,
-    required IconData icon,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return SwitchListTile(
-      title: Text(label),
-      value: value,
-      secondary: Icon(icon),
-      onChanged: onChanged,
-    );
-  }
-
-  Widget _buildTextInput(String label, TextEditingController controller, ValueChanged<String> onChanged) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(),
-      ),
-      onChanged: onChanged,
-    );
   }
 
   @override
@@ -178,7 +160,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             (value) => widget.data['smoking_details'] = value,
                           ),
                         const SizedBox(height: 24),
-                        // make this having a bottle icon that could range from 0.5 to 5 with 0.5 increments
+
                         _buildTextInput(
                           'How much water do you drink daily?',
                           waterIntakeController,
@@ -258,6 +240,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
+
                         _buildToggleOption(
                           label: 'Do you have breakfast daily?',
                           value: widget.data['breakfast'] == 'Yes',
@@ -276,13 +259,16 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                             (value) => widget.data['breakfastDetails'] = value,
                           ),
                         const SizedBox(height: 32),
-                        
+
                         ElevatedButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SleepEnergyScreen(data: widget.data),
+                                builder: (context) => SleepEnergyScreen(
+                                  data: widget.data,
+                                  clientUid: widget.clientUid, // <-- pass forward
+                                ),
                               ),
                             );
                           },
@@ -297,6 +283,35 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildToggleOption({
+    required String label,
+    required bool value,
+    required IconData icon,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SwitchListTile(
+      title: Text(label),
+      value: value,
+      secondary: Icon(icon),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildTextInput(
+    String label,
+    TextEditingController controller,
+    ValueChanged<String> onChanged,
+  ) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      onChanged: onChanged,
     );
   }
 }

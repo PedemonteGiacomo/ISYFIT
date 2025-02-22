@@ -3,7 +3,13 @@ import 'training_goals_screen.dart';
 
 class SleepEnergyScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  const SleepEnergyScreen({Key? key, required this.data}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const SleepEnergyScreen({
+    Key? key,
+    required this.data,
+    this.clientUid, // <-- Accept in constructor
+  }) : super(key: key);
 
   @override
   _SleepEnergyScreenState createState() => _SleepEnergyScreenState();
@@ -23,12 +29,8 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     if (widget.data['wake_time'] != null) {
       wakeTime = _parseTime(widget.data['wake_time']);
     }
-    // If 'energetic' is "Yes", we set the toggle to true. Otherwise default "No".
     feelsEnergetic = (widget.data['energetic'] == 'Yes');
-    // If not "Yes", set it to "No"
-    if (widget.data['energetic'] == null) {
-      widget.data['energetic'] = 'No';
-    }
+    widget.data['energetic'] ??= 'No';
   }
 
   TimeOfDay _parseTime(String time) {
@@ -38,7 +40,11 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     return TimeOfDay(hour: hour, minute: minute);
   }
 
-  Future<void> _selectTime(BuildContext context, TimeOfDay? initialTime, Function(TimeOfDay) onTimeSelected) async {
+  Future<void> _selectTime(
+    BuildContext context,
+    TimeOfDay? initialTime,
+    Function(TimeOfDay) onTimeSelected,
+  ) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: initialTime ?? TimeOfDay.now(),
@@ -112,7 +118,6 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         onTimeSelected: (time) {
                           setState(() {
                             wakeTime = time;
-                            // example storing as "HH:MM"
                             widget.data['wake_time'] = '${time.hour}:${time.minute}';
                           });
                         },
@@ -135,12 +140,14 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
 
                       // Next Button
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.75, // 75% width button
+                        width: MediaQuery.of(context).size.width * 0.75,
                         child: ElevatedButton.icon(
                           onPressed: () {
                             if (sleepTime == null || wakeTime == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please select your sleep and wake-up times.')),
+                                const SnackBar(
+                                  content: Text('Please select your sleep and wake-up times.'),
+                                ),
                               );
                               return;
                             }
@@ -148,7 +155,10 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => TrainingGoalsScreen(data: widget.data),
+                                builder: (context) => TrainingGoalsScreen(
+                                  data: widget.data,
+                                  clientUid: widget.clientUid, // <-- pass forward
+                                ),
                               ),
                             );
                           },
@@ -175,8 +185,13 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     );
   }
 
-  Widget _buildTimePicker(BuildContext context,
-      {required String label, required TimeOfDay? time, required IconData icon, required Function(TimeOfDay) onTimeSelected}) {
+  Widget _buildTimePicker(
+    BuildContext context, {
+    required String label,
+    required TimeOfDay? time,
+    required IconData icon,
+    required Function(TimeOfDay) onTimeSelected,
+  }) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue, size: 24),
@@ -196,9 +211,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      time != null
-                          ? '${time.format(context)}'
-                          : label,
+                      time != null ? time.format(context) : label,
                       style: TextStyle(
                         fontSize: 14,
                         color: time != null ? Colors.black : Colors.grey,
@@ -235,10 +248,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                Text(label, style: const TextStyle(fontSize: 14)),
                 Switch(
                   value: value,
                   onChanged: onChanged,

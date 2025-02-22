@@ -3,7 +3,13 @@ import 'final_submit_screen.dart';
 
 class TrainingGoalsScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  const TrainingGoalsScreen({Key? key, required this.data}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const TrainingGoalsScreen({
+    Key? key,
+    required this.data,
+    this.clientUid, // <-- Accept in constructor
+  }) : super(key: key);
 
   @override
   _TrainingGoalsScreenState createState() => _TrainingGoalsScreenState();
@@ -24,11 +30,9 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
   @override
   void initState() {
     super.initState();
-    // existing
     goalsController.text = widget.data['goals'] ?? '';
     selectedDays.addAll(widget.data['training_days'] ?? []);
 
-    // new
     sportExpController.text = widget.data['sportExperience'] ?? '';
     gymExpController.text = widget.data['gymExperience'] ?? '';
     otherPTExpController.text = widget.data['otherPTExperience'] ?? '';
@@ -89,7 +93,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // 1) Esperienze sportive dilettantistiche/professionistiche
+                        // Esperienze sportive
                         _buildTextInput(
                           'Esperienze sportive?',
                           'Dilettantistiche, professionistiche, etc.',
@@ -98,7 +102,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 2) Hai già esperienza in sala pesi?
+                        // Esperienza sala pesi
                         _buildTextInput(
                           'Esperienza sala pesi?',
                           'Se sì, quanto tempo fa e per quanto?',
@@ -107,7 +111,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 3) Esperienza con altri PT?
+                        // Altri PT
                         _buildTextInput(
                           'Altri Personal Trainer in passato?',
                           'Come ti sei trovato?',
@@ -116,11 +120,11 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 4) Quante volte a settimana?
+                        // Quante volte a settimana
                         _buildTimesPerWeekDropdown(),
                         const SizedBox(height: 24),
 
-                        // 5) Goals
+                        // Goals
                         _buildTextInput(
                           'What are your training goals?',
                           'E.g., fitness, strength, hypertrophy, etc.',
@@ -129,7 +133,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 6) Preferred Training Days
+                        // Preferred training days
                         _buildToggleButtonGroup(
                           label: 'Preferred training days',
                           options: [
@@ -147,7 +151,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 7) Orario preferito
+                        // Orario preferito
                         _buildTextInput(
                           'Orario preferito',
                           'Mattina? Pomeriggio? Sera?',
@@ -163,14 +167,15 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
                                 _formKey.currentState?.save();
-                                // Save the timesPerWeek also
                                 widget.data['timesPerWeek'] = timesPerWeek;
 
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        FinalSubmitScreen(data: widget.data),
+                                    builder: (context) => FinalSubmitScreen(
+                                      data: widget.data,
+                                      clientUid: widget.clientUid, // <-- pass forward
+                                    ),
                                   ),
                                 );
                               }
@@ -254,10 +259,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8.0,

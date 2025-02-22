@@ -3,7 +3,13 @@ import 'lifestyle_screen.dart';
 
 class PhysicalMeasurementsScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  const PhysicalMeasurementsScreen({Key? key, required this.data}) : super(key: key);
+  final String? clientUid; // <-- Add this
+
+  const PhysicalMeasurementsScreen({
+    Key? key,
+    required this.data,
+    this.clientUid, // <-- Accept it in constructor
+  }) : super(key: key);
 
   @override
   _PhysicalMeasurementsScreenState createState() =>
@@ -72,7 +78,7 @@ class _PhysicalMeasurementsScreenState
                         ),
                         const SizedBox(height: 24),
 
-                        // Form Fields in a Single Row
+                        // Form Fields
                         Row(
                           children: [
                             Expanded(
@@ -108,8 +114,10 @@ class _PhysicalMeasurementsScreenState
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        LifestyleScreen(data: widget.data),
+                                    builder: (context) => LifestyleScreen(
+                                      data: widget.data,
+                                      clientUid: widget.clientUid, // <-- pass forward
+                                    ),
                                   ),
                                 );
                               }

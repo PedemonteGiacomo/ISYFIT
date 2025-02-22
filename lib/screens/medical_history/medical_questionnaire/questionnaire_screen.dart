@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'personal_information_screen.dart';
 
 class QuestionnaireScreen extends StatelessWidget {
-  const QuestionnaireScreen({Key? key}) : super(key: key);
+  final String? clientUid;  // <-- Add this
+  const QuestionnaireScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(title: const Text('Welcome')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -30,16 +30,21 @@ class QuestionnaireScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'This questionnaire will help us understand your background, lifestyle, and goals. '
-                    'Please take a few minutes to complete it. Thank you for your time!',
+                    'This questionnaire will help us understand background, lifestyle, and goals. '
+                    'Please take a few minutes to complete it.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
+                      // Navigate to PersonalInformationScreen, passing clientUid
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const PersonalInformationScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => PersonalInformationScreen(
+                            clientUid: clientUid,
+                          ),
+                        ),
                       );
                     },
                     child: const Text('Start'),
