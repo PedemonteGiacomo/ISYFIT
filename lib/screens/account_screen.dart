@@ -131,10 +131,9 @@ class _AccountScreenState extends State<AccountScreen> {
   /// Log out only if it's the user’s own account
   Future<void> _logout() async {
     await _auth.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const BaseScreen()),
-    );
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false);
   }
 
   /// Save changes to Firestore
@@ -221,8 +220,9 @@ class _AccountScreenState extends State<AccountScreen> {
                         radius: 50,
                         backgroundImage: _profileImageUrl != null
                             ? NetworkImage(_profileImageUrl!)
-                            : const AssetImage('assets/avatar_placeholder.png')
-                                as ImageProvider,
+                            // Use DiceBear as fallback if there's no custom image
+                            : NetworkImage(
+                                'https://api.dicebear.com/6.x/avataaars-neutral/png?seed=Katherine&flip=true'),
                         backgroundColor: Colors.grey[200],
                       ),
                     ),
@@ -233,7 +233,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         children: [
                           Text(
                             _name != null
-                                ? '$_name' + (_surname != null ? ' $_surname' : '')
+                                ? '$_name' +
+                                    (_surname != null ? ' $_surname' : '')
                                 : 'Welcome, Loading...',
                             style: textTheme.headlineSmall,
                           ),
@@ -372,8 +373,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       radius: 50,
                       backgroundImage: _profileImageUrl != null
                           ? NetworkImage(_profileImageUrl!)
-                          : const AssetImage('assets/avatar_placeholder.png')
-                              as ImageProvider,
+                          // Use DiceBear fallback
+                          : NetworkImage(
+                              'https://api.dicebear.com/6.x/avataaars-neutral/png?seed=Katherine&flip=true'),
                       backgroundColor: Colors.deepPurple.shade100,
                     ),
                     const SizedBox(width: 20),
@@ -426,12 +428,12 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     const Divider(thickness: 1.2),
-
                     _buildReadOnlyRow('Name', _name),
                     _buildReadOnlyRow('Surname', _surname),
                     _buildReadOnlyRow('Phone', _phone),
                     if (_vat != null) _buildReadOnlyRow('VAT/P.IVA', _vat),
-                    if (_legalInfo != null) _buildReadOnlyRow('Legal Info', _legalInfo),
+                    if (_legalInfo != null)
+                      _buildReadOnlyRow('Legal Info', _legalInfo),
                     _buildReadOnlyRow(
                       'Date of Birth',
                       _dateOfBirth != null
@@ -456,7 +458,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               ),
             ),
           ],
@@ -494,7 +497,10 @@ class _AccountScreenState extends State<AccountScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          SizedBox(width: 120, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          SizedBox(
+              width: 120,
+              child: Text(label,
+                  style: const TextStyle(fontWeight: FontWeight.bold))),
           const SizedBox(width: 8),
           Expanded(child: Text(value ?? 'Not available')),
         ],
