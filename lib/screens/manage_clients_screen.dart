@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:isyfit/screens/measurements_screen.dart';
+import 'package:isyfit/screens/measurements_home_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/training_records_screen.dart';
 import 'package:isyfit/screens/account_screen.dart';
@@ -25,7 +25,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   Future<void> _addClient() async {
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a valid email address.')));
+        const SnackBar(content: Text('Please enter a valid email address.')),
+      );
       return;
     }
 
@@ -43,7 +44,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
       if (clientQuery.docs.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No client found with this email.')));
+          const SnackBar(content: Text('No client found with this email.')),
+        );
         return;
       }
 
@@ -61,13 +63,15 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           .update({'isSolo': false, 'supervisorPT': user.uid});
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Client added successfully!')));
+        const SnackBar(content: Text('Client added successfully!')),
+      );
 
       _emailController.clear();
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error adding client: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding client: $e')),
+      );
     } finally {
       setState(() => _isAddingClient = false);
     }
@@ -89,12 +93,14 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           .update({'isSolo': true, 'supervisorPT': FieldValue.delete()});
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Client removed successfully!')));
+        const SnackBar(content: Text('Client removed successfully!')),
+      );
 
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error removing client: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error removing client: $e')),
+      );
     }
   }
 
@@ -102,56 +108,74 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Client Email',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _addClient();
-                },
-                child: const Text("Add Client"),
-              ),
-            ],
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25.0),
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Client Email',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _addClient();
+                  },
+                  child: const Text("Add Client"),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  /// Updated: Show popup options for a client
+  /// Show popup options for a client
   void _showClientOptions(
     BuildContext context,
     String clientUid,
     String clientName,
     String clientSurname,
   ) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text(
             '$clientName $clientSurname',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.medical_services, color: Colors.red),
+                leading: Icon(
+                  Icons.medical_services,
+                  color: theme.colorScheme.error, // was red
+                ),
                 title: const Text('Medical'),
                 onTap: () {
                   Navigator.pop(context);
@@ -164,20 +188,27 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                leading: Icon(
+                  Icons.fitness_center,
+                  color: theme.colorScheme.primary, // was orange
+                ),
                 title: const Text('Training'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => TrainingRecordsScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          TrainingRecordsScreen(clientUid: clientUid),
                     ),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.info, color: Colors.blue),
+                leading: Icon(
+                  Icons.info,
+                  color: theme.colorScheme.primary, // was blue
+                ),
                 title: const Text('Info'),
                 onTap: () {
                   Navigator.pop(context);
@@ -190,14 +221,17 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.straighten, color: Colors.green),
+                leading: Icon(
+                  Icons.straighten,
+                  color: theme.colorScheme.primary, // was green
+                ),
                 title: const Text('Measurements'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MeasurementsScreen(clientUid: clientUid),
+                      builder: (_) => MeasurementsHomeScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -230,7 +264,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 clientSnapshot.data!.data() as Map<String, dynamic>;
             final clientName = clientData['name'] ?? 'Unknown';
             final clientSurname = clientData['surname'] ?? 'Unknown';
-            if (!('$clientName $clientSurname').toLowerCase().contains(_searchQuery)) {
+            final query = '$clientName $clientSurname'.toLowerCase();
+            if (!query.contains(_searchQuery)) {
               return const SizedBox.shrink();
             }
             return _buildClientTile(clientData, clientSnapshot.data!.id);
@@ -241,7 +276,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   }
 
   Widget _buildClientTile(Map<String, dynamic> clientData, String clientUid) {
+    final theme = Theme.of(context);
     return Card(
+      color: theme.colorScheme.surface,
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: ListTile(
         leading: CircleAvatar(
@@ -252,7 +289,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         ),
         title: Text(
           '${clientData['name'] ?? ''} ${clientData['surname'] ?? ''}',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(clientData['email'] ?? 'No Email'),
@@ -263,7 +302,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           clientData['surname'] ?? 'Unknown',
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.remove_circle, color: Colors.red),
+          icon: Icon(Icons.remove_circle, color: theme.colorScheme.error),
           onPressed: () => _removeClient(clientUid),
         ),
       ),
@@ -288,7 +327,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   Future<Map<String, Map<String, dynamic>>> _fetchPaymentData(
       List<dynamic> clientIds) async {
-    Map<String, Map<String, dynamic>> paymentDataMap = {};
+    final Map<String, Map<String, dynamic>> paymentDataMap = {};
     for (final clientId in clientIds) {
       final paymentQuery = await FirebaseFirestore.instance
           .collection('payments')
@@ -302,7 +341,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   }
 
   Widget _buildEditableDataTable(
-      Map<String, Map<String, dynamic>> paymentDataMap, List<dynamic> clientIds) {
+    Map<String, Map<String, dynamic>> paymentDataMap,
+    List<dynamic> clientIds,
+  ) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
@@ -320,17 +361,25 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             final paymentData = paymentDataMap[clientId] ?? {};
             final clientNameFuture = _getClientNameFromUid(clientId);
             return DataRow(cells: [
-              DataCell(FutureBuilder<String>(
+              DataCell(
+                FutureBuilder<String>(
                   future: clientNameFuture,
-                  builder: (context, nameSnapshot) =>
-                      Text(nameSnapshot.data ?? 'Loading...'))),
-              DataCell(_buildEditableField(clientId, 'amount', paymentData['amount'])),
+                  builder: (context, nameSnapshot) {
+                    return Text(nameSnapshot.data ?? 'Loading...');
+                  },
+                ),
+              ),
+              DataCell(
+                  _buildEditableField(clientId, 'amount', paymentData['amount'])),
               DataCell(_buildEditableDateField(clientId, 'date', paymentData['date'])),
               DataCell(_buildEditableField(clientId, 'method', paymentData['method'])),
               DataCell(_buildEditableField(clientId, 'object', paymentData['object'])),
-              DataCell(IconButton(
+              DataCell(
+                IconButton(
                   icon: const Icon(Icons.edit),
-                  onPressed: () => _editPayment(clientId))),
+                  onPressed: () => _editPayment(clientId),
+                ),
+              ),
             ]);
           }).toList(),
         ),
@@ -341,8 +390,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   Widget _buildEditableField(String documentId, String field, dynamic value) {
     return TextFormField(
       initialValue: value?.toString() ?? '',
-      onChanged: (newValue) => _updatePaymentField(documentId, field, newValue),
       decoration: const InputDecoration(border: InputBorder.none),
+      onChanged: (newValue) => _updatePaymentField(documentId, field, newValue),
     );
   }
 
@@ -351,16 +400,19 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         value != null ? DateFormat('yyyy-MM-dd').format(value.toDate()) : '';
     return TextFormField(
       initialValue: formattedDate,
+      decoration: const InputDecoration(border: InputBorder.none),
       onChanged: (newValue) {
         try {
           final newDate = DateFormat('yyyy-MM-dd').parse(newValue);
           _updatePaymentField(documentId, field, Timestamp.fromDate(newDate));
         } catch (_) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Invalid date format. Use yyyy-MM-dd')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid date format. Use yyyy-MM-dd'),
+            ),
+          );
         }
       },
-      decoration: const InputDecoration(border: InputBorder.none),
     );
   }
 
@@ -397,33 +449,28 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Clients'),
         centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Switch(
-                value: _showPayments,
-                onChanged: (newValue) => setState(() => _showPayments = newValue),
-              ),
-            ),
-          )
-        ],
+        backgroundColor: theme.colorScheme.primary,
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-              onPressed: _showAddClientDialog, child: const Icon(Icons.add)),
+            onPressed: _showAddClientDialog,
+            child: const Icon(Icons.add),
+          ),
           const SizedBox(height: 8),
-          const Text('Add New Client',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))
+          Text(
+            'Add New Client',
+            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ],
       ),
       body: Column(
@@ -431,20 +478,29 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
-                controller: _searchController,
-                onChanged: (value) =>
-                    setState(() => _searchQuery = value.trim().toLowerCase()),
-                decoration: const InputDecoration(
-                    labelText: 'Search Clients',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder())),
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value.trim().toLowerCase()),
+              decoration: InputDecoration(
+                labelText: 'Search Clients',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [Text(_showPayments ? 'Payments' : 'Manage Clients')]),
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  _showPayments ? 'Payments' : 'Manage Clients',
+                  style: theme.textTheme.titleSmall,
+                ),
+              ],
+            ),
           ),
           const Divider(),
           Expanded(
@@ -477,7 +533,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     : _buildClientList(clientIds);
               },
             ),
-          )
+          ),
         ],
       ),
     );

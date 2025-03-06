@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:isyfit/screens/measurements_screen.dart';
+import 'package:isyfit/screens/measurements_home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'medical_history/medical_history_screen.dart';
@@ -16,7 +16,7 @@ class BaseScreen extends StatefulWidget {
 
 class _BaseScreenState extends State<BaseScreen> {
   int _currentIndex = 0;
-  String clientid = FirebaseAuth.instance.currentUser!.uid;
+  final String clientid = FirebaseAuth.instance.currentUser!.uid;
 
   late List<Widget> _screens;
 
@@ -27,7 +27,7 @@ class _BaseScreenState extends State<BaseScreen> {
       const HomeScreen(),
       TrainingRecordsScreen(),
       MedicalHistoryScreen(),
-      MeasurementsScreen(clientUid: clientid),
+      MeasurementsHomeScreen(clientUid: clientid),
       AccountScreen(),
     ];
   }
@@ -41,6 +41,7 @@ class _BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // No explicit color usage — it will use ThemeData from buildAppTheme
       body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar.NavigationBar(
         currentIndex: _currentIndex,

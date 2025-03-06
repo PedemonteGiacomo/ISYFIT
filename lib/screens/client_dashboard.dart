@@ -8,9 +8,10 @@ class ClientDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final User? user = FirebaseAuth.instance.currentUser;
 
-    // Immediately return LoginScreen if no user is signed in
+    // If no user is signed in, immediately return LoginScreen
     if (user == null) {
       return const LoginScreen();
     }
@@ -19,82 +20,95 @@ class ClientDashboard extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Client Dashboard'),
         centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get(),
+        future:
+            FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('No data found.'));
+            return Center(
+              child: Text(
+                'No data found.',
+                style: theme.textTheme.bodyLarge,
+              ),
+            );
           }
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
 
           if (userData['isSolo'] == true) {
-            return const Center(
+            return Center(
               child: Text(
                 'You are in SOLO mode.',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             );
           } else {
             final ptId = userData['supervisorPT'];
             return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(ptId)
-                  .get(),
+              future:
+                  FirebaseFirestore.instance.collection('users').doc(ptId).get(),
               builder: (context, ptSnapshot) {
                 if (ptSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
                 if (!ptSnapshot.hasData || ptSnapshot.data == null) {
-                  return const Center(
-                    child: Text('PT information not available.'),
+                  return Center(
+                    child: Text(
+                      'PT information not available.',
+                      style: theme.textTheme.bodyLarge,
+                    ),
                   );
                 }
 
                 final ptData = ptSnapshot.data!.data() as Map<String, dynamic>;
+                final String? ptImageUrl = ptData['profileImageUrl'];
+
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Your PT:',
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
                       CircleAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage(
-                          ptData['profileImageUrl'] ?? '',
-                        ),
-                        onBackgroundImageError: (_, __) =>
-                            const Icon(Icons.person, size: 50),
+                        backgroundColor:
+                            theme.colorScheme.primary.withOpacity(0.2),
+                        backgroundImage: (ptImageUrl != null &&
+                                ptImageUrl.isNotEmpty)
+                            ? NetworkImage(ptImageUrl)
+                            : null,
+                        child: (ptImageUrl == null || ptImageUrl.isEmpty)
+                            ? const Icon(Icons.person, size: 50)
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         '${ptData['name']} ${ptData['surname']}',
-                        style: const TextStyle(
-                          fontSize: 20,
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         ptData['email'] ?? '',
-                        style: const TextStyle(fontSize: 16),
+                        style: theme.textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

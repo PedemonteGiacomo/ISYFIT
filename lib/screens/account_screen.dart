@@ -132,8 +132,9 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _logout() async {
     await _auth.signOut();
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false);
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   /// Save changes to Firestore
@@ -143,7 +144,7 @@ class _AccountScreenState extends State<AccountScreen> {
       if (uid == null) return;
 
       if (!isOwnAccount) {
-        // PT editing client’s info is disabled (or you can allow it, your choice)
+        // PT editing client’s info is disabled
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Editing client’s info is disabled.')),
         );
@@ -182,14 +183,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
   /// Layout for the user’s own account
   Widget _buildOwnAccountLayout(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         actions: [
-          // Show logout icon only if it's the user’s own account
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: _logout,
@@ -201,7 +202,6 @@ class _AccountScreenState extends State<AccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
-
             // Profile Header with editing capabilities
             Card(
               elevation: 4,
@@ -220,10 +220,10 @@ class _AccountScreenState extends State<AccountScreen> {
                         radius: 50,
                         backgroundImage: _profileImageUrl != null
                             ? NetworkImage(_profileImageUrl!)
-                            // Use DiceBear as fallback if there's no custom image
-                            : NetworkImage(
+                            : const NetworkImage(
                                 'https://api.dicebear.com/6.x/avataaars-neutral/png?seed=Katherine&flip=true'),
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor:
+                            theme.colorScheme.surface.withOpacity(0.5),
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -340,21 +340,22 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Layout if a PT is viewing a client’s account – a different representation
+  /// Layout if a PT is viewing a client’s account – read-only representation
   Widget _buildPtViewingClientLayout(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Client Account'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: theme.colorScheme.primary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // A bigger "profile" card showing the client’s info in a read-only style
+            // A bigger "profile" card showing the client’s info
             Card(
               elevation: 4,
               margin: const EdgeInsets.only(bottom: 16.0),
@@ -365,7 +366,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
-                  color: Colors.deepPurple.shade50,
+                  // We can use a tinted surface or primary-based background
+                  color: theme.colorScheme.primary.withOpacity(0.05),
                 ),
                 child: Row(
                   children: [
@@ -373,10 +375,10 @@ class _AccountScreenState extends State<AccountScreen> {
                       radius: 50,
                       backgroundImage: _profileImageUrl != null
                           ? NetworkImage(_profileImageUrl!)
-                          // Use DiceBear fallback
-                          : NetworkImage(
+                          : const NetworkImage(
                               'https://api.dicebear.com/6.x/avataaars-neutral/png?seed=Katherine&flip=true'),
-                      backgroundColor: Colors.deepPurple.shade100,
+                      backgroundColor:
+                          theme.colorScheme.primary.withOpacity(0.2),
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -387,14 +389,15 @@ class _AccountScreenState extends State<AccountScreen> {
                             _name ?? 'Loading Name...',
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple.shade700,
+                              // highlight color usage:
+                              color: theme.colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 5),
                           Text(
                             _email ?? 'No Email',
                             style: textTheme.bodyMedium?.copyWith(
-                              color: Colors.deepPurple.shade400,
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                         ],
@@ -405,7 +408,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
 
-            // Another card with basic account info in a read-only format
+            // Another card with basic account info in read-only format
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -415,7 +418,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
-                  color: Colors.white,
+                  color: theme.colorScheme.surface,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,7 +427,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       'Client Details',
                       style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     const Divider(thickness: 1.2),
@@ -447,14 +450,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
             const SizedBox(height: 20),
 
-            // If you want a "Return" button or something else:
+            // Optional "Return" button
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back),
               label: const Text('Return'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -491,16 +494,19 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Simple read-only field for the PT side
+  /// Simple read-only field for PT side
   Widget _buildReadOnlyRow(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
           SizedBox(
-              width: 120,
-              child: Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.bold))),
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           const SizedBox(width: 8),
           Expanded(child: Text(value ?? 'Not available')),
         ],

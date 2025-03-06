@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/login_screen.dart';
-import 'package:isyfit/screens/measurements_screen.dart';
+import 'package:isyfit/screens/measurements_home_screen.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/training_records_screen.dart';
@@ -129,7 +129,7 @@ class PTDashboard extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          MeasurementsScreen(clientUid: clientUid),
+                          MeasurementsHomeScreen(clientUid: clientUid),
                     ),
                   );
                 },

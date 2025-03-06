@@ -16,18 +16,24 @@ class DocumentsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: documentsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                const Text('No documents uploaded yet.'),
+                Text(
+                  'No documents uploaded yet.',
+                  style: theme.textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: onUpload,
@@ -49,12 +55,19 @@ class DocumentsSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = documents[index];
               return ListTile(
-                title: Text(doc['fileName']),
+                title: Text(
+                  doc['fileName'],
+                  style: theme.textTheme.bodyMedium,
+                ),
                 trailing: Wrap(
                   children: [
                     IconButton(
                       icon: const Icon(Icons.visibility),
-                      onPressed: () => onView(context, doc['downloadUrl'], doc['fileType']),
+                      onPressed: () => onView(
+                        context,
+                        doc['downloadUrl'],
+                        doc['fileType'],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),

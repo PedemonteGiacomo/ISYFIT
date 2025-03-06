@@ -10,30 +10,39 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final User? user = FirebaseAuth.instance.currentUser;
 
+    // If user is not logged in, return to LoginScreen
     if (user == null) {
       return const LoginScreen();
     }
 
     return FutureBuilder<DocumentSnapshot>(
-      future:
-          FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError ||
-            !snapshot.hasData ||
-            !snapshot.data!.exists) {
-          return const Center(child: Text('Error loading user data.'));
+        } else if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return Center(
+            child: Text(
+              'Error loading user data.',
+              style: theme.textTheme.bodyLarge,
+            ),
+          );
         } else {
           final role = snapshot.data!.get('role');
           if (role == 'PT') {
-            return const PTDashboard(); // Redirect to PT Dashboard
+            return const PTDashboard(); // to PT Dashboard
           } else if (role == 'Client') {
-            return const ClientDashboard(); // Redirect to Client Dashboard
+            return const ClientDashboard(); // to Client Dashboard
           } else {
-            return const Center(child: Text('Invalid role.'));
+            return Center(
+              child: Text(
+                'Invalid role.',
+                style: theme.textTheme.bodyLarge,
+              ),
+            );
           }
         }
       },
