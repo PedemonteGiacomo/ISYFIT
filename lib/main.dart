@@ -77,7 +77,8 @@ class _SplashScreenState extends State<SplashScreen> {
     final double height = MediaQuery.of(context).size.height * 0.3;
 
     return Scaffold(
-      backgroundColor: Colors.white, // or Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          Colors.white, // or Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +96,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   textStyle: const TextStyle(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue, // or use Theme.of(context).colorScheme.primary
+                    color: Colors
+                        .blue, // or use Theme.of(context).colorScheme.primary
                   ),
                   speed: const Duration(milliseconds: 100),
                 ),

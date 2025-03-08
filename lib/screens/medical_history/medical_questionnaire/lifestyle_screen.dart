@@ -3,12 +3,12 @@ import 'sleep_energy_screen.dart';
 
 class LifestyleScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  final String? clientUid; // <-- Add this
+  final String? clientUid;
 
   const LifestyleScreen({
     Key? key,
     required this.data,
-    this.clientUid, // <-- Accept in constructor
+    this.clientUid,
   }) : super(key: key);
 
   @override
@@ -26,32 +26,40 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController alcoholDetailsController = TextEditingController();
-  final TextEditingController smokingDetailsController = TextEditingController();
+  final TextEditingController alcoholDetailsController =
+      TextEditingController();
+  final TextEditingController smokingDetailsController =
+      TextEditingController();
   final TextEditingController waterIntakeController = TextEditingController();
-  final TextEditingController spineJointMuscleDetailsController = TextEditingController();
-  final TextEditingController injuriesOrSurgeryDetailsController = TextEditingController();
-  final TextEditingController pathologiesDetailsController = TextEditingController();
-  final TextEditingController breakfastDetailsController = TextEditingController();
+  final TextEditingController spineJointMuscleDetailsController =
+      TextEditingController();
+  final TextEditingController injuriesOrSurgeryDetailsController =
+      TextEditingController();
+  final TextEditingController pathologiesDetailsController =
+      TextEditingController();
+  final TextEditingController breakfastDetailsController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    widget.data['alcohol'] = widget.data['alcohol'] ?? 'No';
-    widget.data['smokes'] = widget.data['smokes'] ?? 'No';
-    widget.data['fixedWorkShifts'] = widget.data['fixedWorkShifts'] ?? 'No';
-    widget.data['waterIntake'] = widget.data['waterIntake'] ?? '';
-    widget.data['spineJointMuscleIssues'] = widget.data['spineJointMuscleIssues'] ?? 'No';
-    widget.data['injuriesOrSurgery'] = widget.data['injuriesOrSurgery'] ?? 'No';
-    widget.data['pathologies'] = widget.data['pathologies'] ?? 'No';
-    widget.data['asthmatic'] = widget.data['asthmatic'] ?? 'No';
-    widget.data['breakfast'] = widget.data['breakfast'] ?? 'No';
+    widget.data['alcohol'] ??= 'No';
+    widget.data['smokes'] ??= 'No';
+    widget.data['fixedWorkShifts'] ??= 'No';
+    widget.data['waterIntake'] ??= '';
+    widget.data['spineJointMuscleIssues'] ??= 'No';
+    widget.data['injuriesOrSurgery'] ??= 'No';
+    widget.data['pathologies'] ??= 'No';
+    widget.data['asthmatic'] ??= 'No';
+    widget.data['breakfast'] ??= 'No';
 
     alcoholDetailsController.text = widget.data['alcohol_details'] ?? '';
     smokingDetailsController.text = widget.data['smoking_details'] ?? '';
     waterIntakeController.text = widget.data['waterIntake'];
-    spineJointMuscleDetailsController.text = widget.data['spineJointMuscleIssuesDetails'] ?? '';
-    injuriesOrSurgeryDetailsController.text = widget.data['injuriesOrSurgeryDetails'] ?? '';
+    spineJointMuscleDetailsController.text =
+        widget.data['spineJointMuscleIssuesDetails'] ?? '';
+    injuriesOrSurgeryDetailsController.text =
+        widget.data['injuriesOrSurgeryDetails'] ?? '';
     pathologiesDetailsController.text = widget.data['pathologiesDetails'] ?? '';
     breakfastDetailsController.text = widget.data['breakfastDetails'] ?? '';
   }
@@ -73,10 +81,11 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lifestyle'),
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Lifestyle'),
+      //   centerTitle: true,
+      //   backgroundColor: theme.colorScheme.primary,
+      // ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -89,25 +98,28 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        const Icon(Icons.medical_services_outlined, size: 64, color: Colors.blue),
+                        Icon(Icons.medical_services_outlined,
+                            size: 64, color: theme.colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
                           'Lifestyle and Medical History',
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Provide lifestyle and medical details to help us tailor the best plan for you.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
                         ),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Are your work shifts fixed?',
                           value: fixedWorkShifts,
@@ -115,12 +127,12 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           onChanged: (value) {
                             setState(() {
                               fixedWorkShifts = value;
-                              widget.data['fixedWorkShifts'] = value ? 'Yes' : 'No';
+                              widget.data['fixedWorkShifts'] =
+                                  value ? 'Yes' : 'No';
                             });
                           },
                         ),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Do you drink alcohol?',
                           value: drinksAlcohol,
@@ -135,12 +147,8 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                         ),
                         if (drinksAlcohol)
                           _buildTextInput(
-                            'If yes, how much?',
-                            alcoholDetailsController,
-                            (value) => widget.data['alcohol_details'] = value,
-                          ),
+                              'If yes, how much?', alcoholDetailsController),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Do you smoke?',
                           value: smokes,
@@ -155,19 +163,11 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                         ),
                         if (smokes)
                           _buildTextInput(
-                            'If yes, how much?',
-                            smokingDetailsController,
-                            (value) => widget.data['smoking_details'] = value,
-                          ),
+                              'If yes, how much?', smokingDetailsController),
                         const SizedBox(height: 24),
-
-                        _buildTextInput(
-                          'How much water do you drink daily?',
-                          waterIntakeController,
-                          (value) => widget.data['waterIntake'] = value,
-                        ),
+                        _buildTextInput('How much water do you drink daily?',
+                            waterIntakeController),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Do you have spine, joint, or muscle issues?',
                           value: spineJointMuscleIssues,
@@ -175,19 +175,17 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           onChanged: (value) {
                             setState(() {
                               spineJointMuscleIssues = value;
-                              widget.data['spineJointMuscleIssues'] = value ? 'Yes' : 'No';
-                              if (!value) spineJointMuscleDetailsController.clear();
+                              widget.data['spineJointMuscleIssues'] =
+                                  value ? 'Yes' : 'No';
+                              if (!value)
+                                spineJointMuscleDetailsController.clear();
                             });
                           },
                         ),
                         if (spineJointMuscleIssues)
-                          _buildTextInput(
-                            'Describe the issue:',
-                            spineJointMuscleDetailsController,
-                            (value) => widget.data['spineJointMuscleIssuesDetails'] = value,
-                          ),
+                          _buildTextInput('Describe the issue:',
+                              spineJointMuscleDetailsController),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Have you had any injuries or surgery?',
                           value: injuriesOrSurgery,
@@ -195,19 +193,17 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           onChanged: (value) {
                             setState(() {
                               injuriesOrSurgery = value;
-                              widget.data['injuriesOrSurgery'] = value ? 'Yes' : 'No';
-                              if (!value) injuriesOrSurgeryDetailsController.clear();
+                              widget.data['injuriesOrSurgery'] =
+                                  value ? 'Yes' : 'No';
+                              if (!value)
+                                injuriesOrSurgeryDetailsController.clear();
                             });
                           },
                         ),
                         if (injuriesOrSurgery)
-                          _buildTextInput(
-                            'Describe your injury/surgery:',
-                            injuriesOrSurgeryDetailsController,
-                            (value) => widget.data['injuriesOrSurgeryDetails'] = value,
-                          ),
+                          _buildTextInput('Describe your injury/surgery:',
+                              injuriesOrSurgeryDetailsController),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Do you have any pathologies?',
                           value: pathologies,
@@ -221,13 +217,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           },
                         ),
                         if (pathologies)
-                          _buildTextInput(
-                            'Describe the pathology:',
-                            pathologiesDetailsController,
-                            (value) => widget.data['pathologiesDetails'] = value,
-                          ),
+                          _buildTextInput('Describe the pathology:',
+                              pathologiesDetailsController),
                         const SizedBox(height: 24),
-
                         _buildToggleOption(
                           label: 'Are you asthmatic?',
                           value: asthmatic,
@@ -240,26 +232,6 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-
-                        _buildToggleOption(
-                          label: 'Do you have breakfast daily?',
-                          value: widget.data['breakfast'] == 'Yes',
-                          icon: Icons.breakfast_dining_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              widget.data['breakfast'] = value ? 'Yes' : 'No';
-                              if (!value) breakfastDetailsController.clear();
-                            });
-                          },
-                        ),
-                        if (widget.data['breakfast'] == 'Yes')
-                          _buildTextInput(
-                            'What do you have for breakfast?',
-                            breakfastDetailsController,
-                            (value) => widget.data['breakfastDetails'] = value,
-                          ),
-                        const SizedBox(height: 32),
-
                         ElevatedButton(
                           onPressed: () {
                             Navigator.push(
@@ -267,7 +239,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                               MaterialPageRoute(
                                 builder: (context) => SleepEnergyScreen(
                                   data: widget.data,
-                                  clientUid: widget.clientUid, // <-- pass forward
+                                  clientUid: widget.clientUid,
                                 ),
                               ),
                             );
@@ -300,18 +272,11 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     );
   }
 
-  Widget _buildTextInput(
-    String label,
-    TextEditingController controller,
-    ValueChanged<String> onChanged,
-  ) {
-    return TextFormField(
+  Widget _buildTextInput(String label, TextEditingController controller) {
+    return TextField(
       controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
-      onChanged: onChanged,
+      decoration:
+          InputDecoration(labelText: label, border: const OutlineInputBorder()),
     );
   }
 }

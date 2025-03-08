@@ -160,7 +160,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         padding: const EdgeInsets.all(12.0),
         margin: const EdgeInsets.only(top: 8.0),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Theme.of(context).colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Column(
@@ -181,6 +181,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   }
 
   Widget _buildPasswordRequirement(String text, bool isSatisfied) {
+    // We keep green/red for clarity on password feedback:
     return Row(
       children: [
         Icon(
@@ -201,11 +202,14 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 8,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: theme.colorScheme.primary, // or theme.primaryColor
+      //   elevation: 8,
+      // ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -215,7 +219,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
-              shadowColor: Theme.of(context).primaryColorLight,
+              shadowColor: theme.colorScheme.primary.withOpacity(0.5),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Padding(
@@ -226,11 +230,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                       // Title
                       Text(
                         'Register as Client',
-                        style:
-                            Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColorDark,
-                                ),
+                        style: textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -348,18 +351,22 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                               hint: const Text('Prefix'),
                               value: _selectedCountryCode,
                               items: countryCodes
-                                  .map((country) => DropdownMenuItem<String>(
-                                        value: country['code'],
-                                        child: Row(
-                                          children: [
-                                            Text(country['flag']!,
-                                                style: const TextStyle(
-                                                    fontSize: 18)),
-                                            const SizedBox(width: 8),
-                                            Text(country['code']!),
-                                          ],
-                                        ),
-                                      ))
+                                  .map(
+                                    (country) => DropdownMenuItem<String>(
+                                      value: country['code'],
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            country['flag']!,
+                                            style:
+                                                const TextStyle(fontSize: 18),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(country['code']!),
+                                        ],
+                                      ),
+                                    ),
+                                  )
                                   .toList(),
                               onChanged: (value) {
                                 setState(() {
@@ -369,6 +376,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                               dropdownStyleData: DropdownStyleData(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8.0),
+                                  color: theme.colorScheme.surface,
                                 ),
                               ),
                             ),
@@ -410,10 +418,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             style: TextStyle(
                               color: _selectedDate == null
                                   ? Colors.grey
-                                  : Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .color,
+                                  : textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),
@@ -427,19 +432,19 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             value: _agreeToTerms,
                             onChanged: (value) {
                               setState(() {
-                                _agreeToTerms = value!;
+                                _agreeToTerms = value ?? false;
                               });
                             },
                           ),
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
-                                // Handle privacy policy navigation
+                                // Could show a Terms & Privacy policy dialog or route
                               },
                               child: Text(
                                 'I accept all the conditions and privacy policy.',
                                 style: TextStyle(
-                                  color: Theme.of(context).primaryColorDark,
+                                  color: theme.primaryColorDark,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
@@ -448,29 +453,30 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
+
                       // Toggle for SOLO or Assign PT
                       Row(
                         children: [
                           Expanded(
                             child: RadioListTile<bool>(
-                              title: Text("Go SOLO"),
+                              title: const Text("Go SOLO"),
                               value: true,
                               groupValue: isSolo,
                               onChanged: (value) {
                                 setState(() {
-                                  isSolo = value!;
+                                  isSolo = value ?? true;
                                 });
                               },
                             ),
                           ),
                           Expanded(
                             child: RadioListTile<bool>(
-                              title: Text("Assign a PT"),
+                              title: const Text("Assign a PT"),
                               value: false,
                               groupValue: isSolo,
                               onChanged: (value) {
                                 setState(() {
-                                  isSolo = value!;
+                                  isSolo = value ?? false;
                                 });
                               },
                             ),
@@ -480,11 +486,17 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
 
                       // PT Email Field (conditionally shown)
                       if (!isSolo)
-                        TextField(
-                          controller: _ptEmailController,
-                          decoration: InputDecoration(
-                            labelText: 'PT Email',
-                            border: OutlineInputBorder(),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: TextField(
+                            controller: _ptEmailController,
+                            decoration: InputDecoration(
+                              labelText: 'PT Email',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              prefixIcon: const Icon(Icons.email_outlined),
+                            ),
                           ),
                         ),
                       const SizedBox(height: 16),
@@ -495,7 +507,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           : ElevatedButton(
                               onPressed: _registerClient,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
+                                backgroundColor: theme.primaryColor,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12.0,
                                   horizontal: 24.0,

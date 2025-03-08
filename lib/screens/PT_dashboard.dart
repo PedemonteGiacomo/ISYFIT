@@ -88,7 +88,8 @@ class PTDashboard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          MedicalHistoryScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -183,13 +184,13 @@ class PTDashboard extends StatelessWidget {
                         radius: 20,
                         child: Text(
                           clientName.isNotEmpty
-                              ? clientName[0].toUpperCase() + clientSurname[0].toUpperCase()
+                              ? clientName[0].toUpperCase() +
+                                  clientSurname[0].toUpperCase()
                               : 'U',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                          
                         ),
                         backgroundColor: Colors.blue.shade400,
                       ),
@@ -204,33 +205,32 @@ class PTDashboard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                        Column(
+                      Column(
                         children: [
                           Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: isPaying ? Colors.green : Colors.red,
-                            shape: BoxShape.circle,
-                          ),
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: isPaying ? Colors.green : Colors.red,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                          isPaying ? 'Paying' : 'Not Paying',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isPaying ? Colors.green : Colors.red,
-                          ),
+                            isPaying ? 'Paying' : 'Not Paying',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isPaying ? Colors.green : Colors.red,
+                            ),
                           ),
                         ],
-                        ),
+                      ),
                     ],
                   ),
                 ),
               );
             }).toList(),
             const SizedBox(height: 12),
-            
           ],
         );
       },
@@ -243,7 +243,8 @@ class PTDashboard extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PT Dashboard'),
+        title: Text('PT Dashboard',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -314,29 +315,29 @@ class PTDashboard extends StatelessWidget {
                   // ),
                   // const SizedBox(height: 16),
 
-                  
-                    Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                      "Recent Clients",
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        "Recent Clients",
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ManageClientsScreen(),
-                        ),
-                        );
-                      },
-                      child: const Text("View All"),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ManageClientsScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text("View All"),
                       ),
                     ],
-                    ),
+                  ),
                   const SizedBox(height: 8),
                   ConstrainedBox(
                     constraints: BoxConstraints(

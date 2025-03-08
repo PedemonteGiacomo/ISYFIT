@@ -3,12 +3,12 @@ import 'final_submit_screen.dart';
 
 class TrainingGoalsScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  final String? clientUid; // <-- Add this
+  final String? clientUid;
 
   const TrainingGoalsScreen({
     Key? key,
     required this.data,
-    this.clientUid, // <-- Accept in constructor
+    this.clientUid,
   }) : super(key: key);
 
   @override
@@ -25,14 +25,13 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
   final TextEditingController otherPTExpController = TextEditingController();
   final TextEditingController preferredTimeController = TextEditingController();
 
-  int timesPerWeek = 3; // or default 2, etc.
+  int timesPerWeek = 3;
 
   @override
   void initState() {
     super.initState();
     goalsController.text = widget.data['goals'] ?? '';
     selectedDays.addAll(widget.data['training_days'] ?? []);
-
     sportExpController.text = widget.data['sportExperience'] ?? '';
     gymExpController.text = widget.data['gymExperience'] ?? '';
     otherPTExpController.text = widget.data['otherPTExperience'] ?? '';
@@ -55,10 +54,11 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Training and Goals'),
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: theme.primaryColor,
+      //   title: const Text('Training & Goals'),
+      //   centerTitle: true,
+      // ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -77,65 +77,61 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                     child: Column(
                       children: [
                         // Header Section
-                        const Icon(Icons.fitness_center_outlined,
-                            size: 64, color: Colors.blue),
+                        Icon(Icons.fitness_center_outlined,
+                            size: 64, color: theme.colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
-                          'Training and Goals',
+                          'Training & Goals',
                           style: theme.textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Define your training goals and additional details to help us plan the best program for you.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
                         ),
                         const SizedBox(height: 24),
 
-                        // Esperienze sportive
                         _buildTextInput(
-                          'Esperienze sportive?',
-                          'Dilettantistiche, professionistiche, etc.',
+                          'Sports Experience',
+                          'Professional, amateur, casual?',
                           sportExpController,
                           (value) => widget.data['sportExperience'] = value,
                         ),
                         const SizedBox(height: 16),
 
-                        // Esperienza sala pesi
                         _buildTextInput(
-                          'Esperienza sala pesi?',
-                          'Se sì, quanto tempo fa e per quanto?',
+                          'Gym Experience',
+                          'Have you trained with weights before?',
                           gymExpController,
                           (value) => widget.data['gymExperience'] = value,
                         ),
                         const SizedBox(height: 16),
 
-                        // Altri PT
                         _buildTextInput(
-                          'Altri Personal Trainer in passato?',
-                          'Come ti sei trovato?',
+                          'Previous Personal Trainers',
+                          'How was your experience?',
                           otherPTExpController,
                           (value) => widget.data['otherPTExperience'] = value,
                         ),
                         const SizedBox(height: 16),
 
-                        // Quante volte a settimana
                         _buildTimesPerWeekDropdown(),
                         const SizedBox(height: 24),
 
-                        // Goals
                         _buildTextInput(
                           'What are your training goals?',
-                          'E.g., fitness, strength, hypertrophy, etc.',
+                          'E.g., fitness, strength, hypertrophy',
                           goalsController,
                           (value) => widget.data['goals'] = value,
                         ),
                         const SizedBox(height: 16),
 
-                        // Preferred training days
                         _buildToggleButtonGroup(
-                          label: 'Preferred training days',
+                          label: 'Preferred Training Days',
                           options: [
                             'Monday',
                             'Tuesday',
@@ -151,10 +147,9 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Orario preferito
                         _buildTextInput(
-                          'Orario preferito',
-                          'Mattina? Pomeriggio? Sera?',
+                          'Preferred Training Time',
+                          'Morning, afternoon, or evening?',
                           preferredTimeController,
                           (value) => widget.data['preferredTime'] = value,
                         ),
@@ -166,7 +161,6 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
-                                _formKey.currentState?.save();
                                 widget.data['timesPerWeek'] = timesPerWeek;
 
                                 Navigator.push(
@@ -174,7 +168,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => FinalSubmitScreen(
                                       data: widget.data,
-                                      clientUid: widget.clientUid, // <-- pass forward
+                                      clientUid: widget.clientUid,
                                     ),
                                   ),
                                 );
@@ -214,36 +208,25 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.edit_outlined, color: Colors.blue, size: 24),
+        Icon(Icons.edit_outlined,
+            color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(width: 12),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              hintText: hint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                TextFormField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                  onSaved: (value) => onSaved(value ?? ''),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'This field is required' : null,
-                  minLines: 1,
-                  maxLines: 3,
-                ),
-              ],
-            ),
+            onSaved: (value) => onSaved(value ?? ''),
+            validator: (value) => value == null || value.isEmpty
+                ? 'This field is required'
+                : null,
+            minLines: 1,
+            maxLines: 3,
           ),
         ),
       ],
@@ -271,18 +254,18 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
-                  if (selected) {
-                    selectedValues.add(option);
-                  } else {
-                    selectedValues.remove(option);
-                  }
+                  selected
+                      ? selectedValues.add(option)
+                      : selectedValues.remove(option);
                   onChanged(selectedValues);
                 });
               },
-              selectedColor: Colors.blue.shade100,
+              selectedColor: Theme.of(context).colorScheme.primaryContainer,
               backgroundColor: Colors.grey.shade200,
               labelStyle: TextStyle(
-                color: isSelected ? Colors.blue : Colors.black,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.black,
               ),
             );
           }).toList(),
@@ -294,18 +277,17 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
   Widget _buildTimesPerWeekDropdown() {
     return Row(
       children: [
-        const Icon(Icons.calendar_month, color: Colors.blue),
+        Icon(Icons.calendar_month,
+            color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 12),
-        const Text('Quante volte a settimana?'),
+        const Text('How many times per week?'),
         const SizedBox(width: 16),
         DropdownButton<int>(
           value: timesPerWeek,
-          items: [1, 2, 3, 4, 5, 6, 7].map((count) {
-            return DropdownMenuItem<int>(
-              value: count,
-              child: Text('$count'),
-            );
-          }).toList(),
+          items: List.generate(7, (i) => i + 1)
+              .map((count) =>
+                  DropdownMenuItem(value: count, child: Text('$count')))
+              .toList(),
           onChanged: (val) {
             setState(() {
               timesPerWeek = val ?? 3;

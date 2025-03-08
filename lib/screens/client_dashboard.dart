@@ -18,7 +18,8 @@ class ClientDashboard extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Client Dashboard'),
+        title: Text('Client Dashboard',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -53,8 +54,10 @@ class ClientDashboard extends StatelessWidget {
           } else {
             final ptId = userData['supervisorPT'];
             return FutureBuilder<DocumentSnapshot>(
-              future:
-                  FirebaseFirestore.instance.collection('users').doc(ptId).get(),
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(ptId)
+                  .get(),
               builder: (context, ptSnapshot) {
                 if (ptSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -88,10 +91,10 @@ class ClientDashboard extends StatelessWidget {
                         radius: 50,
                         backgroundColor:
                             theme.colorScheme.primary.withOpacity(0.2),
-                        backgroundImage: (ptImageUrl != null &&
-                                ptImageUrl.isNotEmpty)
-                            ? NetworkImage(ptImageUrl)
-                            : null,
+                        backgroundImage:
+                            (ptImageUrl != null && ptImageUrl.isNotEmpty)
+                                ? NetworkImage(ptImageUrl)
+                                : null,
                         child: (ptImageUrl == null || ptImageUrl.isEmpty)
                             ? const Icon(Icons.person, size: 50)
                             : null,

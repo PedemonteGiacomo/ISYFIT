@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/country_codes.dart'; // Import your expanded country codes
-import 'package:dropdown_button2/dropdown_button2.dart'; // Import the dropdown_button2 package
+import 'package:dropdown_button2/dropdown_button2.dart'; // Import dropdown_button2 package
 import 'base_screen.dart';
 
 class RegisterPTScreen extends StatefulWidget {
@@ -36,15 +36,16 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       _passwordController.text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
   bool get _hasMinLength => _passwordController.text.length >= 8;
 
-  bool get _isEmailValid =>
-      RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-          .hasMatch(_emailController.text);
+  bool get _isEmailValid => RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      ).hasMatch(_emailController.text);
 
   Future<void> _registerPT() async {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must agree to the terms and conditions to register.'),
+          content:
+              Text('You must agree to the terms and conditions to register.'),
         ),
       );
       return;
@@ -59,9 +60,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       UserCredential userCredential =
@@ -85,7 +84,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         'dateOfBirth': _selectedDate?.toIso8601String(),
       });
 
-      // Redirect to PT Dashboard
+      // Redirect to PT Dashboard (or BaseScreen)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const BaseScreen()),
@@ -93,13 +92,12 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('An error occurred during registration. Please try again.'),
+          content:
+              Text('An error occurred during registration. Please try again.'),
         ),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -112,9 +110,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     );
 
     if (pickedDate != null) {
-      setState(() {
-        _selectedDate = pickedDate;
-      });
+      setState(() => _selectedDate = pickedDate);
     }
   }
 
@@ -125,15 +121,17 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         padding: const EdgeInsets.all(12.0),
         margin: const EdgeInsets.only(top: 8.0),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Theme.of(context).colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildPasswordRequirement('At least 8 characters', _hasMinLength),
-            _buildPasswordRequirement('At least one uppercase letter', _hasUppercase),
-            _buildPasswordRequirement('At least one lowercase letter', _hasLowercase),
+            _buildPasswordRequirement(
+                'At least one uppercase letter', _hasUppercase),
+            _buildPasswordRequirement(
+                'At least one lowercase letter', _hasLowercase),
             _buildPasswordRequirement('At least one number', _hasNumber),
             _buildPasswordRequirement(
                 'At least one special character', _hasSpecialChar),
@@ -144,6 +142,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   }
 
   Widget _buildPasswordRequirement(String text, bool isSatisfied) {
+    // Keeping green/red for form feedback clarity:
     return Row(
       children: [
         Icon(
@@ -154,9 +153,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         const SizedBox(width: 8),
         Text(
           text,
-          style: TextStyle(
-            color: isSatisfied ? Colors.green : Colors.red,
-          ),
+          style: TextStyle(color: isSatisfied ? Colors.green : Colors.red),
         ),
       ],
     );
@@ -164,303 +161,300 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 8,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: theme.colorScheme.primary,
+      //   elevation: 8,
+      // ),
       body: Center(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              shadowColor: Theme.of(context).primaryColorLight,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title
-                      Text(
-                        'Register as PT',
-                        style:
-                            Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColorDark,
-                                ),
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            shadowColor: theme.colorScheme.primary.withOpacity(0.5),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title
+                    Text(
+                      'Register as PT',
+                      style: textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
-                      const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 24),
 
-                      // Name and Surname Fields
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _nameController,
-                              decoration: InputDecoration(
-                                labelText: 'Name',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                prefixIcon: const Icon(Icons.person),
+                    // Name and Surname Fields
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: 'Name',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
+                              prefixIcon: const Icon(Icons.person),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: _surnameController,
-                              decoration: InputDecoration(
-                                labelText: 'Surname',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: _surnameController,
+                            decoration: InputDecoration(
+                              labelText: 'Surname',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
+                              prefixIcon: const Icon(Icons.person_outline),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Email Field
-                      Focus(
-                        onFocusChange: (hasFocus) {
-                          if (!hasFocus) {
-                            setState(() {
-                              _emailFieldTouched = true;
-                            });
-                          }
+                    // Email Field
+                    Focus(
+                      onFocusChange: (hasFocus) {
+                        if (!hasFocus) {
+                          setState(() {
+                            _emailFieldTouched = true;
+                          });
+                        }
+                      },
+                      child: TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (value) {
+                          setState(() {});
                         },
-                        child: TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          prefixIcon: const Icon(Icons.email),
+                          suffixIcon: _emailFieldTouched
+                              ? Icon(
+                                  _isEmailValid
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color:
+                                      _isEmailValid ? Colors.green : Colors.red,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Password Field with Info Icon
+                    Stack(
+                      children: [
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
                           onChanged: (value) {
                             setState(() {});
                           },
                           decoration: InputDecoration(
-                            labelText: 'Email',
+                            labelText: 'Password',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                            prefixIcon: const Icon(Icons.email),
-                            suffixIcon: _emailFieldTouched
-                                ? Icon(
-                                    _isEmailValid
-                                        ? Icons.check_circle
-                                        : Icons.cancel,
-                                    color: _isEmailValid
-                                        ? Colors.green
-                                        : Colors.red,
-                                  )
-                                : null,
+                            prefixIcon: const Icon(Icons.lock),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password Field with Info Icon
-                      Stack(
-                        children: [
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            onChanged: (value) {
-                              setState(() {});
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _showPasswordInfo = !_showPasswordInfo;
+                              });
                             },
+                            child: const Icon(
+                              Icons.info_outline,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    _buildPasswordInfo(),
+                    const SizedBox(height: 16),
+
+                    // Phone Number Field with Prefix Dropdown
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          child: DropdownButton2<String>(
+                            hint: const Text('Prefix'),
+                            value: _selectedCountryCode,
+                            items: countryCodes
+                                .map(
+                                  (country) => DropdownMenuItem<String>(
+                                    value: country['code'],
+                                    child: Row(
+                                      children: [
+                                        Text(country['flag']!,
+                                            style:
+                                                const TextStyle(fontSize: 18)),
+                                        const SizedBox(width: 8),
+                                        Text(country['code']!),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCountryCode = value;
+                              });
+                            },
+                            dropdownStyleData: DropdownStyleData(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.0),
+                                color: theme.colorScheme.surface,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
-                              labelText: 'Password',
+                              labelText: 'Phone Number',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
-                              prefixIcon: const Icon(Icons.lock),
                             ),
                           ),
-                          Positioned(
-                            right: 10,
-                            top: 10,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _showPasswordInfo = !_showPasswordInfo;
-                                });
-                              },
-                              child: const Icon(
-                                Icons.info_outline,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // VAT Field
+                    TextField(
+                      controller: _vatController,
+                      decoration: InputDecoration(
+                        labelText: 'VAT/P.IVA',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        prefixIcon: const Icon(Icons.business),
                       ),
-                      _buildPasswordInfo(),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Phone Number Field with Prefix Dropdown
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 120,
-                            child: DropdownButton2<String>(
-                              hint: const Text('Prefix'),
-                              value: _selectedCountryCode,
-                              items: countryCodes
-                                  .map((country) => DropdownMenuItem<String>(
-                                        value: country['code'],
-                                        child: Row(
-                                          children: [
-                                            Text(country['flag']!,
-                                                style: const TextStyle(
-                                                    fontSize: 18)),
-                                            const SizedBox(width: 8),
-                                            Text(country['code']!),
-                                          ],
-                                        ),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedCountryCode = value;
-                                });
-                              },
-                              dropdownStyleData: DropdownStyleData(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-
-                          // Phone Number Input
-                          Expanded(
-                            child: TextField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              decoration: InputDecoration(
-                                labelText: 'Phone Number',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    // Legal Information Field
+                    TextField(
+                      controller: _legalInfoController,
+                      decoration: InputDecoration(
+                        labelText: 'Legal Information',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        prefixIcon: const Icon(Icons.gavel),
                       ),
-                      const SizedBox(height: 16),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
 
-                      // VAT Field
-                      TextField(
-                        controller: _vatController,
+                    // Date Picker
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'VAT/P.IVA',
+                          labelText: 'Date of Birth',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
-                          prefixIcon: const Icon(Icons.business),
+                          prefixIcon: const Icon(Icons.calendar_today),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Legal Information Field
-                      // TextField(
-                      //   controller: _legalInfoController,
-                      //   decoration: InputDecoration(
-                      //     labelText: 'Legal Information',
-                      //     border: OutlineInputBorder(
-                      //       borderRadius: BorderRadius.circular(12.0),
-                      //     ),
-                      //     prefixIcon: const Icon(Icons.gavel),
-                      //   ),
-                      //   maxLines: 3,
-                      // ),
-                      // const SizedBox(height: 16),
-
-                      // Date Picker
-                      GestureDetector(
-                        onTap: _pickDate,
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Date of Birth',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            prefixIcon: const Icon(Icons.calendar_today),
-                          ),
-                          child: Text(
-                            _selectedDate == null
-                                ? 'Select Date'
-                                : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                            style: TextStyle(
-                              color: _selectedDate == null
-                                  ? Colors.grey
-                                  : Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .color,
-                            ),
+                        child: Text(
+                          _selectedDate == null
+                              ? 'Select Date'
+                              : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                          style: TextStyle(
+                            color: _selectedDate == null
+                                ? Colors.grey
+                                : textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Agreement Checkbox
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _agreeToTerms,
-                            onChanged: (value) {
-                              setState(() {
-                                _agreeToTerms = value!;
-                              });
+                    // Agreement Checkbox
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _agreeToTerms,
+                          onChanged: (value) {
+                            setState(() {
+                              _agreeToTerms = value ?? false;
+                            });
+                          },
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Handle privacy policy navigation
                             },
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                // Handle privacy policy navigation
-                              },
-                              child: Text(
-                                'I accept all the conditions and privacy policy.',
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColorDark,
-                                  decoration: TextDecoration.underline,
-                                ),
+                            child: Text(
+                              'I accept all the conditions and privacy policy.',
+                              style: TextStyle(
+                                color: theme.primaryColorDark,
+                                decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Register Button
-                      _isLoading
-                          ? const CircularProgressIndicator()
-                          : ElevatedButton(
-                              onPressed: _registerPT,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0,
-                                  horizontal: 24.0,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
+                    // Register Button
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _registerPT,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.primaryColor,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.0,
+                                horizontal: 24.0,
                               ),
-                              child: const Text(
-                                'Register',
-                                style: TextStyle(fontSize: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
                             ),
-                    ],
-                  ),
+                            child: const Text(
+                              'Register',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                  ],
                 ),
               ),
             ),

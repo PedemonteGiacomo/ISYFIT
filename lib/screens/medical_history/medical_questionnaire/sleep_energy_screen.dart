@@ -3,12 +3,12 @@ import 'training_goals_screen.dart';
 
 class SleepEnergyScreen extends StatefulWidget {
   final Map<String, dynamic> data;
-  final String? clientUid; // <-- Add this
+  final String? clientUid;
 
   const SleepEnergyScreen({
     Key? key,
     required this.data,
-    this.clientUid, // <-- Accept in constructor
+    this.clientUid,
   }) : super(key: key);
 
   @override
@@ -23,21 +23,15 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.data['sleep_time'] != null) {
-      sleepTime = _parseTime(widget.data['sleep_time']);
-    }
-    if (widget.data['wake_time'] != null) {
-      wakeTime = _parseTime(widget.data['wake_time']);
-    }
+    sleepTime = _parseTime(widget.data['sleep_time']);
+    wakeTime = _parseTime(widget.data['wake_time']);
     feelsEnergetic = (widget.data['energetic'] == 'Yes');
-    widget.data['energetic'] ??= 'No';
   }
 
-  TimeOfDay _parseTime(String time) {
+  TimeOfDay? _parseTime(String? time) {
+    if (time == null) return null;
     final parts = time.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-    return TimeOfDay(hour: hour, minute: minute);
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   Future<void> _selectTime(
@@ -59,10 +53,11 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sleep and Energy'),
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: theme.colorScheme.primary,
+      //   title: const Text('Sleep & Energy'),
+      //   centerTitle: true,
+      // ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -78,19 +73,21 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // Header Section
-                      const Icon(Icons.nights_stay_outlined, size: 64, color: Colors.blue),
+                      Icon(Icons.nights_stay_outlined,
+                          size: 64, color: theme.colorScheme.primary),
                       const SizedBox(height: 16),
                       Text(
-                        'Sleep and Energy',
+                        'Sleep & Energy',
                         style: theme.textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Help us understand your sleep patterns and energy levels to optimize your plan.',
+                      Text(
+                        'Help us understand your sleep patterns and energy levels.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -103,7 +100,8 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         onTimeSelected: (time) {
                           setState(() {
                             sleepTime = time;
-                            widget.data['sleep_time'] = '${time.hour}:${time.minute}';
+                            widget.data['sleep_time'] =
+                                '${time.hour}:${time.minute}';
                           });
                         },
                       ),
@@ -118,7 +116,8 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                         onTimeSelected: (time) {
                           setState(() {
                             wakeTime = time;
-                            widget.data['wake_time'] = '${time.hour}:${time.minute}';
+                            widget.data['wake_time'] =
+                                '${time.hour}:${time.minute}';
                           });
                         },
                       ),
@@ -126,7 +125,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
 
                       // Energetic Toggle
                       _buildToggleOption(
-                        label: 'Do you feel energetic upon waking up?',
+                        label: 'Do you feel energetic when you wake up?',
                         value: feelsEnergetic,
                         icon: Icons.battery_charging_full_outlined,
                         onChanged: (value) {
@@ -145,24 +144,27 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                           onPressed: () {
                             if (sleepTime == null || wakeTime == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please select your sleep and wake-up times.'),
+                                SnackBar(
+                                  content: const Text(
+                                      'Please select your sleep and wake-up times.'),
+                                  backgroundColor:
+                                      theme.colorScheme.errorContainer,
                                 ),
                               );
                               return;
                             }
-
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => TrainingGoalsScreen(
                                   data: widget.data,
-                                  clientUid: widget.clientUid, // <-- pass forward
+                                  clientUid: widget.clientUid,
                                 ),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                          icon: const Icon(Icons.arrow_forward,
+                              color: Colors.white),
                           label: const Text('Next'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -194,7 +196,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Container(
@@ -236,7 +238,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Container(
@@ -252,7 +254,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                 Switch(
                   value: value,
                   onChanged: onChanged,
-                  activeColor: Colors.blue,
+                  activeColor: Theme.of(context).colorScheme.primary,
                 ),
               ],
             ),

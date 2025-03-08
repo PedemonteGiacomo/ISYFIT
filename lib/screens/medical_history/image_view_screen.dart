@@ -9,7 +9,8 @@ class ImageViewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Document View'),
+        title: Text('Document View',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
       ),
       body: Center(
         child: Container(
@@ -17,7 +18,7 @@ class ImageViewScreen extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(
               color: Colors.grey, // Border color
-              width: 2,           // Border width
+              width: 2, // Border width
             ),
             borderRadius: BorderRadius.circular(12), // Rounded corners
           ),

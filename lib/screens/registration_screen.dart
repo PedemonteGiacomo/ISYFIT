@@ -12,6 +12,7 @@ class RegistrationScreen extends StatelessWidget {
     required String description,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -23,40 +24,40 @@ class RegistrationScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // Icon
+              // Icon Section
               CircleAvatar(
                 radius: 30,
-                backgroundColor:
-                    Theme.of(context).primaryColor.withOpacity(0.1),
+                backgroundColor: theme.primaryColor.withOpacity(
+                    0.1), // or theme.colorScheme.primary.withOpacity(0.1)
                 child: Icon(
                   icon,
-                  color: Theme.of(context).primaryColor,
+                  color: theme.primaryColor, // or theme.colorScheme.primary
                   size: 30,
                 ),
               ),
               const SizedBox(width: 16),
 
-              // Title and Description
+              // Title & Description
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       description,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ],
                 ),
               ),
 
-              // Arrow Icon
+              // Arrow
               const Icon(Icons.arrow_forward_ios, size: 20),
             ],
           ),
@@ -67,59 +68,54 @@ class RegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(''), // Removed the text but kept the blue bar
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 8,
-      ),
+      // appBar: AppBar(
+      //   title: const Text(''), // Use an empty title but preserve the app bar
+      //   backgroundColor: theme.primaryColor, // or theme.colorScheme.primary
+      //   elevation: 8,
+      // ),
       body: Center(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxWidth: 700), // Reduced width
-                  child: _buildOptionCard(
-                    context: context,
-                    icon: Icons.person,
-                    title: 'Register as Client',
-                    description:
-                        'Create an account to be guided by a Personal Trainer or use limited features.',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const RegisterClientScreen()),
-                      );
-                    },
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700),
+                child: _buildOptionCard(
+                  context: context,
+                  icon: Icons.person,
+                  title: 'Register as Client',
+                  description:
+                      'Create an account to be guided by a Personal Trainer or use limited features.',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterClientScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxWidth: 700), //Reduced width
-                  child: _buildOptionCard(
-                    context: context,
-                    icon: Icons.fitness_center,
-                    title: 'Register as PT',
-                    description:
-                        'Sign up as a Personal Trainer to manage your clients and grow your business.',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const RegisterPTScreen()),
-                      );
-                    },
+              ),
+              const SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700),
+                child: _buildOptionCard(
+                  context: context,
+                  icon: Icons.fitness_center,
+                  title: 'Register as PT',
+                  description:
+                      'Sign up as a Personal Trainer to manage your clients and grow your business.',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterPTScreen(),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

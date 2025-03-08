@@ -19,11 +19,14 @@ class HomeScreen extends StatelessWidget {
     }
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      future:
+          FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+        } else if (snapshot.hasError ||
+            !snapshot.hasData ||
+            !snapshot.data!.exists) {
           return Center(
             child: Text(
               'Error loading user data.',

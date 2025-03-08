@@ -1,9 +1,8 @@
-// lib/theme/app_theme.dart
 import 'package:flutter/material.dart';
 
-// If you want to embed a custom font (e.g. Roboto), 
+// If you want to embed a custom font (e.g. Roboto),
 // make sure you declared it in pubspec.yaml and placed the font file in assets.
-// For now, let's assume "Roboto" is declared in pubspec.yaml. 
+// For now, let's assume "Roboto" is declared in pubspec.yaml.
 
 /// Example brand colors: Electric Blue, plus black/white
 const Color kElectricBlue = Color(0xFF0062FF);
@@ -14,7 +13,7 @@ const Color kWhite = Colors.white;
 const MaterialColor kElectricBlueSwatch = MaterialColor(
   0xFF0062FF,
   <int, Color>{
-    50:  Color(0xFFE6F0FF),
+    50: Color(0xFFE6F0FF),
     100: Color(0xFFCCE0FF),
     200: Color(0xFF99C2FF),
     300: Color(0xFF66A3FF),
@@ -29,19 +28,18 @@ const MaterialColor kElectricBlueSwatch = MaterialColor(
 
 ThemeData buildAppTheme({bool isDark = false}) {
   final base = isDark ? ThemeData.dark() : ThemeData.light();
-  
+
   return base.copyWith(
     //primarySwatch: kElectricBlueSwatch,
     primaryColor: kElectricBlue,
     scaffoldBackgroundColor: isDark ? kBlack : kWhite,
-    
+
     // Text
     textTheme: base.textTheme.apply(
       fontFamily: 'Roboto', // or any other declared font
       bodyColor: isDark ? kWhite : kBlack,
       displayColor: isDark ? kWhite : kBlack,
     ),
-    
     // ElevatedButton styling
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

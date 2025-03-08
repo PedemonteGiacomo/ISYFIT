@@ -55,7 +55,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .update({'clients': FieldValue.arrayUnion([clientId])});
+          .update({
+        'clients': FieldValue.arrayUnion([clientId])
+      });
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -85,7 +87,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .update({'clients': FieldValue.arrayRemove([clientId])});
+          .update({
+        'clients': FieldValue.arrayRemove([clientId])
+      });
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -182,7 +186,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MedicalHistoryScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          MedicalHistoryScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -231,7 +236,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MeasurementsHomeScreen(clientUid: clientUid),
+                      builder: (_) =>
+                          MeasurementsHomeScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -369,11 +375,14 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                   },
                 ),
               ),
-              DataCell(
-                  _buildEditableField(clientId, 'amount', paymentData['amount'])),
-              DataCell(_buildEditableDateField(clientId, 'date', paymentData['date'])),
-              DataCell(_buildEditableField(clientId, 'method', paymentData['method'])),
-              DataCell(_buildEditableField(clientId, 'object', paymentData['object'])),
+              DataCell(_buildEditableField(
+                  clientId, 'amount', paymentData['amount'])),
+              DataCell(_buildEditableDateField(
+                  clientId, 'date', paymentData['date'])),
+              DataCell(_buildEditableField(
+                  clientId, 'method', paymentData['method'])),
+              DataCell(_buildEditableField(
+                  clientId, 'object', paymentData['object'])),
               DataCell(
                 IconButton(
                   icon: const Icon(Icons.edit),
@@ -395,7 +404,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     );
   }
 
-  Widget _buildEditableDateField(String documentId, String field, Timestamp? value) {
+  Widget _buildEditableDateField(
+      String documentId, String field, Timestamp? value) {
     final formattedDate =
         value != null ? DateFormat('yyyy-MM-dd').format(value.toDate()) : '';
     return TextFormField(
@@ -427,8 +437,10 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   }
 
   Future<String> _getClientNameFromUid(String clientUid) async {
-    final userSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(clientUid).get();
+    final userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(clientUid)
+        .get();
     if (userSnapshot.exists) {
       final userData = userSnapshot.data() as Map<String, dynamic>;
       return '${userData['name'] ?? ''} ${userData['surname'] ?? ''}';
@@ -454,7 +466,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Clients'),
+        title: Text('Manage Clients',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -469,7 +482,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           const SizedBox(height: 8),
           Text(
             'Add New Client',
-            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -479,7 +493,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              onChanged: (value) => setState(() => _searchQuery = value.trim().toLowerCase()),
+              onChanged: (value) =>
+                  setState(() => _searchQuery = value.trim().toLowerCase()),
               decoration: InputDecoration(
                 labelText: 'Search Clients',
                 prefixIcon: const Icon(Icons.search),
@@ -525,7 +540,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                 if (clientIds.isEmpty && !_showPayments) {
                   return const Center(child: Text('No clients to manage.'));
                 } else if (clientIds.isEmpty && _showPayments) {
-                  return const Center(child: Text('No payment data available.'));
+                  return const Center(
+                      child: Text('No payment data available.'));
                 }
 
                 return _showPayments

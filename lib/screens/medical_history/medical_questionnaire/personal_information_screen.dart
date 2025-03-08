@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'physical_measurements_screen.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
-  final String? clientUid; // <-- Add this
+  final String? clientUid;
 
   const PersonalInformationScreen({Key? key, this.clientUid}) : super(key: key);
 
@@ -30,11 +30,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     _loadUserData();
   }
 
-  /// If clientUid != null, load the data for that user. Otherwise, load current user’s data.
+  /// Load user data from Firestore based on clientUid (if provided) or the logged-in user.
   Future<void> _loadUserData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      final userIdToLoad = widget.clientUid ?? user?.uid; 
+      final userIdToLoad = widget.clientUid ?? user?.uid;
       if (userIdToLoad != null) {
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
@@ -74,10 +74,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Personal Information'),
-        centerTitle: true,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Personal Information'),
+      //   centerTitle: true,
+      //   backgroundColor: theme.colorScheme.primary,
+      // ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -90,11 +91,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
                       // Header Section
-                      const Icon(Icons.person, size: 64, color: Colors.blue),
+                      Icon(Icons.person,
+                          size: 64, color: theme.colorScheme.primary),
                       const SizedBox(height: 16),
                       Text(
                         'Personal Information',
@@ -102,10 +104,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'This section displays personal details as stored in the system.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -130,37 +134,22 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Email',
-                              email ?? 'N/A',
-                              Icons.email_outlined,
-                            ),
-                          ),
-                        ],
-                      ),
+
+                      _buildFieldWithIcon(
+                          'Email', email ?? 'N/A', Icons.email_outlined),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Phone',
-                              phone ?? 'N/A',
-                              Icons.phone_outlined,
-                            ),
-                          ),
-                        ],
-                      ),
+
+                      _buildFieldWithIcon(
+                          'Phone', phone ?? 'N/A', Icons.phone_outlined),
                       const SizedBox(height: 16),
+
                       Row(
                         children: [
                           Expanded(
                             child: _buildFieldWithIcon(
                               'Date of Birth',
                               dateOfBirth ?? 'N/A',
-                              Icons.calendar_today,
+                              Icons.calendar_today_outlined,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -168,25 +157,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             child: _buildFieldWithIcon(
                               'Role',
                               role ?? 'N/A',
-                              role == 'PT' ? Icons.medical_services : Icons.person,
+                              role == 'PT'
+                                  ? Icons.medical_services
+                                  : Icons.person,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      // Row(
-                      //   children: [
-                      //     Expanded(
-                      //       child: _buildFieldWithIcon(
-                      //         'Profession',
-                      //         profession ?? 'N/A',
-                      //         Icons.work_outline,
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-
                       const SizedBox(height: 32),
+
                       // Next Button -> Pass clientUid forward
                       SizedBox(
                         width: MediaQuery.of(context).size.width * 0.5,
@@ -195,7 +174,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PhysicalMeasurementsScreen(
+                                builder: (context) =>
+                                    PhysicalMeasurementsScreen(
                                   data: {
                                     'name': name,
                                     'surname': surname,
@@ -203,14 +183,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                     'phone': phone,
                                     'dateOfBirth': dateOfBirth,
                                     'role': role,
-                                    // 'profession': profession,
                                   },
-                                  clientUid: widget.clientUid, // Pass forward
+                                  clientUid: widget.clientUid,
                                 ),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                          icon: const Icon(Icons.arrow_forward,
+                              color: Colors.white),
                           label: const Text('Next'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -233,32 +213,48 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     );
   }
 
+  /// Reusable field with an icon
   Widget _buildFieldWithIcon(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border.all(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

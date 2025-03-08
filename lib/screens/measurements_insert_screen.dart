@@ -12,20 +12,21 @@ final Map<String, String> measurementTypeInfo = {
 
 class MeasurementsInsertScreen extends StatefulWidget {
   // Optionally receive the clientUid here, if needed:
-  final String? clientUid; 
+  final String? clientUid;
   const MeasurementsInsertScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
-  State<MeasurementsInsertScreen> createState() => _MeasurementsInsertScreenState();
+  State<MeasurementsInsertScreen> createState() =>
+      _MeasurementsInsertScreenState();
 }
 
 class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
     with AutomaticKeepAliveClientMixin {
-  // By default, TabBarView rebuilds child widgets on tab switch, 
+  // By default, TabBarView rebuilds child widgets on tab switch,
   // but wantKeepAlive => true helps keep state alive.
 
   @override
-  bool get wantKeepAlive => true; 
+  bool get wantKeepAlive => true;
 
   // The currently selected measurement
   String _selectedMeasurementType = '';
@@ -112,7 +113,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       icon: Icon(icon, color: Colors.white),
       label: Text(
         type,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       onPressed: () {
         setState(() {
@@ -183,7 +185,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           children: [
             _buildTextField(_biaHeightCtrl, 'Height (cm)'),
             _buildTextField(_biaWeightCtrl, 'Weight (kg)'),
-            _buildTextField(_biaSkeletalMuscleMassCtrl, 'Skeletal Muscle Mass (kg)'),
+            _buildTextField(
+                _biaSkeletalMuscleMassCtrl, 'Skeletal Muscle Mass (kg)'),
             _buildTextField(_biaBodyFatKgCtrl, 'Body Fat (kg)'),
             _buildTextField(_biaBMICtrl, 'BMI'),
             _buildTextField(_biaBasalMetabolicRateCtrl, 'Basal Metabolic Rate'),

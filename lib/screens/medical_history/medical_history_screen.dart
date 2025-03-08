@@ -147,7 +147,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
     );
 
     try {
@@ -218,7 +222,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
     );
 
     try {
@@ -253,10 +261,17 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   }
 
   void _viewDocument(BuildContext context, String url, String fileType) {
-    if (fileType == 'pdf') {
+    final extension = fileType.toLowerCase();
+
+    if (extension == 'pdf' || extension == 'doc' || extension == 'docx') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => PDFViewScreen(pdfUrl: url)),
+        MaterialPageRoute(
+          builder: (_) => PDFViewScreen(
+            fileUrl: url,
+            fileExtension: extension,
+          ),
+        ),
       );
     } else {
       Navigator.push(
@@ -281,50 +296,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  // Widget _buildClientHeader(BuildContext context, Map<String, dynamic> data) {
-  //   final name = data['name'] ?? 'Unknown Name';
-  //   final email = data['email'] ?? 'No Email';
-  //   return Container(
-  //     margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-  //     padding: const EdgeInsets.all(16),
-  //     decoration: BoxDecoration(
-  //       color: Colors.deepPurple.shade50,
-  //       borderRadius: BorderRadius.circular(12),
-  //       border: Border.all(color: Colors.deepPurple.shade100, width: 1),
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         CircleAvatar(
-  //           radius: 24,
-  //           backgroundColor: Colors.deepPurple.shade100,
-  //           child: const Icon(Icons.person, color: Colors.white),
-  //         ),
-  //         const SizedBox(width: 12),
-  //         Expanded(
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 name,
-  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //                       fontWeight: FontWeight.bold,
-  //                       color: Colors.deepPurple.shade700,
-  //                     ),
-  //               ),
-  //               const SizedBox(height: 4),
-  //               Text(
-  //                 email,
-  //                 style: TextStyle(
-  //                     fontSize: 14, color: Colors.deepPurple.shade400),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   /// ---------------------------------------
   /// DASHBOARD-STYLE UI BUILDERS
   /// ---------------------------------------
@@ -334,7 +305,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [          
+        children: [
           // If PT is viewing, show the client’s name
           if (isPTView)
             FutureBuilder<Map<String, dynamic>?>(
@@ -347,91 +318,24 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 if (profileData == null) return const SizedBox();
                 return Text(
                   '${profileData['name']} ${profileData['surname'] ?? ''} (${profileData['email']})',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 );
               },
             ),
           // else show "Your anamnesis" for the user
           if (!isPTView)
-            const Text(
+            Text(
               'Your Anamnesis',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
         ],
       ),
     );
   }
-
-  /// A row of cards showing height, weight, and age at a glance
-  // Widget _buildQuickStatsRow(Map<String, dynamic> data) {
-  //   final height = data['height'] != null ? '${data['height']} cm' : 'N/A';
-  //   final weight = data['weight'] != null ? '${data['weight']} kg' : 'N/A';
-  //   final ageStr = data.containsKey('dateOfBirth')
-  //       ? '${calculateAge(data['dateOfBirth'])} yrs'
-  //       : 'N/A';
-
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.horizontal,
-  //     padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-  //     child: Row(
-  //       children: [
-  //         _buildInfoCard(icon: Icons.height, label: 'Height', value: height),
-  //         const SizedBox(width: 12),
-  //         _buildInfoCard(icon: Icons.monitor_weight, label: 'Weight', value: weight),
-  //         const SizedBox(width: 12),
-  //         _buildInfoCard(icon: Icons.cake_outlined, label: 'Age', value: ageStr),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildInfoCard({
-  //   required IconData icon,
-  //   required String label,
-  //   required String value,
-  // }) {
-  //   return Container(
-  //     width: 120,
-  //     padding: const EdgeInsets.all(16),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(12),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.grey.shade200,
-  //           blurRadius: 6,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         Icon(icon, color: Colors.blueAccent, size: 28),
-  //         const SizedBox(height: 8),
-  //         Text(
-  //           label,
-  //           style: TextStyle(
-  //             fontSize: 14,
-  //             color: Colors.grey.shade600,
-  //             fontWeight: FontWeight.w600,
-  //           ),
-  //         ),
-  //         const SizedBox(height: 4),
-  //         Text(
-  //           value,
-  //           style: const TextStyle(
-  //             fontSize: 16,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   /// PERSONAL INFO TAB
   Widget _buildPersonalInfoTab(Map<String, dynamic> data) {
@@ -444,15 +348,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     final ageStr = data.containsKey('dateOfBirth')
         ? '${calculateAge(data['dateOfBirth'])} yrs'
         : 'N/A';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Quick stats at the top
-          // _buildQuickStatsRow(data),
           const SizedBox(height: 16),
-
-          // A card with personal details
           _buildSectionCard(
             title: 'Personal Details',
             icon: Icons.person_pin,
@@ -462,9 +363,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               _buildDataLine(label: 'Age', value: ageStr),
             ],
           ),
-
           const SizedBox(height: 16),
-
           _buildSectionCard(
             title: 'Contact Details',
             icon: Icons.phone,
@@ -473,9 +372,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               _buildDataLine(label: 'Profession', value: profession),
             ],
           ),
-
           const SizedBox(height: 16),
-
           _buildSectionCard(
             title: 'Physical Stats',
             icon: Icons.accessibility,
@@ -499,6 +396,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     final sleepTime = data['sleep_time'] ?? 'N/A';
     final wakeTime = data['wake_time'] ?? 'N/A';
     final energetic = data['energetic'] ?? 'N/A';
+
     var breakfast = data['breakfast'] ?? 'N/A';
     if (breakfast == 'Yes' && data['breakfastDetails'] != null) {
       breakfast += ' (${data['breakfastDetails']})';
@@ -552,6 +450,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     final fixedShifts = data['fixedWorkShifts'] ?? 'N/A';
     final goals = data['goals'] ?? 'N/A';
     final gymExperience = data['gymExperience'] ?? 'N/A';
+
     final trainingDays = data['training_days'] is List
         ? (data['training_days'] as List).join(', ')
         : (data['training_days'] ?? 'N/A').toString();
@@ -561,7 +460,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Injuries & Health card
           _buildSectionCard(
             title: 'Health & Injury History',
             icon: Icons.health_and_safety,
@@ -584,8 +482,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // Training experience card
           _buildSectionCard(
             title: 'Training Experience & Goals',
             icon: Icons.fitness_center,
@@ -611,8 +507,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: medicalDocuments,
       builder: (context, snapshot) {
+        final theme = Theme.of(context);
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: theme.colorScheme.primary,
+            ),
+          );
         }
         final docs = snapshot.data ?? [];
         if (docs.isEmpty) {
@@ -622,10 +523,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('No documents uploaded yet.',
-                      style: TextStyle(fontSize: 16)),
+                  Text(
+                    'No documents uploaded yet.',
+                    style: theme.textTheme.bodyLarge,
+                  ),
                   const SizedBox(height: 16),
-                  // Always show the Upload button
                   ElevatedButton.icon(
                     onPressed: () => _uploadFile(context),
                     icon: const Icon(Icons.upload_file),
@@ -642,15 +544,15 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Title + Upload button (always shown)
+              // Title + Upload button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Medical Documents',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   ElevatedButton.icon(
                     onPressed: () => _uploadFile(context),
@@ -679,33 +581,34 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.blue.withOpacity(0.1),
-                          child: Icon(icon, color: Colors.blue),
+                          backgroundColor:
+                              theme.colorScheme.primary.withOpacity(0.1),
+                          child: Icon(icon, color: theme.colorScheme.primary),
                         ),
                         title: Text(
                           doc['fileName'] ?? '',
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14),
+                          style: theme.textTheme.bodyMedium,
                         ),
                         subtitle: Text(
                           'Uploaded on: $uploadDate',
-                          style: const TextStyle(fontSize: 12),
+                          style: theme.textTheme.bodySmall,
                         ),
                         trailing: Wrap(
                           spacing: 12,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.visibility,
-                                  color: Colors.green),
+                              icon: Icon(Icons.visibility,
+                                  color: Colors.green.shade600),
                               onPressed: () => _viewDocument(
                                 context,
                                 doc['downloadUrl'] ?? '',
                                 doc['fileType'] ?? '',
                               ),
                             ),
-                            // Always show the delete button for PT and client alike.
                             IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
+                              icon: Icon(Icons.delete,
+                                  color: theme.colorScheme.error),
                               onPressed: () => _deleteDocument(context, doc),
                             ),
                           ],
@@ -723,9 +626,14 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                       showAllDocuments = !showAllDocuments;
                     });
                   },
-                  child: Text(showAllDocuments
-                      ? 'Show Less Documents'
-                      : 'Show All Documents'),
+                  child: Text(
+                    showAllDocuments
+                        ? 'Show Less Documents'
+                        : 'Show All Documents',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -740,27 +648,27 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     required IconData icon,
     required List<Widget> children,
   }) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blueGrey.shade50,
+        color: theme.colorScheme.surface.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueGrey.shade100),
+        border: Border.all(color: theme.colorScheme.surfaceVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.blueGrey.shade700),
+              Icon(icon, color: theme.colorScheme.secondary),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(
-                  color: Colors.blueGrey.shade800,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  color: theme.colorScheme.secondary,
                 ),
               ),
             ],
@@ -773,6 +681,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   }
 
   Widget _buildDataLine({required String label, required String value}) {
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -780,10 +689,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Text(value),
+          Text(value, style: textTheme.bodyMedium),
         ],
       ),
     );
@@ -796,9 +707,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
   /// If no medical history for PT’s client, show a simple message
   Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
+    final theme = Theme.of(context);
     return Column(
       children: [
-        //if (profileData != null) _buildClientHeader(context, profileData),
         Expanded(
           child: Center(
             child: SingleChildScrollView(
@@ -808,32 +719,37 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Card(
                     elevation: 4,
-                    color: Colors.orange.shade50,
+                    color: theme.colorScheme.errorContainer.withOpacity(0.2),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.warning,
-                              size: 48, color: Colors.orange.shade600),
+                          Icon(
+                            Icons.warning,
+                            size: 48,
+                            color: theme.colorScheme.error,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No Medical Data Found',
-                            style: TextStyle(
-                              color: Colors.orange.shade800,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'This user has not yet provided any medical history.\n'
                             'You can fill out the questionnaire for them or ask the user to do it.',
                             textAlign: TextAlign.center,
-                            style:
-                                TextStyle(fontSize: 14, color: Colors.black87),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
@@ -851,10 +767,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              foregroundColor: Colors.white,
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: theme.colorScheme.onPrimary,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -863,10 +780,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                             label: const Text('Return to Clients'),
                             onPressed: () => Navigator.pop(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange.shade800,
-                              foregroundColor: Colors.white,
+                              backgroundColor: theme.colorScheme.secondary,
+                              foregroundColor: theme.colorScheme.onSecondary,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ],
@@ -895,8 +813,20 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         future: clientProfile,
         builder: (context, snapshotProfile) {
           if (snapshotProfile.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  'Fit-Check',
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             );
           }
           final profileData = snapshotProfile.data;
@@ -905,15 +835,28 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             future: medicalHistory,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
+                return Scaffold(
+                  appBar: AppBar(
+                    title: Text('Fit-Check',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary)),
+                    backgroundColor: Theme.of(context).primaryColor,
+                  ),
+                  body: Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 );
               }
               // If no medical data for this client
               if (!snapshot.hasData || snapshot.data == null) {
                 return Scaffold(
                   appBar: AppBar(
-                    title: const Text('Medical History Dashboard'),
+                    title: Text('Fit-Check',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary)),
+                    backgroundColor: Theme.of(context).primaryColor,
                     centerTitle: true,
                   ),
                   body: _buildNoMedicalHistoryForPT(profileData),
@@ -923,22 +866,25 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text('Medical History Dashboard'),
+                  title: Text('Fit-Check',
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary)),
+                  backgroundColor: Theme.of(context).primaryColor,
                   centerTitle: true,
                 ),
                 body: Column(
                   children: [
                     _buildDashboardHeader(),
-                    //if (profileData != null) _buildClientHeader(context, profileData),
                     Expanded(
                       child: DefaultTabController(
                         length: 4,
                         child: Column(
                           children: [
                             TabBar(
-                              labelColor: Theme.of(context).primaryColor,
+                              labelColor: Theme.of(context).colorScheme.primary,
                               unselectedLabelColor: Colors.grey,
-                              indicatorColor: Theme.of(context).primaryColor,
+                              indicatorColor:
+                                  Theme.of(context).colorScheme.primary,
                               tabs: const [
                                 Tab(text: 'Personal Info'),
                                 Tab(text: 'Lifestyle'),
@@ -974,15 +920,28 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       future: medicalHistory,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Fit-Check',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)),
+              backgroundColor: Theme.of(context).primaryColor,
+            ),
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
           );
         }
         // If no data, show the questionnaire
         if (!snapshot.hasData || snapshot.data == null) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Medical History Dashboard'),
+              title: Text('Fit-Check',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)),
+              backgroundColor: Theme.of(context).primaryColor,
               centerTitle: true,
             ),
             body: _buildNoMedicalHistoryForUser(),
@@ -991,7 +950,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         final data = snapshot.data!;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Medical History Dashboard'),
+            title: Text('Fit-Check',
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+            backgroundColor: Theme.of(context).primaryColor,
             centerTitle: true,
           ),
           body: Column(
@@ -1003,9 +965,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   child: Column(
                     children: [
                       TabBar(
-                        labelColor: Theme.of(context).primaryColor,
+                        labelColor: Theme.of(context).colorScheme.primary,
                         unselectedLabelColor: Colors.grey,
-                        indicatorColor: Theme.of(context).primaryColor,
+                        indicatorColor: Theme.of(context).colorScheme.primary,
                         tabs: const [
                           Tab(text: 'Personal Info'),
                           Tab(text: 'Lifestyle'),

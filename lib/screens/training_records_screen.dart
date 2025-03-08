@@ -3,14 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:isyfit/screens/login_screen.dart';
 
-// Example of a TrainingRecordsScreen that can handle both
-//  - the current user (clientUid == null)
-//  - or a specific client (clientUid != null) if a PT opens it.
-
 class TrainingRecordsScreen extends StatefulWidget {
-  final String? clientUid; 
-  // If null, uses the logged-in user's data.
-  // If not null, the PT is viewing that user's training data.
+  /// If `clientUid` is null, it uses the currently logged-in user.
+  /// If not null, it means a PT is viewing a specific client's records.
+  final String? clientUid;
 
   const TrainingRecordsScreen({Key? key, this.clientUid}) : super(key: key);
 
@@ -19,29 +15,25 @@ class TrainingRecordsScreen extends StatefulWidget {
 }
 
 class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
-  // If this is false, we won't show "Add plan," etc.
-  // You can decide if the PT can add plans for their clients or not.
+  /// Check if the user is looking at their own data
   bool get isOwnAccount {
     final currentUser = FirebaseAuth.instance.currentUser;
-    final uid = currentUser?.uid;
-    // If clientUid is null or equals the current user's UID => own account
-    if (widget.clientUid == null || widget.clientUid == uid) {
-      return true;
-    }
-    return false;
+    if (currentUser == null) return false;
+    // If clientUid is null or matches current user => own account
+    return widget.clientUid == null || widget.clientUid == currentUser.uid;
   }
 
-  /// Returns either [widget.clientUid] if not null, or the current user's uid otherwise.
+  /// Return `widget.clientUid` if not null, else the current user's UID.
   String? get targetUid {
     final user = FirebaseAuth.instance.currentUser;
     return widget.clientUid ?? user?.uid;
   }
 
-  // For PT viewing a client's data, we fetch name + email
+  /// If `clientUid` is non-null, we assume a PT is viewing a client's records.
   bool get isPTView => widget.clientUid != null;
 
-  // We'll store the future that fetches client doc
-  late Future<Map<String, dynamic>?>? _clientProfileFuture;
+  /// Store a Future that fetches the client's profile if a PT is viewing it.
+  late final Future<Map<String, dynamic>?>? _clientProfileFuture;
 
   @override
   void initState() {
@@ -53,7 +45,7 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
     }
   }
 
-  /// If PT is viewing a client, fetch that client's name and email
+  /// Fetch client profile data if PT is viewing
   Future<Map<String, dynamic>?> _fetchClientProfile() async {
     if (targetUid == null) return null;
     final docSnap = await FirebaseFirestore.instance
@@ -65,35 +57,40 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If there's no user & no clientUid, we cannot load anything
+    // If we have no user and no clientUid, we must prompt for login
     if (targetUid == null) {
       return const LoginScreen();
     }
 
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Training Records'),
+        title: Text('Training Records',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
       ),
       body: isPTView
-          ? // If PT is viewing, show a profile future + the main content
-          FutureBuilder<Map<String, dynamic>?>(
-            future: _clientProfileFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final clientData = snapshot.data;
-              return _buildMainContent(context, clientData: clientData);
-            },
-          )
-          : // If it's the user's own account, just build main content with no profile header
-          _buildMainContent(context, clientData: null),
+          ? FutureBuilder<Map<String, dynamic>?>(
+              future: _clientProfileFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final clientData = snapshot.data;
+                return _buildMainContent(context, clientData: clientData);
+              },
+            )
+          : _buildMainContent(context, clientData: null),
     );
   }
 
-  /// Builds the **entire** screen content, optionally showing a client header
-  Widget _buildMainContent(BuildContext context, {Map<String, dynamic>? clientData}) {
+  /// Builds the entire screen content
+  Widget _buildMainContent(
+    BuildContext context, {
+    Map<String, dynamic>? clientData,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
@@ -101,8 +98,9 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (clientData != null) _buildClientHeader(context, clientData),
-            // Overview Section
-            _buildSectionTitle('Overview'),
+
+            // Overview
+            _buildSectionTitle(context, 'Overview'),
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -110,28 +108,13 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Manage and track training progress effectively.',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isOwnAccount
-                          ? 'This section provides insights into your training plans, progress updates, and session history.'
-                          : 'This section provides insights into your client’s training plans, progress updates, and session history.',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
+                child: _buildOverviewInfo(context),
               ),
             ),
             const SizedBox(height: 20),
 
-            // Recent Training Sessions Section
-            _buildSectionTitle('Recent Training Sessions'),
+            // Recent Training Sessions
+            _buildSectionTitle(context, 'Recent Training Sessions'),
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -146,7 +129,7 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
                       subtitle: 'Focus: Strength Training',
                       icon: Icons.person,
                       onTap: () {
-                        // For example, open a detail screen
+                        // Example: open a detail screen
                         Navigator.pushNamed(context, '/client-training-detail');
                       },
                     ),
@@ -172,8 +155,8 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Actions Section
-            _buildSectionTitle('Actions'),
+            // Actions
+            _buildSectionTitle(context, 'Actions'),
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -181,28 +164,7 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // "Create New Training Plan"
-                    if (isOwnAccount) ...[
-                      _buildActionButton(
-                        label: 'Create New Training Plan',
-                        icon: Icons.add_circle_outline,
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/create-training-plan');
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    _buildActionButton(
-                      label: 'View All Training Records',
-                      icon: Icons.search,
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/all-training-records');
-                      },
-                    ),
-                  ],
-                ),
+                child: _buildActions(context),
               ),
             ),
           ],
@@ -211,19 +173,22 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
     );
   }
 
-  /// If PT is viewing a client, show a small header with name + email
-  Widget _buildClientHeader(BuildContext context, Map<String, dynamic> clientData) {
+  /// Header for PT viewing a client
+  Widget _buildClientHeader(
+      BuildContext context, Map<String, dynamic> clientData) {
+    final theme = Theme.of(context);
     final clientName = clientData['name'] ?? 'Unknown Name';
     final clientEmail = clientData['email'] ?? 'Unknown Email';
+    final profilePicUrl = clientData['profileImageUrl'] as String?;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.shade50,
+        color: theme.colorScheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: Colors.deepPurple.shade100,
+          color: theme.colorScheme.primary.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -231,8 +196,12 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: Colors.deepPurple.shade100,
-            child: const Icon(Icons.person, color: Colors.white),
+            backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+            backgroundImage:
+                profilePicUrl != null ? NetworkImage(profilePicUrl) : null,
+            child: profilePicUrl == null
+                ? const Icon(Icons.person, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -241,17 +210,16 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
               children: [
                 Text(
                   clientName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade700,
-                      ),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   clientEmail,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.deepPurple.shade400,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -262,16 +230,24 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+  /// Builds an overview text, depending on if it's the user's own account
+  Widget _buildOverviewInfo(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Manage and track training progress effectively.',
+          style: theme.textTheme.bodyLarge,
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          isOwnAccount
+              ? 'This section provides insights into your training plans, progress updates, and session history.'
+              : 'This section provides insights into your client’s training plans, progress updates, and session history.',
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+        ),
+      ],
     );
   }
 
@@ -281,13 +257,48 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
     required IconData icon,
     VoidCallback? onTap,
   }) {
+    final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon, size: 32),
-      title: Text(title, style: const TextStyle(fontSize: 16)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)),
+      leading: Icon(icon, size: 32, color: theme.colorScheme.primary),
+      title: Text(title, style: theme.textTheme.bodyLarge),
+      subtitle: Text(
+        subtitle,
+        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+      ),
       trailing: const Icon(Icons.arrow_forward),
       onTap: onTap,
     );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    final widgets = <Widget>[];
+
+    // If it's your own account, show "Create New Training Plan"
+    if (isOwnAccount) {
+      widgets.addAll([
+        _buildActionButton(
+          label: 'Create New Training Plan',
+          icon: Icons.add_circle_outline,
+          onPressed: () {
+            Navigator.pushNamed(context, '/create-training-plan');
+          },
+        ),
+        const SizedBox(height: 12),
+      ]);
+    }
+
+    // Everyone sees "View All Training Records"
+    widgets.add(
+      _buildActionButton(
+        label: 'View All Training Records',
+        icon: Icons.search,
+        onPressed: () {
+          Navigator.pushNamed(context, '/all-training-records');
+        },
+      ),
+    );
+
+    return Column(children: widgets);
   }
 
   Widget _buildActionButton({
@@ -295,16 +306,30 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
+    final theme = Theme.of(context);
     return ElevatedButton.icon(
-      icon: Icon(icon, size: 20),
+      icon: Icon(icon, color: theme.colorScheme.onPrimary, size: 20),
       label: Text(label),
       style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.primary,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
       ),
       onPressed: onPressed,
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style:
+            theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

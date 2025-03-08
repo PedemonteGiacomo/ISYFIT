@@ -3,11 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:webview_flutter/webview_flutter.dart';
 
 class PDFViewScreen extends StatefulWidget {
-  final String pdfUrl;
+  final String fileUrl;
+  final String fileExtension; // e.g. 'pdf', 'doc', 'docx', etc.
 
-  const PDFViewScreen({Key? key, required this.pdfUrl}) : super(key: key);
+  const PDFViewScreen({
+    Key? key,
+    required this.fileUrl,
+    required this.fileExtension,
+  }) : super(key: key);
 
   @override
   _PDFViewScreenState createState() => _PDFViewScreenState();
@@ -16,28 +22,45 @@ class PDFViewScreen extends StatefulWidget {
 class _PDFViewScreenState extends State<PDFViewScreen> {
   String? localFilePath;
   bool isLoading = true;
+
+  // For PDFs
   int totalPages = 0;
   int currentPage = 0;
   bool showControls = false;
-
   late PDFViewController pdfController;
+
+  // For docx via Google Docs in WebView
+  bool isWebViewInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _downloadAndLoadPDF();
+    _initFileViewer();
+  }
+
+  Future<void> _initFileViewer() async {
+    final extension = widget.fileExtension.toLowerCase();
+    if (extension == 'pdf') {
+      await _downloadAndLoadPDF();
+    } else if (extension == 'doc' || extension == 'docx') {
+      setState(() {
+        isLoading = false;
+        isWebViewInitialized = true;
+      });
+    } else {
+      // unsupported
+      setState(() => isLoading = false);
+    }
   }
 
   Future<void> _downloadAndLoadPDF() async {
     try {
       final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/temp_pdf.pdf';
-
-      final response = await http.get(Uri.parse(widget.pdfUrl));
+      final filePath = '${directory.path}/temp_file.pdf';
+      final response = await http.get(Uri.parse(widget.fileUrl));
       if (response.statusCode == 200) {
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
-
         setState(() {
           localFilePath = filePath;
           isLoading = false;
@@ -46,6 +69,7 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
         throw Exception('Failed to download PDF');
       }
     } catch (e) {
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading PDF: $e')),
       );
@@ -60,12 +84,20 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final extension = widget.fileExtension.toLowerCase();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PDF Viewer'),
+        title: Text(
+            extension == 'pdf'
+                ? 'PDF Viewer'
+                : (extension == 'doc' || extension == 'docx')
+                    ? 'DOCX Viewer'
+                    : 'File Viewer',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         actions: [
-          if (!isLoading)
-            GestureDetector(
+          if (!isLoading && extension == 'pdf')
+            InkWell(
               onTap: _toggleControls,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -81,56 +113,89 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
       ),
       body: Stack(
         children: [
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Container(
-                  margin: const EdgeInsets.all(16), // Margin outside the border
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey, // Border color
-                      width: 2, // Border width
-                    ),
-                    borderRadius: BorderRadius.circular(12), // Rounded corners
-                  ),
-                  padding:
-                      const EdgeInsets.all(16), // Padding inside the border
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10), // Clipping corners
-                    child: PDFView(
-                      filePath: localFilePath!,
-                      enableSwipe: true,
-                      swipeHorizontal: true,
-                      autoSpacing: true,
-                      pageFling: true,
-                      fitEachPage: true,
-                      onRender: (pages) {
-                        setState(() {
-                          totalPages = pages!;
-                        });
-                      },
-                      onViewCreated: (PDFViewController controller) {
-                        pdfController = controller;
-                      },
-                      onPageChanged: (page, _) {
-                        setState(() {
-                          currentPage = page!;
-                        });
-                      },
-                      onError: (error) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: $error')),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-          if (showControls) _buildControls(),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator())
+          else ...[
+            if (extension == 'pdf' && localFilePath != null) _buildPDFView(),
+            if ((extension == 'doc' || extension == 'docx') &&
+                isWebViewInitialized)
+              _buildDocxView(),
+            if (extension != 'pdf' && extension != 'doc' && extension != 'docx')
+              _buildUnsupportedView(),
+          ],
+          if (showControls && extension == 'pdf') _buildControlsOverlay(),
         ],
       ),
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildPDFView() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: PDFView(
+          filePath: localFilePath!,
+          enableSwipe: true,
+          swipeHorizontal: true,
+          autoSpacing: true,
+          pageFling: true,
+          fitEachPage: true,
+          onRender: (pages) {
+            setState(() {
+              totalPages = pages ?? 0;
+            });
+          },
+          onViewCreated: (controller) {
+            pdfController = controller;
+          },
+          onPageChanged: (page, _) {
+            setState(() {
+              currentPage = page ?? 0;
+            });
+          },
+          onError: (error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: $error')),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocxView() {
+    // Use Google Docs viewer link
+    final docxUrl = widget.fileUrl;
+    final googleDocsUrl =
+        'https://docs.google.com/gview?embedded=true&url=$docxUrl';
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: const Text('...'), // or a WebView, see below
+      ),
+    );
+  }
+
+  Widget _buildUnsupportedView() {
+    return const Center(
+      child: Text('Unsupported file type'),
+    );
+  }
+
+  Widget _buildControlsOverlay() {
     return Positioned(
       bottom: 20,
       left: 20,

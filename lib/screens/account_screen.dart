@@ -188,7 +188,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account'),
+        title: Text('Account',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         backgroundColor: theme.colorScheme.primary,
         actions: [
           IconButton(
@@ -347,7 +348,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Client Account'),
+        title: Text('Client Account',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -397,7 +399,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           Text(
                             _email ?? 'No Email',
                             style: textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                         ],
