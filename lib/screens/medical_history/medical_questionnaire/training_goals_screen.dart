@@ -54,11 +54,12 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: theme.primaryColor,
-      //   title: const Text('Training & Goals'),
-      //   centerTitle: true,
-      // ),
+      appBar: AppBar(
+        backgroundColor: theme.primaryColor,
+        title: Text('Training & Goals',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(

@@ -53,11 +53,12 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: theme.colorScheme.primary,
-      //   title: const Text('Sleep & Energy'),
-      //   centerTitle: true,
-      // ),
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.primary,
+        title: Text('Sleep & Energy',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(

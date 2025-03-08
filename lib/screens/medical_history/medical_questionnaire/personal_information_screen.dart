@@ -74,11 +74,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     }
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Personal Information'),
-      //   centerTitle: true,
-      //   backgroundColor: theme.colorScheme.primary,
-      // ),
+      appBar: AppBar(
+        title: Text('Personal Information',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(

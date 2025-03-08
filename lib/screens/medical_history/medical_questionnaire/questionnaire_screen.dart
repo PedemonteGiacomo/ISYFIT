@@ -13,7 +13,8 @@ class QuestionnaireScreen extends StatelessWidget {
     return Scaffold(
       // appBar: AppBar(
       //   backgroundColor: theme.colorScheme.primary,
-      //   title: const Text('Medical Questionnaire'),
+      //   title: Text('Medical Questionnaire',
+      //       style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
       //   centerTitle: true,
       // ),
       body: Center(

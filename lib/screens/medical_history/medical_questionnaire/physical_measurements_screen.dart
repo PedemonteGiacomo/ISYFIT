@@ -43,11 +43,12 @@ class _PhysicalMeasurementsScreenState
     final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Physical Measurements'),
-      //   centerTitle: true,
-      //   backgroundColor: theme.colorScheme.primary,
-      // ),
+      appBar: AppBar(
+        title: Text('Physical Measurements',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(

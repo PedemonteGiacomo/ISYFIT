@@ -81,11 +81,12 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Lifestyle'),
-      //   centerTitle: true,
-      //   backgroundColor: theme.colorScheme.primary,
-      // ),
+      appBar: AppBar(
+        title: Text('Lifestyle',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+        backgroundColor: theme.colorScheme.primary,
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
