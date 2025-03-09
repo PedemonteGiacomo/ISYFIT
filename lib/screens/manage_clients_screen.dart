@@ -470,6 +470,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,

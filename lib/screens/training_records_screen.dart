@@ -70,6 +70,9 @@ class _TrainingRecordsScreenState extends State<TrainingRecordsScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: isPTView
           ? FutureBuilder<Map<String, dynamic>?>(

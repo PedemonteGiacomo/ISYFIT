@@ -40,6 +40,14 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
           .hasMatch(_emailController.text);
 
+  // reflects if all password requirements are met in the icon
+  bool get _allRequirementsMet =>
+    _hasUppercase &&
+    _hasLowercase &&
+    _hasNumber &&
+    _hasSpecialChar &&
+    _hasMinLength;
+
   Future<void> _registerClient() async {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -248,7 +256,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),
-                                prefixIcon: const Icon(Icons.person),
+                                prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                               ),
                             ),
                           ),
@@ -261,7 +269,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),
-                                prefixIcon: const Icon(Icons.person_outline),
+                                prefixIcon: Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary),
                               ),
                             ),
                           ),
@@ -289,7 +297,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                            prefixIcon: const Icon(Icons.email),
+                            prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
                             suffixIcon: _emailFieldTouched
                                 ? Icon(
                                     _isEmailValid
@@ -319,7 +327,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
-                              prefixIcon: const Icon(Icons.lock),
+                              prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
                           Positioned(
@@ -331,9 +339,11 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   _showPasswordInfo = !_showPasswordInfo;
                                 });
                               },
-                              child: const Icon(
+                              child: Icon(
                                 Icons.info_outline,
-                                color: Colors.grey,
+                                color: _allRequirementsMet
+                                    ? Colors.green
+                                    : Colors.red,
                               ),
                             ),
                           ),
@@ -409,7 +419,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                            prefixIcon: const Icon(Icons.calendar_today),
+                            prefixIcon: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
                           ),
                           child: Text(
                             _selectedDate == null
@@ -471,7 +481,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           ),
                           Expanded(
                             child: RadioListTile<bool>(
-                              title: const Text("Assign a PT"),
+                              title: const Text("Assign PT"),
                               value: false,
                               groupValue: isSolo,
                               onChanged: (value) {
@@ -495,7 +505,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
-                              prefixIcon: const Icon(Icons.email_outlined),
+                              prefixIcon: Icon(Icons.email_outlined, color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
                         ),
@@ -516,9 +526,9 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Register',
-                                style: TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
                               ),
                             ),
                     ],

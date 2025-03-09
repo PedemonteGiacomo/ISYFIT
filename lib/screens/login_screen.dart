@@ -125,9 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 horizontal: 24.0,
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Login',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                     const SizedBox(height: 16),

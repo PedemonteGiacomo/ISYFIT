@@ -11,6 +11,11 @@ class ImageViewScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Document View',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        iconTheme: IconThemeData(
+    color: Theme.of(context).colorScheme.onPrimary,
+  ),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Center(
         child: Container(

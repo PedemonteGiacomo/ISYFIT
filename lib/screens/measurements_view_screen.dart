@@ -78,9 +78,28 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context); // keepAlive
+
+    /// ADDED: Wrap the main content in a Column so we can add a refresh icon at the top
     return Column(
       children: [
+        /// ADDED: A small Row at the top with a Refresh button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () {
+                // Forces a rebuild, causing the FutureBuilder to re-fetch
+                setState(() {});
+              },
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh Measurements',
+            ),
+          ],
+        ),
+
         const SizedBox(height: 12),
+
+        // The rest of your original layout
         _buildMeasurementTypeSelection(context),
         const SizedBox(height: 12),
         Expanded(
@@ -329,6 +348,11 @@ class FullHistoryScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('$measurementType - Full History',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: FutureBuilder<QuerySnapshot>(
         future: collectionRef

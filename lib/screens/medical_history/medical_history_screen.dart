@@ -530,8 +530,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () => _uploadFile(context),
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Upload Document'),
+                    icon: Icon(Icons.upload_file,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                    label: Text('Upload Document',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary)),
                   ),
                 ],
               ),
@@ -555,10 +558,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () => _uploadFile(context),
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Upload'),
-                  ),
+                      onPressed: () => _uploadFile(context),
+                      icon: Icon(Icons.upload_file,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      label: Text('Upload',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary))),
                 ],
               ),
               const SizedBox(height: 16),
@@ -753,8 +758,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
-                            icon: const Icon(Icons.assignment_outlined),
-                            label: const Text('Fill Questionnaire'),
+                            icon: Icon(Icons.assignment_outlined,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                            label: Text('Fill Questionnaire',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                             onPressed: () {
                               // Navigate to the questionnaire flow but pass the clientUid
                               Navigator.push(
@@ -776,8 +786,13 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            icon: const Icon(Icons.arrow_back),
-                            label: const Text('Return to Clients'),
+                            icon: Icon(Icons.arrow_back,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                            label: Text('Return to Clients',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                             onPressed: () => Navigator.pop(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.secondary,
@@ -821,6 +836,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                       TextStyle(color: Theme.of(context).colorScheme.onPrimary),
                 ),
                 backgroundColor: Theme.of(context).primaryColor,
+                centerTitle: true,
+                iconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
               ),
               body: Center(
                 child: CircularProgressIndicator(
@@ -841,6 +860,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary)),
                     backgroundColor: Theme.of(context).primaryColor,
+                    centerTitle: true,
+                    iconTheme: IconThemeData(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                   body: Center(
                     child: CircularProgressIndicator(
@@ -858,6 +881,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                             color: Theme.of(context).colorScheme.onPrimary)),
                     backgroundColor: Theme.of(context).primaryColor,
                     centerTitle: true,
+                    iconTheme: IconThemeData(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                   body: _buildNoMedicalHistoryForPT(profileData),
                 );
@@ -871,6 +897,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           color: Theme.of(context).colorScheme.onPrimary)),
                   backgroundColor: Theme.of(context).primaryColor,
                   centerTitle: true,
+                  iconTheme: IconThemeData(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
                 body: Column(
                   children: [
@@ -926,6 +955,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimary)),
               backgroundColor: Theme.of(context).primaryColor,
+              centerTitle: true,
+              iconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
             body: Center(
               child: CircularProgressIndicator(
@@ -943,6 +976,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                       color: Theme.of(context).colorScheme.onPrimary)),
               backgroundColor: Theme.of(context).primaryColor,
               centerTitle: true,
+              iconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
             body: _buildNoMedicalHistoryForUser(),
           );
@@ -955,6 +991,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
             backgroundColor: Theme.of(context).primaryColor,
             centerTitle: true,
+            iconTheme: IconThemeData(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
           ),
           body: Column(
             children: [

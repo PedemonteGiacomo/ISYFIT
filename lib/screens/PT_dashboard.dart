@@ -163,8 +163,8 @@ class PTDashboard extends StatelessWidget {
         return Column(
           children: [
             ...clients.map((client) {
-              final clientName = client['name'] ?? 'Unknown';
-              final clientSurname = client['surname'] ?? 'Unknown';
+              final clientName = client['name'] ?? ' ';
+              final clientSurname = client['surname'] ?? ' ';
               final isPaying = client['isPaying'] ?? false;
 
               return InkWell(
@@ -246,6 +246,10 @@ class PTDashboard extends StatelessWidget {
         title: Text('PT Dashboard',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -334,7 +338,7 @@ class PTDashboard extends StatelessWidget {
                             ),
                           );
                         },
-                        child: const Text("View All"),
+                        child: Text("View All", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                       ),
                     ],
                   ),

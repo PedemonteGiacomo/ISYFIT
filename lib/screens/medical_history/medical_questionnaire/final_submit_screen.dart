@@ -30,6 +30,9 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -90,11 +93,13 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.send, color: Colors.white),
+                              : Icon(Icons.send,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
                           label: Text(
                             isSubmitting ? 'Submitting...' : 'Submit',
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(

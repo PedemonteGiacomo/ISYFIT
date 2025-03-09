@@ -95,6 +95,11 @@ class _PDFViewScreenState extends State<PDFViewScreen> {
                     ? 'DOCX Viewer'
                     : 'File Viewer',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
         actions: [
           if (!isLoading && extension == 'pdf')
             InkWell(

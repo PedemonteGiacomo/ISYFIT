@@ -59,6 +59,9 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
         title: Text('Training & Goals',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -162,8 +165,13 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               if (_formKey.currentState?.validate() ?? false) {
+                                // **Important**: Save the form so onSaved() runs
+                                _formKey.currentState!.save();
+
+                                // then store timesPerWeek
                                 widget.data['timesPerWeek'] = timesPerWeek;
 
+                                // Navigate
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -175,8 +183,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                                 );
                               }
                             },
-                            icon: const Icon(Icons.arrow_forward,
-                                color: Colors.white),
+                            icon: Icon(Icons.arrow_forward,
+                                color: Theme.of(context).colorScheme.onPrimary),
                             label: const Text('Next'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -222,12 +230,12 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onSaved: (value) => onSaved(value ?? ''),
-            validator: (value) => value == null || value.isEmpty
-                ? 'This field is required'
-                : null,
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'This field is required' : null,
             minLines: 1,
             maxLines: 3,
+            // The critical part: this only runs if you call formKey.save()
+            onSaved: (value) => onSaved(value ?? ''),
           ),
         ),
       ],
@@ -278,8 +286,7 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
   Widget _buildTimesPerWeekDropdown() {
     return Row(
       children: [
-        Icon(Icons.calendar_month,
-            color: Theme.of(context).colorScheme.primary),
+        Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 12),
         const Text('How many times per week?'),
         const SizedBox(width: 16),

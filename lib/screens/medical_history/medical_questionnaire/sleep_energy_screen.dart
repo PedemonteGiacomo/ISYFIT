@@ -58,6 +58,9 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
         title: Text('Sleep & Energy',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -164,9 +167,12 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.arrow_forward,
-                              color: Colors.white),
-                          label: const Text('Next'),
+                          icon: Icon(Icons.arrow_forward,
+                              color: Theme.of(context).colorScheme.onPrimary),
+                          label: Text('Next',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary)),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: theme.primaryColor,

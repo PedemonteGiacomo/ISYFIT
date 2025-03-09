@@ -58,7 +58,7 @@ class RegistrationScreen extends StatelessWidget {
               ),
 
               // Arrow
-              const Icon(Icons.arrow_forward_ios, size: 20),
+              Icon(Icons.arrow_forward_ios, size: 20, color: Theme.of(context).colorScheme.primary),
             ],
           ),
         ),

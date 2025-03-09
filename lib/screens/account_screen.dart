@@ -189,34 +189,47 @@ class _AccountScreenState extends State<AccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Account',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+            style: TextStyle(color: theme.colorScheme.onPrimary)),
         backgroundColor: theme.colorScheme.primary,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
+            icon: Icon(Icons.logout, color: theme.colorScheme.onPrimary),
             onPressed: _logout,
+            tooltip: 'Logout',
           )
         ],
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            /// Profile Header with editing capabilities
             const SizedBox(height: 20),
-            // Profile Header with editing capabilities
+
+            /// 1) Profile Card (Material 3 style, tinted surface)
             Card(
-              elevation: 4,
-              margin: const EdgeInsets.all(16.0),
+              elevation: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
-              child: Padding(
+              color: theme.colorScheme.onPrimary,
+              child: Container(
                 padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  color: theme.colorScheme.primary.withOpacity(0.05),
+                ),
                 child: Row(
                   children: [
-                    // Avatar with ability to tap and upload
-                    GestureDetector(
+                    /// Avatar with an InkWell ripple for a more “material” feel
+                    InkWell(
                       onTap: _uploadProfilePicture,
+                      borderRadius: BorderRadius.circular(50),
                       child: CircleAvatar(
                         radius: 50,
                         backgroundImage: _profileImageUrl != null
@@ -224,7 +237,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             : const NetworkImage(
                                 'https://api.dicebear.com/6.x/avataaars-neutral/png?seed=Katherine&flip=true'),
                         backgroundColor:
-                            theme.colorScheme.surface.withOpacity(0.5),
+                            theme.colorScheme.surfaceVariant.withOpacity(0.5),
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -237,12 +250,23 @@ class _AccountScreenState extends State<AccountScreen> {
                                 ? '$_name' +
                                     (_surname != null ? ' $_surname' : '')
                                 : 'Welcome, Loading...',
-                            style: textTheme.headlineSmall,
+                            style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const SizedBox(height: 5),
-                          Text(
-                            _email ?? 'No Email',
-                            style: textTheme.bodyMedium,
+                          Row(
+                            children: [
+                              Icon(Icons.email_outlined,
+                                  size: 18, color: theme.colorScheme.primary),
+                              const SizedBox(width: 8),
+                              Text(
+                                _email ?? 'No Email',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -252,89 +276,113 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
 
-            // Account Information card
+            /// 2) Account Information card
             Card(
-              elevation: 4,
-              margin: const EdgeInsets.all(16.0),
+              elevation: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
+              color: theme.colorScheme.onPrimary,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ListTile(
-                    title: Text(
-                      'Account Information',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(_isEditMode ? Icons.check : Icons.edit),
-                      onPressed: () {
-                        if (_isEditMode) {
-                          _saveChanges();
-                        }
-                        setState(() {
-                          _isEditMode = !_isEditMode;
-                        });
-                      },
+                  /// Header: “Account Information” + Edit/Check icon
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 12),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Account Information',
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: Icon(
+                            _isEditMode ? Icons.check : Icons.edit,
+                            color: theme.colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            if (_isEditMode) {
+                              _saveChanges();
+                            }
+                            setState(() {
+                              _isEditMode = !_isEditMode;
+                            });
+                          },
+                          tooltip:
+                              _isEditMode ? 'Save changes' : 'Edit information',
+                        ),
+                      ],
                     ),
                   ),
                   const Divider(),
 
                   // Name
-                  _buildField(
+                  _buildEditableListTile(
                     label: 'Name',
                     value: _name,
                     isEditable: _isEditMode,
+                    icon: Icons.person_outline,
                     onChanged: (value) => _name = value,
                   ),
 
                   // Surname
-                  _buildField(
+                  _buildEditableListTile(
                     label: 'Surname',
                     value: _surname,
                     isEditable: _isEditMode,
+                    icon: Icons.person,
                     onChanged: (value) => _surname = value,
                   ),
 
                   // Phone
-                  _buildField(
+                  _buildEditableListTile(
                     label: 'Phone',
                     value: _phone,
                     isEditable: _isEditMode,
+                    icon: Icons.phone,
                     onChanged: (value) => _phone = value,
                   ),
 
                   // VAT/P.IVA (only if present)
                   if (_vat != null)
-                    _buildField(
+                    _buildEditableListTile(
                       label: 'VAT/P.IVA',
                       value: _vat,
                       isEditable: _isEditMode,
+                      icon: Icons.badge,
                       onChanged: (value) => _vat = value,
                     ),
 
                   // Legal Info (if present)
                   if (_legalInfo != null)
-                    _buildField(
+                    _buildEditableListTile(
                       label: 'Legal Info',
                       value: _legalInfo,
                       isEditable: _isEditMode,
                       maxLines: 3,
+                      icon: Icons.info_outline,
                       onChanged: (value) => _legalInfo = value,
                     ),
 
                   // Date of Birth (non-editable for now)
-                  _buildNonEditableField(
+                  _buildNonEditableListTile(
                     label: 'Date of Birth',
                     value: _dateOfBirth != null
                         ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
                         : 'Not available',
+                    icon: Icons.calendar_today_outlined,
                   ),
+
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -349,7 +397,7 @@ class _AccountScreenState extends State<AccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Client Account',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+            style: TextStyle(color: theme.colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
       ),
@@ -357,18 +405,18 @@ class _AccountScreenState extends State<AccountScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // A bigger "profile" card showing the client’s info
+            /// 1) A bigger "profile" card with tinted surface
             Card(
-              elevation: 4,
+              elevation: 3,
               margin: const EdgeInsets.only(bottom: 16.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
+              color: theme.colorScheme.onPrimary,
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
-                  // We can use a tinted surface or primary-based background
                   color: theme.colorScheme.primary.withOpacity(0.05),
                 ),
                 child: Row(
@@ -391,17 +439,22 @@ class _AccountScreenState extends State<AccountScreen> {
                             _name ?? 'Loading Name...',
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              // highlight color usage:
                               color: theme.colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 5),
-                          Text(
-                            _email ?? 'No Email',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.6),
-                            ),
+                          Row(
+                            children: [
+                              Icon(Icons.email_outlined,
+                                  size: 18, color: theme.colorScheme.primary),
+                              const SizedBox(width: 8),
+                              Text(
+                                _email ?? 'No Email',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -411,12 +464,13 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
 
-            // Another card with basic account info in read-only format
+            /// 2) A "Client Details" card, read-only
             Card(
-              elevation: 4,
+              elevation: 3,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
+              color: theme.colorScheme.surfaceTint,
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
@@ -434,13 +488,16 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     const Divider(thickness: 1.2),
-                    _buildReadOnlyRow('Name', _name),
-                    _buildReadOnlyRow('Surname', _surname),
-                    _buildReadOnlyRow('Phone', _phone),
-                    if (_vat != null) _buildReadOnlyRow('VAT/P.IVA', _vat),
+                    _buildReadOnlyRow(Icons.person_outline, 'Name', _name),
+                    _buildReadOnlyRow(Icons.person, 'Surname', _surname),
+                    _buildReadOnlyRow(Icons.phone, 'Phone', _phone),
+                    if (_vat != null)
+                      _buildReadOnlyRow(Icons.badge, 'VAT/P.IVA', _vat),
                     if (_legalInfo != null)
-                      _buildReadOnlyRow('Legal Info', _legalInfo),
+                      _buildReadOnlyRow(
+                          Icons.info_outline, 'Legal Info', _legalInfo),
                     _buildReadOnlyRow(
+                      Icons.calendar_today_outlined,
                       'Date of Birth',
                       _dateOfBirth != null
                           ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
@@ -453,11 +510,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
             const SizedBox(height: 20),
 
-            // Optional "Return" button
+            /// 3) Return button to go back
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Return'),
+              icon: Icon(Icons.arrow_back,
+                  color: Theme.of(context).colorScheme.onPrimary),
+              label: Text('Return',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
@@ -474,15 +534,19 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Reusable editable field
-  Widget _buildField({
+  /// Reusable editable tile with an icon
+  Widget _buildEditableListTile({
     required String label,
     required String? value,
     required bool isEditable,
+    required IconData icon,
     required ValueChanged<String> onChanged,
     int maxLines = 1,
   }) {
+    final theme = Theme.of(context);
+
     return ListTile(
+      leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(label),
       subtitle: isEditable
           ? TextField(
@@ -497,34 +561,42 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Simple read-only field for PT side
-  Widget _buildReadOnlyRow(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value ?? 'Not available')),
-        ],
-      ),
+  /// Non-editable tile for user’s own side
+  Widget _buildNonEditableListTile({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Icon(icon, color: theme.colorScheme.primary),
+      title: Text(label),
+      subtitle: Text(value),
     );
   }
 
-  /// Non-editable field for user’s own side
-  Widget _buildNonEditableField({
-    required String label,
-    required String value,
-  }) {
-    return ListTile(
-      title: Text(label),
-      subtitle: Text(value),
+  /// Simple read-only field for PT side, with optional icon
+  Widget _buildReadOnlyRow(IconData icon, String label, String? value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value ?? 'Not available',
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

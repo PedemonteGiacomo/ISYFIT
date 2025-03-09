@@ -110,97 +110,116 @@ class _MeasurementsCompleteViewScreenState
   Widget build(BuildContext context) {
     super.build(context);
 
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_allRecords.isEmpty) {
-      return const Center(child: Text('No measurement data found.'));
-    }
-
-    // We'll display a ScrollView with:
-    // 1) A "body silhouette" card highlighting some fields (like waist, chest, arms).
-    // 2) A section with expansions by measurement type, listing each doc chronologically.
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildBodySilhouetteCard(context),
-            const SizedBox(height: 24),
-            _buildAllTypesExpansion(context),
-          ],
+    /// ADDED: We'll wrap the main content in a Column so we can easily place a refresh icon above.
+    return Column(
+      children: [
+        /// ADDED: A small row at the top with a refresh button
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                /// ADDED: Tapping calls _fetchAllRecords().
+                onPressed: () async {
+                  await _fetchAllRecords();
+                },
+                icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
+                tooltip: 'Refresh Measurements',
+              ),
+            ],
+          ),
         ),
-      ),
+
+        /// ADDED: Expanded to fill the rest of the space
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _allRecords.isEmpty
+                  ? const Center(child: Text('No measurement data found.'))
+                  : SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // _buildBodySilhouetteCard(context),
+                            // const SizedBox(height: 24),
+                            _buildAllTypesExpansion(context),
+                          ],
+                        ),
+                      ),
+                    ),
+        ),
+      ],
     );
   }
 
   /// 1) Body Silhouette Card
-  Widget _buildBodySilhouetteCard(BuildContext context) {
-    // E.g., we might want to highlight "waist" from USArmy or BIA
-    // In your data model, "waist" might appear in USArmy or BIA?
-    // We'll just attempt to read a few "common" measure keys:
+  // Widget _buildBodySilhouetteCard(BuildContext context) {
+  //   // E.g., we might want to highlight "waist" from USArmy or BIA
+  //   // In your data model, "waist" might appear in USArmy or BIA?
+  //   // We'll just attempt to read a few "common" measure keys:
 
-    final waistVal = _getLatestValue('waist');
-    final chestVal = _getLatestValue('chest');
-    final rightArmVal = _getLatestValue('rightArm');
-    final leftArmVal = _getLatestValue('leftArm');
-    final weightVal = _getLatestValue('weightInKg');
+  //   final waistVal = _getLatestValue('waist');
+  //   final chestVal = _getLatestValue('chest');
+  //   final rightArmVal = _getLatestValue('rightArm');
+  //   final leftArmVal = _getLatestValue('leftArm');
+  //   final weightVal = _getLatestValue('weightInKg');
 
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: SizedBox(
-        height: 400,
-        // We'll do a stack with an image, then Positioneds for label overlays
-        child: Stack(
-          children: [
-            // 1) The background silhouette
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.9,
-                child: Image.asset(
-                  'assets/images/silhouette.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            // 2) Overlays: e.g. waist label
-            if (waistVal != null)
-              Positioned(
-                left: 120,
-                top: 220,
-                child: _buildOverlayLabel('Waist: $waistVal cm'),
-              ),
-            if (chestVal != null)
-              Positioned(
-                left: 100,
-                top: 160,
-                child: _buildOverlayLabel('Chest: $chestVal cm'),
-              ),
-            if (rightArmVal != null)
-              Positioned(
-                right: 40,
-                top: 180,
-                child: _buildOverlayLabel('R-Arm: $rightArmVal cm'),
-              ),
-            if (leftArmVal != null)
-              Positioned(
-                left: 40,
-                top: 180,
-                child: _buildOverlayLabel('L-Arm: $leftArmVal cm'),
-              ),
-            if (weightVal != null)
-              Positioned(
-                left: 100,
-                bottom: 20,
-                child: _buildOverlayLabel('Weight: $weightVal kg'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  //   return Card(
+  //     elevation: 4,
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //     child: SizedBox(
+  //       height: 400,
+  //       // We'll do a stack with an image, then Positioneds for label overlays
+  //       child: Stack(
+  //         children: [
+  //           // 1) The background silhouette
+  //           Positioned.fill(
+  //             child: Opacity(
+  //               opacity: 0.9,
+  //               child: Image.asset(
+  //                 'assets/images/silhouette.png',
+  //                 fit: BoxFit.contain,
+  //               ),
+  //             ),
+  //           ),
+  //           // 2) Overlays: e.g. waist label
+  //           if (waistVal != null)
+  //             Positioned(
+  //               left: 120,
+  //               top: 220,
+  //               child: _buildOverlayLabel('Waist: $waistVal cm'),
+  //             ),
+  //           if (chestVal != null)
+  //             Positioned(
+  //               left: 100,
+  //               top: 160,
+  //               child: _buildOverlayLabel('Chest: $chestVal cm'),
+  //             ),
+  //           if (rightArmVal != null)
+  //             Positioned(
+  //               right: 40,
+  //               top: 180,
+  //               child: _buildOverlayLabel('R-Arm: $rightArmVal cm'),
+  //             ),
+  //           if (leftArmVal != null)
+  //             Positioned(
+  //               left: 40,
+  //               top: 180,
+  //               child: _buildOverlayLabel('L-Arm: $leftArmVal cm'),
+  //             ),
+  //           if (weightVal != null)
+  //             Positioned(
+  //               left: 100,
+  //               bottom: 20,
+  //               child: _buildOverlayLabel('Weight: $weightVal kg'),
+  //             ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildOverlayLabel(String text) {
     return Container(

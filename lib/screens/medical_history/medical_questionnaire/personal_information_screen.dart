@@ -79,6 +79,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -190,9 +193,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.arrow_forward,
-                              color: Colors.white),
-                          label: const Text('Next'),
+                          icon: Icon(Icons.arrow_forward,
+                              color: Theme.of(context).colorScheme.onPrimary),
+                          label: Text('Next',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary)),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: theme.primaryColor,

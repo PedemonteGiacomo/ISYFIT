@@ -86,6 +86,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -245,7 +248,11 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                               ),
                             );
                           },
-                          child: const Text('Next'),
+                          child: Text(
+                            'Next',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary),
+                          ),
                         ),
                       ],
                     ),
@@ -268,7 +275,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     return SwitchListTile(
       title: Text(label),
       value: value,
-      secondary: Icon(icon),
+      secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
       onChanged: onChanged,
     );
   }

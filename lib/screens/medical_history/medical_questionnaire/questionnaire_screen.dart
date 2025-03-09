@@ -63,9 +63,8 @@ class QuestionnaireScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon:
-                          const Icon(Icons.arrow_forward, color: Colors.white),
-                      label: const Text('Start'),
+                      icon: Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.onPrimary),
+                      label: Text('Start', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: theme.primaryColor,

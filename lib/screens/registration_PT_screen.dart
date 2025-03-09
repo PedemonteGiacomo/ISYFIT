@@ -40,6 +40,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
       ).hasMatch(_emailController.text);
 
+  bool get _allRequirementsMet =>
+      _hasUppercase &&
+      _hasLowercase &&
+      _hasNumber &&
+      _hasSpecialChar &&
+      _hasMinLength;
+
   Future<void> _registerPT() async {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -206,7 +213,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
-                              prefixIcon: const Icon(Icons.person),
+                              prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
                         ),
@@ -219,7 +226,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
-                              prefixIcon: const Icon(Icons.person_outline),
+                              prefixIcon: Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
                         ),
@@ -247,7 +254,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
-                          prefixIcon: const Icon(Icons.email),
+                          prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
                           suffixIcon: _emailFieldTouched
                               ? Icon(
                                   _isEmailValid
@@ -276,7 +283,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                            prefixIcon: const Icon(Icons.lock),
+                            prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                           ),
                         ),
                         Positioned(
@@ -288,9 +295,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                                 _showPasswordInfo = !_showPasswordInfo;
                               });
                             },
-                            child: const Icon(
+                            child: Icon(
                               Icons.info_outline,
-                              color: Colors.grey,
+                              color: _allRequirementsMet ? Colors.green : Colors.red,
                             ),
                           ),
                         ),
@@ -361,7 +368,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
-                        prefixIcon: const Icon(Icons.business),
+                        prefixIcon: Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -374,7 +381,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
-                        prefixIcon: const Icon(Icons.gavel),
+                        prefixIcon: Icon(Icons.gavel, color: Theme.of(context).colorScheme.primary),
                       ),
                       maxLines: 3,
                     ),
@@ -389,7 +396,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
-                          prefixIcon: const Icon(Icons.calendar_today),
+                          prefixIcon: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
                         ),
                         child: Text(
                           _selectedDate == null
@@ -449,9 +456,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Register',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                   ],

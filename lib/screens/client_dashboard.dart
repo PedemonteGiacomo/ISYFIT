@@ -22,6 +22,9 @@ class ClientDashboard extends StatelessWidget {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future:
@@ -96,7 +99,9 @@ class ClientDashboard extends StatelessWidget {
                                 ? NetworkImage(ptImageUrl)
                                 : null,
                         child: (ptImageUrl == null || ptImageUrl.isEmpty)
-                            ? const Icon(Icons.person, size: 50)
+                            ? Icon(Icons.person,
+                                size: 50,
+                                color: Theme.of(context).colorScheme.primary)
                             : null,
                       ),
                       const SizedBox(height: 16),
