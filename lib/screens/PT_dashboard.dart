@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
@@ -106,8 +107,8 @@ class PTDashboard extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.straighten,
-                    color: theme.colorScheme.secondary),
+                leading:
+                    Icon(Icons.straighten, color: theme.colorScheme.secondary),
                 title: const Text('isy-lab'),
                 onTap: () {
                   Navigator.pop(context);
@@ -127,8 +128,7 @@ class PTDashboard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          IsyCheckMainScreen(clientUid: clientUid),
+                      builder: (_) => IsyCheckMainScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -283,23 +283,16 @@ class PTDashboard extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'PT Dashboard',
-          style: TextStyle(color: colorScheme.onPrimary),
-        ),
-        centerTitle: true,
-        backgroundColor: colorScheme.primary,
-        iconTheme: IconThemeData(color: colorScheme.onPrimary),
+      appBar: GradientAppBar(
+        title: 'PT Dashboard',
       ),
       body: FutureBuilder<String>(
         future: _fetchUserName(),
         builder: (context, snapshot) {
-          final userName =
-              snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasData
-                  ? snapshot.data!
-                  : "User";
+          final userName = snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData
+              ? snapshot.data!
+              : "User";
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -310,47 +303,50 @@ class PTDashboard extends StatelessWidget {
                   // This uses the M3 card shape from your theme or you can override:
                   margin: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    ),
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                    children: [
-                      CircleAvatar(
-                      radius: 28,
-                      backgroundColor:
-                        Theme.of(context).colorScheme.onPrimary,
-                      child: Icon(
-                        Icons.person,
-                        size: 30,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                      child: Text(
-                        "Welcome, $userName",
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.6),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                       ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            child: Icon(
+                              Icons.person,
+                              size: 30,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              "Welcome, $userName",
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
                     ),
-                  ),
                   ),
                 ),
 

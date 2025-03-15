@@ -50,22 +50,35 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
         body: Column(
           children: [
             // 1) A Material widget for the TabBar for a more “Material” look:
-            Material(
-              elevation: 4, // Shadow effect for a raised tab bar
-              color: Theme.of(context).colorScheme.primary,
-              child: TabBar(
-                tabs: const [
-                  Tab(icon: Icon(Icons.add), text: "Insert"),
-                  Tab(icon: Icon(Icons.view_agenda), text: "Simple View"),
-                  Tab(icon: Icon(Icons.auto_graph), text: "Complete View"),
+            Container(
+              decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.6),
                 ],
-                // Colors
-                labelColor: Theme.of(context).colorScheme.onPrimary,
-                unselectedLabelColor:
-                    Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
-                indicatorColor: Theme.of(context).colorScheme.onPrimary,
-                indicatorWeight: 3,
-                // The default ripple effect is used, so we omit overlayColor
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              // boxShadow: [
+              //   BoxShadow(
+              //   color: Colors.black.withOpacity(0.2),
+              //   blurRadius: 4,
+              //   offset: const Offset(0, 2),
+              //   ),
+              // ],
+              ),
+              child: TabBar(
+              tabs: const [
+                Tab(icon: Icon(Icons.add), text: "Insert"),
+                Tab(icon: Icon(Icons.view_agenda), text: "Simple View"),
+                Tab(icon: Icon(Icons.auto_graph), text: "Complete View"),
+              ],
+              labelColor: Theme.of(context).colorScheme.onPrimary,
+              unselectedLabelColor:
+                Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+              indicatorColor: Theme.of(context).colorScheme.onPrimary,
+              indicatorWeight: 3,
               ),
             ),
 

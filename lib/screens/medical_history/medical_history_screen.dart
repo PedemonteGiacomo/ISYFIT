@@ -12,6 +12,7 @@ import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 
 /// Helper function: Calculate age from dateOfBirth string
 int calculateAge(String? dateOfBirth) {
@@ -807,17 +808,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         // While loading, show a loading indicator.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                'isy-check',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-              centerTitle: true,
-              iconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+            appBar: GradientAppBar(
+              title: 'isi-check',
               actions: [
                 // Add a "Home" icon that takes the PT back to the main flow.
                 IconButton(
@@ -846,17 +838,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           return DefaultTabController(
             length: 4,
             child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  'isy-check',
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-                ),
-                backgroundColor: Theme.of(context).primaryColor,
-                centerTitle: true,
-                iconTheme: IconThemeData(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
+              appBar: GradientAppBar(
+                title: 'isi-check',
                 actions: [
                   // Add a "Home" icon that takes the PT back to the main flow.
                   IconButton(
@@ -905,18 +888,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               return DefaultTabController(
                 length: 4,
                 child: Scaffold(
-                  appBar: AppBar(
-                    title: Text(
-                      'isy-check',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    centerTitle: true,
-                    iconTheme: IconThemeData(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
+                  appBar: GradientAppBar(
+                    title: 'isi-check',
                     actions: [
                       // Add a "Home" icon that takes the PT back to the main flow.
                       IconButton(
@@ -965,17 +938,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         return DefaultTabController(
           length: 4,
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                'isy-fit',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-              centerTitle: true,
-              iconTheme: IconThemeData(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+            appBar: GradientAppBar(
+              title: 'isi-check',
               actions: [
                 // Add a "Home" icon that takes the PT back to the main flow.
                 IconButton(

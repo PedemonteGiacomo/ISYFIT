@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
 import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 
 class ManageClientsScreen extends StatefulWidget {
   const ManageClientsScreen({Key? key}) : super(key: key);
@@ -451,15 +453,23 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Manage Clients',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
-      ),
+      appBar: GradientAppBar(
+              title: 'Manage Clients',
+              actions: [
+                // Add a "Home" icon that takes the PT back to the main flow.
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    // For example, pushReplacement to the main BaseScreen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,

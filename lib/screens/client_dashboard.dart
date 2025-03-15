@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:isyfit/screens/login_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 
 class ClientDashboard extends StatelessWidget {
   const ClientDashboard({Key? key}) : super(key: key);
@@ -17,14 +18,8 @@ class ClientDashboard extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Client Dashboard',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+      appBar: GradientAppBar(
+        title: 'Client Dashboard',
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future:

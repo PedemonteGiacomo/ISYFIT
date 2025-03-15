@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 
 //TODO: implement the settings part here
 
@@ -189,11 +190,8 @@ class _AccountScreenState extends State<AccountScreen> {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Account',
-            style: TextStyle(color: theme.colorScheme.onPrimary)),
-        backgroundColor: theme.colorScheme.primary,
-        centerTitle: true,
+      appBar: GradientAppBar(
+        title: 'Account',
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: theme.colorScheme.onPrimary),
@@ -201,9 +199,6 @@ class _AccountScreenState extends State<AccountScreen> {
             tooltip: 'Logout',
           )
         ],
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -397,28 +392,22 @@ class _AccountScreenState extends State<AccountScreen> {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Client Account',
-            style: TextStyle(color: theme.colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
+      appBar: GradientAppBar(
+        title: 'Account',
         actions: [
-                  // Add a "Home" icon that takes the PT back to the main flow.
-                  IconButton(
-                    icon: Icon(Icons.home,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    onPressed: () {
-                      // For example, pushReplacement to the main BaseScreen
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BaseScreen()),
-                      );
-                    },
-                  ),
-                ],
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -619,7 +608,6 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 }
-
 
 // TO USE THE ACCOUNT PROFILE SCRREN AND SETTING USE THIS:
 
