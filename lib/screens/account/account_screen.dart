@@ -257,10 +257,17 @@ class _AccountScreenState extends State<AccountScreen> {
                               Icon(Icons.email_outlined,
                                   size: 18, color: theme.colorScheme.primary),
                               const SizedBox(width: 8),
-                              Text(
-                                _email ?? 'No Email',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  fontStyle: FontStyle.italic,
+                              Expanded(
+                                child: Text(
+                                  _email ?? 'No Email',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  // Options to control layout:
+                                  // maxLines: 1,          // Limit to one line
+                                  // overflow: TextOverflow.ellipsis, // Show "..." if too long
+                                  // or just let it wrap on multiple lines:
+                                  softWrap: true,
                                 ),
                               ),
                             ],

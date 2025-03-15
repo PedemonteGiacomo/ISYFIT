@@ -20,13 +20,13 @@ class PTDashboard extends StatelessWidget {
   Future<String> _fetchUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return "User";
+      return " ";
     }
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .get();
-    return userDoc.data()?['name'] ?? "User";
+    return userDoc.data()?['name'] ?? " ";
   }
 
   /// Fetch the last 3 clients

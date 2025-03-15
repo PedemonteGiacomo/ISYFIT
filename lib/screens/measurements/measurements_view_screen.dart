@@ -76,42 +76,56 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    super.build(context); // keepAlive
+Widget build(BuildContext context) {
+  super.build(context); // keepAlive
 
-    /// ADDED: Wrap the main content in a Column so we can add a refresh icon at the top
-    return Column(
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
 
-/// ADDED: A small Row at the top with a Refresh button
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              onPressed: () {
-                // Forces a rebuild, causing the FutureBuilder to re-fetch
-                setState(() {});
-              },
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh Measurements',
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-
-        // The rest of your original layout
+        // 1) Measurement type selection
         _buildMeasurementTypeSelection(context),
-        
         const SizedBox(height: 12),
-        Expanded(
-          child: _selectedMeasurementType.isEmpty
-              ? _buildNoMeasurementSelectedUI()
-              : _buildTwoLastMeasuresView(_selectedMeasurementType),
-        ),
-        
+
+        // 2) Content that may expand
+        if (_selectedMeasurementType.isEmpty)
+          _buildNoMeasurementSelectedUI()
+        else
+          _buildTwoLastMeasuresView(_selectedMeasurementType),
+
+        const SizedBox(height: 16),
+
+        // 3) Buttons
+        if (_selectedMeasurementType.isNotEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              //const Spacer(), // Push everything to center and right
+              ElevatedButton.icon(
+          onPressed: () =>
+              _navigateToFullHistory(context, _selectedMeasurementType),
+          icon: Icon(Icons.history, color: Theme.of(context).colorScheme.onPrimary),
+          label: Text('View Full History', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+              ),
+              IconButton(
+          onPressed: () => setState(() {}),
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Refresh Measurements',
+              ),
+            ],
+          ),
       ],
-    );
-  }
+    ),
+  );
+}
+
 
   // Let user choose BIA / USArmy / Plicometro
   Widget _buildMeasurementTypeSelection(BuildContext context) {
@@ -232,10 +246,7 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     )),
-                ElevatedButton(
-                  onPressed: () => _navigateToFullHistory(context, type),
-                  child: const Text('View Full History'),
-                ),
+                
               ],
             ),
             const SizedBox(height: 16),

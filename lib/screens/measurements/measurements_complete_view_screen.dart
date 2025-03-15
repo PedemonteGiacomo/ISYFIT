@@ -110,47 +110,39 @@ class _MeasurementsCompleteViewScreenState
   Widget build(BuildContext context) {
     super.build(context);
 
-    /// ADDED: We'll wrap the main content in a Column so we can easily place a refresh icon above.
-    return Column(
-      children: [
-        /// ADDED: A small row at the top with a refresh button
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-          child: Row(
+    // If you have a loading state or an empty state, you can handle them up front.
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_allRecords.isEmpty) {
+      return const Center(child: Text('No measurement data found.'));
+    }
+
+    // Otherwise, show your scrollable content including expansions & button
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Put your expansions, UI cards, etc. here
+          _buildAllTypesExpansion(context),
+
+          const SizedBox(height: 20),
+
+          // Now the refresh button is in the same scrollable column
+          Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                /// ADDED: Tapping calls _fetchAllRecords().
-                onPressed: () async {
-                  await _fetchAllRecords();
-                },
-                icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
+                onPressed: _fetchAllRecords,
+                icon: Icon(Icons.refresh,
+                    color: Theme.of(context).colorScheme.primary),
                 tooltip: 'Refresh Measurements',
               ),
             ],
           ),
-        ),
-
-        /// ADDED: Expanded to fill the rest of the space
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _allRecords.isEmpty
-                  ? const Center(child: Text('No measurement data found.'))
-                  : SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            // _buildBodySilhouetteCard(context),
-                            // const SizedBox(height: 24),
-                            _buildAllTypesExpansion(context),
-                          ],
-                        ),
-                      ),
-                    ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

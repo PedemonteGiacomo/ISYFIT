@@ -71,8 +71,8 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
               child: TabBar(
               tabs: const [
                 Tab(icon: Icon(Icons.add), text: "Insert"),
-                Tab(icon: Icon(Icons.view_agenda), text: "Simple View"),
-                Tab(icon: Icon(Icons.auto_graph), text: "Complete View"),
+                Tab(icon: Icon(Icons.watch_later_outlined), text: "Last Data"),
+                Tab(icon: Icon(Icons.auto_graph), text: "All Data"),
               ],
               labelColor: Theme.of(context).colorScheme.onPrimary,
               unselectedLabelColor:
