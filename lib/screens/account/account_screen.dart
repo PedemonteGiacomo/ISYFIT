@@ -600,3 +600,57 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 }
+
+
+// TO USE THE ACCOUNT PROFILE SCRREN AND SETTING USE THIS:
+
+// import 'package:flutter/material.dart';
+// import 'account_profile_screen.dart';
+// import 'account_settings_screen.dart';
+
+// class AccountScreen extends StatefulWidget {
+//   /// If clientUid is non-null, show that client's data (PT view)
+//   /// Otherwise, show the logged-in user's account.
+//   final String? clientUid;
+//   const AccountScreen({Key? key, this.clientUid}) : super(key: key);
+
+//   @override
+//   State<AccountScreen> createState() => _AccountScreenState();
+// }
+
+// class _AccountScreenState extends State<AccountScreen> {
+//   int _selectedTab = 0;
+
+//   final List<Widget> _tabs = [
+//     AccountProfileScreen(), // Displays full profile details
+//     AccountSettingsScreen(), // Displays settings options (placeholder)
+//   ];
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text("Account"),
+//         centerTitle: true,
+//         backgroundColor: theme.colorScheme.primary,
+//         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+//       ),
+//       body: _tabs[_selectedTab],
+//       bottomNavigationBar: BottomNavigationBar(
+//         currentIndex: _selectedTab,
+//         onTap: (index) => setState(() => _selectedTab = index),
+//         items: const [
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.person),
+//             label: "Profile",
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.settings),
+//             label: "Settings",
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

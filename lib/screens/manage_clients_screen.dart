@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:isyfit/screens/measurements_home_screen.dart';
+import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/training_records_screen.dart';
-import 'package:isyfit/screens/account_screen.dart';
+import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
+import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
 
 class ManageClientsScreen extends StatefulWidget {
   const ManageClientsScreen({Key? key}) : super(key: key);
@@ -151,86 +153,44 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     );
   }
 
-  /// Show popup options for a client
+  /// Show popup with 4 options
   void _showClientOptions(
-    BuildContext context,
-    String clientUid,
-    String clientName,
-    String clientSurname,
-  ) {
-    final theme = Theme.of(context);
+    BuildContext context, {
+    required String clientUid,
+    required String clientName,
+    required String clientSurname,
+  }) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.0),
           ),
           title: Text(
-            '$clientName $clientSurname',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            clientName + " " + clientSurname,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(
-                  Icons.medical_services,
-                  color: theme.colorScheme.error, // was red
-                ),
-                title: const Text('Medical'),
+                leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                title: const Text('isy-training'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          MedicalHistoryScreen(clientUid: clientUid),
+                          IsyTrainingMainScreen(clientUid: clientUid),
                     ),
                   );
                 },
-              ),
+              ),       
               ListTile(
-                leading: Icon(
-                  Icons.fitness_center,
-                  color: theme.colorScheme.primary, // was orange
-                ),
-                title: const Text('Training'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          TrainingRecordsScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.info,
-                  color: theme.colorScheme.primary, // was blue
-                ),
-                title: const Text('Info'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AccountScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.straighten,
-                  color: theme.colorScheme.primary, // was green
-                ),
-                title: const Text('Measurements'),
+                leading: const Icon(Icons.straighten, color: Colors.green),
+                title: const Text('isy-lab'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -238,6 +198,33 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     MaterialPageRoute(
                       builder: (_) =>
                           MeasurementsHomeScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.medical_services, color: Colors.red),
+                title: const Text('isi-check'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          IsyCheckMainScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: Colors.blue),
+                title: const Text('account'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AccountScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -303,9 +290,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         subtitle: Text(clientData['email'] ?? 'No Email'),
         onTap: () => _showClientOptions(
           context,
-          clientUid,
-          clientData['name'] ?? 'Unknown',
-          clientData['surname'] ?? 'Unknown',
+          clientUid: clientUid,
+          clientName: clientData['name'] ?? 'Unknown',
+          clientSurname: clientData['surname'] ?? 'Unknown',
         ),
         trailing: IconButton(
           icon: Icon(Icons.remove_circle, color: theme.colorScheme.error),

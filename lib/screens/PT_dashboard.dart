@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/login_screen.dart';
-import 'package:isyfit/screens/measurements_home_screen.dart';
+import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
-import 'package:isyfit/screens/training_records_screen.dart';
-import 'package:isyfit/screens/account_screen.dart';
+import 'package:isyfit/screens/account/account_screen.dart';
+import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
+import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
+
 
 class PTDashboard extends StatelessWidget {
   const PTDashboard({Key? key}) : super(key: key);
@@ -81,49 +83,22 @@ class PTDashboard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.medical_services, color: Colors.red),
-                title: const Text('Medical'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          MedicalHistoryScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.fitness_center, color: Colors.orange),
-                title: const Text('Training'),
+                title: const Text('isy-training'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          TrainingRecordsScreen(clientUid: clientUid),
+                          IsyTrainingMainScreen(clientUid: clientUid),
                     ),
                   );
                 },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info, color: Colors.blue),
-                title: const Text('Info'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AccountScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
+              ),       
               ListTile(
                 leading: const Icon(Icons.straighten, color: Colors.green),
-                title: const Text('Measurements'),
+                title: const Text('isy-lab'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -131,6 +106,33 @@ class PTDashboard extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) =>
                           MeasurementsHomeScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.medical_services, color: Colors.red),
+                title: const Text('isi-check'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          IsyCheckMainScreen(clientUid: clientUid),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: Colors.blue),
+                title: const Text('account'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AccountScreen(clientUid: clientUid),
                     ),
                   );
                 },

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/country_codes.dart'; // Import your expanded country codes
+import '../../widgets/country_codes.dart'; // Import your expanded country codes
 import 'package:dropdown_button2/dropdown_button2.dart'; // Import dropdown_button2 package
-import 'base_screen.dart';
+import '../base_screen.dart';
 
 class RegisterPTScreen extends StatefulWidget {
   const RegisterPTScreen({Key? key}) : super(key: key);

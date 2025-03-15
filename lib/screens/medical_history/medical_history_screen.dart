@@ -5,17 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
-
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 
-/// A helper function to parse and calculate the user’s age from a dateOfBirth string.
+/// Helper function: Calculate age from dateOfBirth string
 int calculateAge(String? dateOfBirth) {
   if (dateOfBirth == null) return 0;
   try {
@@ -34,9 +30,8 @@ int calculateAge(String? dateOfBirth) {
 
 class MedicalHistoryScreen extends StatefulWidget {
   /// If [clientUid] is non-null, a PT is viewing a client’s medical data.
-  /// If [clientUid] is null, we load the current logged-in user’s data.
+  /// Otherwise, the current logged-in user’s data is loaded.
   final String? clientUid;
-
   const MedicalHistoryScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
@@ -44,13 +39,11 @@ class MedicalHistoryScreen extends StatefulWidget {
 }
 
 class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
-  /// The main medical_history doc for the target user
+  /// The main medical_history document for the target user.
   late Future<Map<String, dynamic>?> medicalHistory;
-
-  /// A list of uploaded documents (PDFs/images) for the user
+  /// A list of uploaded documents for the user.
   late Future<List<Map<String, dynamic>>> medicalDocuments;
-
-  /// If a PT is viewing, fetch that client’s minimal profile
+  /// If a PT is viewing, fetch that client’s minimal profile.
   late Future<Map<String, dynamic>?> clientProfile;
 
   bool showAllDocuments = false;
@@ -67,7 +60,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// If PT is viewing, use [clientUid], else the current user’s uid
+  /// If PT is viewing, use clientUid; otherwise, use the current user's uid.
   String? get targetUid {
     if (widget.clientUid != null) return widget.clientUid;
     return FirebaseAuth.instance.currentUser?.uid;
@@ -91,7 +84,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         .doc(uid)
         .collection('medical_documents')
         .get();
-
     return querySnapshot.docs.map((doc) {
       return {
         'fileName': doc['fileName'],
@@ -118,7 +110,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       );
       return;
     }
-
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
@@ -131,7 +122,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
     final file = result.files.single;
     Uint8List? fileBytes = file.bytes;
-
     if (fileBytes == null && file.path != null) {
       final fileFromPath = File(file.path!);
       fileBytes = await fileFromPath.readAsBytes();
@@ -142,8 +132,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       );
       return;
     }
-
-    // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -153,10 +141,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         ),
       ),
     );
-
     try {
       final fileName = file.name;
-      // Check if file already exists
       final existingFiles = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -170,14 +156,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         );
         return;
       }
-
-      // Upload to Firebase Storage
-      final storageRef =
-          FirebaseStorage.instance.ref('medical_documents/$uid/$fileName');
+      final storageRef = FirebaseStorage.instance
+          .ref('medical_documents/$uid/$fileName');
       await storageRef.putData(fileBytes);
       final downloadUrl = await storageRef.getDownloadURL();
-
-      // Add doc in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -188,13 +170,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         'fileType': file.extension,
         'uploadedAt': Timestamp.now(),
       });
-
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('File uploaded successfully!')),
       );
-
-      // Refresh
       setState(() {
         medicalDocuments = _fetchDocuments();
       });
@@ -206,19 +185,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Future<void> _deleteDocument(
-      BuildContext context, Map<String, dynamic> doc) async {
+  Future<void> _deleteDocument(BuildContext context, Map<String, dynamic> doc) async {
     final uid = targetUid;
     if (uid == null) return;
-
-    // Remove the PT-check here so both PT and clients can delete documents.
-    // if (isPTView) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('PT cannot delete this document.')),
-    //   );
-    //   return;
-    // }
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -228,23 +197,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         ),
       ),
     );
-
     try {
       final storageRef = FirebaseStorage.instance
           .ref('medical_documents/$uid/${doc['fileName']}');
       await storageRef.delete();
-
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .collection('medical_documents')
           .where('fileName', isEqualTo: doc['fileName'])
           .get();
-
       for (final document in querySnapshot.docs) {
         await document.reference.delete();
       }
-
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Document deleted successfully!')),
@@ -262,7 +227,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
   void _viewDocument(BuildContext context, String url, String fileType) {
     final extension = fileType.toLowerCase();
-
     if (extension == 'pdf' || extension == 'doc' || extension == 'docx') {
       Navigator.push(
         context,
@@ -276,7 +240,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     } else {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ImageViewScreen(imageUrl: url)),
+        MaterialPageRoute(
+          builder: (_) => ImageViewScreen(
+            imageUrl: url,
+          ),
+        ),
       );
     }
   }
@@ -296,9 +264,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// ---------------------------------------
-  /// DASHBOARD-STYLE UI BUILDERS
-  /// ---------------------------------------
+  /// ---------------- Dashboard-Style UI Builders ----------------
 
   Widget _buildDashboardHeader() {
     return Padding(
@@ -306,7 +272,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // If PT is viewing, show the client’s name
           if (isPTView)
             FutureBuilder<Map<String, dynamic>?>(
               future: clientProfile,
@@ -318,26 +283,28 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 if (profileData == null) return const SizedBox();
                 return Text(
                   '${profileData['name']} ${profileData['surname'] ?? ''} (${profileData['email']})',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 );
               },
-            ),
-          // else show "Your anamnesis" for the user
-          if (!isPTView)
+            )
+          else
             Text(
               'Your Anamnesis',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
         ],
       ),
     );
   }
 
-  /// PERSONAL INFO TAB
+  /// ---------------- Tab Content Builders ----------------
+
   Widget _buildPersonalInfoTab(Map<String, dynamic> data) {
     final name = data['name'] ?? 'N/A';
     final surname = data['surname'] ?? 'N/A';
@@ -386,7 +353,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// LIFESTYLE TAB
   Widget _buildLifestyleTab(Map<String, dynamic> data) {
     final alcohol = data['alcohol'] ?? 'N/A';
     final alcoholDetails = data['alcohol_details'] ?? '';
@@ -412,10 +378,16 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             children: [
               _buildDataLine(label: 'Alcohol?', value: alcohol),
               if (alcoholDetails.isNotEmpty)
-                _buildDataLine(label: 'Alcohol Details', value: alcoholDetails),
+                _buildDataLine(
+                  label: 'Alcohol Details',
+                  value: alcoholDetails,
+                ),
               _buildDataLine(label: 'Smokes?', value: smokes),
               if (smokingDetails.isNotEmpty)
-                _buildDataLine(label: 'Smoking Details', value: smokingDetails),
+                _buildDataLine(
+                  label: 'Smoking Details',
+                  value: smokingDetails,
+                ),
               _buildDataLine(label: 'Water Intake', value: waterIntake),
               _buildDataLine(label: 'Breakfast', value: breakfast),
             ],
@@ -435,7 +407,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// TRAINING TAB
   Widget _buildTrainingTab(Map<String, dynamic> data) {
     final injuriesOrSurgery = data['injuriesOrSurgery'] ?? 'N/A';
     final injuriesOrSurgeryDetails = data['injuriesOrSurgeryDetails'] ?? 'N/A';
@@ -465,19 +436,21 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             icon: Icons.health_and_safety,
             children: [
               _buildDataLine(
-                  label: 'Spine/Joint/Muscle Issues', value: spineIssues),
+                label: 'Spine/Joint/Muscle Issues',
+                value: spineIssues,
+              ),
               if (spineIssues == 'Yes' && spineDetails != 'N/A')
                 _buildDataLine(label: 'Details', value: spineDetails),
-              _buildDataLine(
-                  label: 'Injuries or Surgery', value: injuriesOrSurgery),
+              _buildDataLine(label: 'Injuries or Surgery', value: injuriesOrSurgery),
               if (injuriesOrSurgery == 'Yes' &&
                   injuriesOrSurgeryDetails != 'N/A')
-                _buildDataLine(
-                    label: 'Details', value: injuriesOrSurgeryDetails),
+                _buildDataLine(label: 'Details', value: injuriesOrSurgeryDetails),
               _buildDataLine(label: 'Pathologies', value: pathologies),
               if (pathologies != 'N/A' && pathologiesDetails != 'N/A')
                 _buildDataLine(
-                    label: 'Pathologies Details', value: pathologiesDetails),
+                  label: 'Pathologies Details',
+                  value: pathologiesDetails,
+                ),
               _buildDataLine(label: 'Asthmatic Subject?', value: asthmatic),
             ],
           ),
@@ -486,10 +459,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             title: 'Training Experience & Goals',
             icon: Icons.fitness_center,
             children: [
-              _buildDataLine(
-                  label: 'Sports Experience', value: sportsExperience),
-              _buildDataLine(
-                  label: 'Other PT Experience', value: otherPTExperience),
+              _buildDataLine(label: 'Sports Experience', value: sportsExperience),
+              _buildDataLine(label: 'Other PT Experience', value: otherPTExperience),
               _buildDataLine(label: 'Fixed Shifts?', value: fixedShifts),
               _buildDataLine(label: 'Gym Experience', value: gymExperience),
               _buildDataLine(label: 'Training Days', value: trainingDays),
@@ -502,7 +473,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// DOCUMENTS TAB
   Widget _buildDocumentsTab(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: medicalDocuments,
@@ -530,55 +500,59 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () => _uploadFile(context),
-                    icon: Icon(Icons.upload_file,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    label: Text('Upload Document',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary)),
+                    icon: Icon(
+                      Icons.upload_file,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                    label: Text(
+                      'Upload Document',
+                      style: TextStyle(color: theme.colorScheme.onPrimary),
+                    ),
                   ),
                 ],
               ),
             ),
           );
         }
-
         final visibleDocs = showAllDocuments ? docs : docs.take(3).toList();
         return Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Title + Upload button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Medical Documents',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: theme.textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   ElevatedButton.icon(
-                      onPressed: () => _uploadFile(context),
-                      icon: Icon(Icons.upload_file,
-                          color: Theme.of(context).colorScheme.onPrimary),
-                      label: Text('Upload',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary))),
+                    onPressed: () => _uploadFile(context),
+                    icon: Icon(
+                      Icons.upload_file,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                    label: Text(
+                      'Upload',
+                      style: TextStyle(color: theme.colorScheme.onPrimary),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
-              // Documents list
               Expanded(
                 child: ListView.builder(
                   itemCount: visibleDocs.length,
                   itemBuilder: (context, index) {
                     final doc = visibleDocs[index];
-                    final icon = _getFileTypeIcon(doc['fileType'] ?? '');
-                    final timestamp = doc['uploadedAt'] as Timestamp?;
+                    final icon =
+                        _getFileTypeIcon(doc['fileType'] ?? '');
+                    final timestamp =
+                        doc['uploadedAt'] as Timestamp?;
                     final uploadDate = timestamp != null
                         ? DateFormat.yMMMd().format(timestamp.toDate())
                         : 'N/A';
-
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(
@@ -588,7 +562,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                         leading: CircleAvatar(
                           backgroundColor:
                               theme.colorScheme.primary.withOpacity(0.1),
-                          child: Icon(icon, color: theme.colorScheme.primary),
+                          child: Icon(
+                            icon,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                         title: Text(
                           doc['fileName'] ?? '',
@@ -603,8 +580,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           spacing: 12,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.visibility,
-                                  color: Colors.green.shade600),
+                              icon: Icon(
+                                Icons.visibility,
+                                color: Colors.green.shade600,
+                              ),
                               onPressed: () => _viewDocument(
                                 context,
                                 doc['downloadUrl'] ?? '',
@@ -612,8 +591,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete,
-                                  color: theme.colorScheme.error),
+                              icon: Icon(
+                                Icons.delete,
+                                color: theme.colorScheme.error,
+                              ),
                               onPressed: () => _deleteDocument(context, doc),
                             ),
                           ],
@@ -623,7 +604,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   },
                 ),
               ),
-              // Show more / Show less toggle
               if (docs.length > 3)
                 TextButton(
                   onPressed: () {
@@ -635,9 +615,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     showAllDocuments
                         ? 'Show Less Documents'
                         : 'Show All Documents',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.primary),
                   ),
                 ),
             ],
@@ -647,7 +626,111 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// Helper card layout for sections
+  /// If no medical history for the user (non-PT), show the questionnaire.
+  Widget _buildNoMedicalHistoryForUser() {
+    return const QuestionnaireScreen();
+  }
+
+  /// If no medical history for a PT’s client, show a message.
+  Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Card(
+                    elevation: 4,
+                    color: theme.colorScheme.errorContainer.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.warning,
+                              size: 48, color: theme.colorScheme.error),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No Medical Data Found',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'This user has not yet provided any medical history.\nYou can fill out the questionnaire for them or ask the user to do it.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            icon: Icon(Icons.assignment_outlined,
+                                color: theme.colorScheme.onPrimary),
+                            label: Text(
+                              'Fill Questionnaire',
+                              style:
+                                  TextStyle(color: theme.colorScheme.onPrimary),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => QuestionnaireScreen(
+                                    clientUid: widget.clientUid,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: theme.colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            icon: Icon(Icons.arrow_back,
+                                color: theme.colorScheme.onPrimary),
+                            label: Text('Return to Clients',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary)),
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.secondary,
+                              foregroundColor: theme.colorScheme.onSecondary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// ---------------- Helper UI Builders ----------------
+
   Widget _buildSectionCard({
     required String title,
     required IconData icon,
@@ -694,9 +777,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           Expanded(
             child: Text(
               label,
-              style: textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style:
+                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           Text(value, style: textTheme.bodyMedium),
@@ -705,255 +787,24 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// If no medical history for the user (non-PT), show the questionnaire
-  Widget _buildNoMedicalHistoryForUser() {
-    return const QuestionnaireScreen();
-  }
-
-  /// If no medical history for PT’s client, show a simple message
-  Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Expanded(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 4,
-                    color: theme.colorScheme.errorContainer.withOpacity(0.2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.warning,
-                            size: 48,
-                            color: theme.colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No Medical Data Found',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: theme.colorScheme.error,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This user has not yet provided any medical history.\n'
-                            'You can fill out the questionnaire for them or ask the user to do it.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.assignment_outlined,
-                                color: Theme.of(context).colorScheme.onPrimary),
-                            label: Text('Fill Questionnaire',
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary)),
-                            onPressed: () {
-                              // Navigate to the questionnaire flow but pass the clientUid
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => QuestionnaireScreen(
-                                    clientUid: widget.clientUid,
-                                  ),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.arrow_back,
-                                color: Theme.of(context).colorScheme.onPrimary),
-                            label: Text('Return to Clients',
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary)),
-                            onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.secondary,
-                              foregroundColor: theme.colorScheme.onSecondary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  /// ---------------- Main Build ----------------
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const LoginScreen();
-    }
+    if (user == null) return const LoginScreen();
 
-    // If we are a PT viewing a client’s data:
-    if (isPTView) {
-      return FutureBuilder<Map<String, dynamic>?>(
-        future: clientProfile,
-        builder: (context, snapshotProfile) {
-          if (snapshotProfile.connectionState == ConnectionState.waiting) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  'Fit-Check',
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-                ),
-                backgroundColor: Theme.of(context).primaryColor,
-                centerTitle: true,
-                iconTheme: IconThemeData(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            );
-          }
-          final profileData = snapshotProfile.data;
-
-          return FutureBuilder<Map<String, dynamic>?>(
-            future: medicalHistory,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text('Fit-Check',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary)),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    centerTitle: true,
-                    iconTheme: IconThemeData(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  body: Center(
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                );
-              }
-              // If no medical data for this client
-              if (!snapshot.hasData || snapshot.data == null) {
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text('Fit-Check',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary)),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    centerTitle: true,
-                    iconTheme: IconThemeData(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                  body: _buildNoMedicalHistoryForPT(profileData),
-                );
-              }
-              final data = snapshot.data!;
-
-              return Scaffold(
-                appBar: AppBar(
-                  title: Text('Fit-Check',
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary)),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  centerTitle: true,
-                  iconTheme: IconThemeData(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
-                body: Column(
-                  children: [
-                    _buildDashboardHeader(),
-                    Expanded(
-                      child: DefaultTabController(
-                        length: 4,
-                        child: Column(
-                          children: [
-                            TabBar(
-                              labelColor: Theme.of(context).colorScheme.primary,
-                              unselectedLabelColor: Colors.grey,
-                              indicatorColor:
-                                  Theme.of(context).colorScheme.primary,
-                              tabs: const [
-                                Tab(text: 'Personal Info'),
-                                Tab(text: 'Lifestyle'),
-                                Tab(text: 'Training'),
-                                Tab(text: 'Documents'),
-                              ],
-                            ),
-                            Expanded(
-                              child: TabBarView(
-                                children: [
-                                  _buildPersonalInfoTab(data),
-                                  _buildLifestyleTab(data),
-                                  _buildTrainingTab(data),
-                                  _buildDocumentsTab(context),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-    }
-
-    // If we are viewing our own data
     return FutureBuilder<Map<String, dynamic>?>(
       future: medicalHistory,
       builder: (context, snapshot) {
+        // While loading, show a loading indicator.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('Fit-Check',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary)),
+              title: Text(
+                'isy-check',
+                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+              ),
               backgroundColor: Theme.of(context).primaryColor,
               centerTitle: true,
               iconTheme: IconThemeData(
@@ -967,71 +818,150 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             ),
           );
         }
-        // If no data, show the questionnaire
-        if (!snapshot.hasData || snapshot.data == null) {
-          return Scaffold(
+
+        // If no data and non-PT view => show the questionnaire in Tab[0].
+        if (!isPTView && (!snapshot.hasData || snapshot.data == null)) {
+          return DefaultTabController(
+            length: 4,
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  'isy-check',
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+                centerTitle: true,
+                iconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+              bottomNavigationBar: const TabBar(
+                tabs: [
+                  Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
+                  Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
+                  Tab(icon: Icon(Icons.fitness_center), text: "Training"),
+                  Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
+                ],
+                labelColor: Colors.blue,
+                unselectedLabelColor: Colors.grey,
+              ),
+              body: TabBarView(
+                children: [
+                  // Tab 0 -> show the user questionnaire
+                  _buildNoMedicalHistoryForUser(),
+                  // The other tabs are just empty placeholders in this no-data scenario
+                  Container(),
+                  Container(),
+                  Container(),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // If no data but PT view => show "No Medical Data Found" screen in Tab[0].
+        if (isPTView && (!snapshot.hasData || snapshot.data == null)) {
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: clientProfile,
+            builder: (context, ptSnapshot) {
+              final profileData = ptSnapshot.data;
+              return DefaultTabController(
+                length: 4,
+                child: Scaffold(
+                  appBar: AppBar(
+                    title: Text(
+                      'isy-check',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    centerTitle: true,
+                    iconTheme: IconThemeData(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                  bottomNavigationBar: const TabBar(
+                    tabs: [
+                      Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
+                      Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
+                      Tab(icon: Icon(Icons.fitness_center), text: "Training"),
+                      Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
+                    ],
+                    labelColor: Colors.blue,
+                    unselectedLabelColor: Colors.grey,
+                  ),
+                  body: TabBarView(
+                    children: [
+                      // Tab 0 -> PT "No Medical Data Found" screen
+                      _buildNoMedicalHistoryForPT(profileData),
+                      Container(),
+                      Container(),
+                      Container(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        }
+
+        // Otherwise, we have valid medical data => show the normal 4-tab layout.
+        final data = snapshot.data!;
+        return DefaultTabController(
+          length: 4,
+          child: Scaffold(
             appBar: AppBar(
-              title: Text('Fit-Check',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary)),
+              title: Text(
+                'isy-fit',
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+              ),
               backgroundColor: Theme.of(context).primaryColor,
               centerTitle: true,
               iconTheme: IconThemeData(
                 color: Theme.of(context).colorScheme.onPrimary,
               ),
             ),
-            body: _buildNoMedicalHistoryForUser(),
-          );
-        }
-        final data = snapshot.data!;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Fit-Check',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-            backgroundColor: Theme.of(context).primaryColor,
-            centerTitle: true,
-            iconTheme: IconThemeData(
-              color: Theme.of(context).colorScheme.onPrimary,
+            bottomNavigationBar: const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
+                Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
+                Tab(icon: Icon(Icons.fitness_center), text: "Training"),
+                Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
+              ],
+              labelColor: Colors.blue,
+              unselectedLabelColor: Colors.grey,
             ),
-          ),
-          body: Column(
-            children: [
-              _buildDashboardHeader(),
-              Expanded(
-                child: DefaultTabController(
-                  length: 4,
-                  child: Column(
-                    children: [
-                      TabBar(
-                        labelColor: Theme.of(context).colorScheme.primary,
-                        unselectedLabelColor: Colors.grey,
-                        indicatorColor: Theme.of(context).colorScheme.primary,
-                        tabs: const [
-                          Tab(text: 'Personal Info'),
-                          Tab(text: 'Lifestyle'),
-                          Tab(text: 'Training'),
-                          Tab(text: 'Documents'),
-                        ],
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            _buildPersonalInfoTab(data),
-                            _buildLifestyleTab(data),
-                            _buildTrainingTab(data),
-                            _buildDocumentsTab(context),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            body: TabBarView(
+              children: [
+                // Tab 0 -> Personal Info
+                _tabWithPossibleHeader(child: _buildPersonalInfoTab(data)),
+                // Tab 1 -> Lifestyle
+                _tabWithPossibleHeader(child: _buildLifestyleTab(data)),
+                // Tab 2 -> Training
+                _tabWithPossibleHeader(child: _buildTrainingTab(data)),
+                // Tab 3 -> Documents
+                _tabWithPossibleHeader(child: _buildDocumentsTab(context)),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  /// Helper to optionally show the PT dashboard header if isPTView is true.
+  Widget _tabWithPossibleHeader({required Widget child}) {
+    if (!isPTView) {
+      return child;
+    }
+    return Column(
+      children: [
+        _buildDashboardHeader(),
+        Expanded(child: child),
+      ],
     );
   }
 }

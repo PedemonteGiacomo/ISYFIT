@@ -82,7 +82,8 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
     /// ADDED: Wrap the main content in a Column so we can add a refresh icon at the top
     return Column(
       children: [
-        /// ADDED: A small Row at the top with a Refresh button
+
+/// ADDED: A small Row at the top with a Refresh button
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -96,17 +97,18 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
             ),
           ],
         ),
-
-        const SizedBox(height: 12),
+        const SizedBox(height: 2),
 
         // The rest of your original layout
         _buildMeasurementTypeSelection(context),
+        
         const SizedBox(height: 12),
         Expanded(
           child: _selectedMeasurementType.isEmpty
               ? _buildNoMeasurementSelectedUI()
               : _buildTwoLastMeasuresView(_selectedMeasurementType),
         ),
+        
       ],
     );
   }

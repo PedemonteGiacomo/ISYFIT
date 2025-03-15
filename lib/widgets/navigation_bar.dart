@@ -13,13 +13,11 @@ class NavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onIndexChanged,
       backgroundColor: theme.colorScheme.surface,
       selectedItemColor: theme.colorScheme.primary,
-      // or theme.colorScheme.onSurface if you prefer
       unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.7),
       items: const [
         BottomNavigationBarItem(
@@ -28,15 +26,15 @@ class NavigationBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.fitness_center),
-          label: "Training",
+          label: "isy-training",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.science_outlined),
+          label: "isy-lab",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.check_circle_outline),
-          label: "Fit-Check",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.straighten),
-          label: "Measurements",
+          label: "isy-check",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),

@@ -6,8 +6,7 @@ import 'measurements_insert_screen.dart';
 import 'measurements_view_screen.dart';
 
 class MeasurementsHomeScreen extends StatefulWidget {
-  final String
-      clientUid; // Non-null means we’re potentially a PT viewing a client.
+  final String clientUid; // Non-null => possibly a PT viewing a client
 
   const MeasurementsHomeScreen({Key? key, required this.clientUid})
       : super(key: key);
@@ -19,8 +18,7 @@ class MeasurementsHomeScreen extends StatefulWidget {
 class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
   late Future<Map<String, dynamic>?> _clientProfileFuture;
 
-  /// If the current user is the same as [widget.clientUid],
-  /// we assume it’s the client themself. Otherwise, likely a PT is viewing the data.
+  /// If currentUser.uid != widget.clientUid => PT is viewing someone else
   bool get isPTView {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return false;
@@ -30,9 +28,7 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Only fetch the client’s info if we’re a PT viewing a different user.
-    // If you want to always show it (even for the user themselves),
-    // you can remove the condition.
+    // Only fetch the client’s info if it’s a PT viewing a different user
     _clientProfileFuture =
         isPTView ? _fetchClientProfile() : Future.value(null);
   }
@@ -48,53 +44,40 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 3, // Insert, Simple View, Complete View
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "Measurements",
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
-          centerTitle: true,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          iconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          bottom: TabBar(
-            tabs: [
-              Tab(
-                icon: Icon(Icons.add,
-                    color: Theme.of(context).colorScheme.onPrimary),
-                text: "Insert",
-              ),
-              Tab(
-                icon: Icon(Icons.view_agenda,
-                    color: Theme.of(context).colorScheme.onPrimary),
-                text: "Simple View",
-              ),
-              Tab(
-                icon: Icon(Icons.auto_graph,
-                    color: Theme.of(context).colorScheme.onPrimary),
-                text: "Complete View",
-              ),
-            ],
-            labelColor: Theme.of(context).colorScheme.onPrimary,
-            unselectedLabelColor: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
+        // No appBar here, so we don't override the parent's "isy-lab" app bar
         body: Column(
           children: [
-            // 1) Only show client’s name if we’re a PT viewing another user
+            // 1) A Material widget for the TabBar for a more “Material” look:
+            Material(
+              elevation: 4, // Shadow effect for a raised tab bar
+              color: Theme.of(context).colorScheme.primary,
+              child: TabBar(
+                tabs: const [
+                  Tab(icon: Icon(Icons.add), text: "Insert"),
+                  Tab(icon: Icon(Icons.view_agenda), text: "Simple View"),
+                  Tab(icon: Icon(Icons.auto_graph), text: "Complete View"),
+                ],
+                // Colors
+                labelColor: Theme.of(context).colorScheme.onPrimary,
+                unselectedLabelColor:
+                    Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+                indicatorColor: Theme.of(context).colorScheme.onPrimary,
+                indicatorWeight: 3,
+                // The default ripple effect is used, so we omit overlayColor
+              ),
+            ),
+
+            // 1) Optional label for PT or "Your measurements"
             if (isPTView)
               FutureBuilder<Map<String, dynamic>?>(
                 future: _clientProfileFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    // You could show a small linear progress or just an empty space:
                     return const SizedBox(height: 0);
                   }
                   final data = snapshot.data;
-                  // If no data found, maybe show "Unknown client"
                   if (data == null) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -107,11 +90,9 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                       ),
                     );
                   }
-                  // Display "Name Surname (email)" or any format you like
                   final name = data['name'] ?? '';
                   final surname = data['surname'] ?? '';
                   final email = data['email'] ?? '';
-
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
@@ -123,10 +104,8 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                     ),
                   );
                 },
-              ),
-
-            // else show "Your measurements"
-            if (!isPTView)
+              )
+            else
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
@@ -137,7 +116,8 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
-            // 2) The main TabBar content
+
+            // 3) TabBarView with your 3 screens
             Expanded(
               child: TabBarView(
                 children: [

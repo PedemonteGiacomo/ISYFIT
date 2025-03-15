@@ -3,14 +3,12 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-// Import your custom theme:
-import 'theme/app_theme.dart';
-
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/base_screen.dart';
 import 'screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'screens/medical_history/medical_history_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,12 +29,7 @@ class IsyFitApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'IsyFit',
-      // Here we call buildAppTheme from app_theme.dart:
       theme: buildAppTheme(isDark: false),
-      // You could also specify:
-      // darkTheme: buildAppTheme(isDark: true),
-      // themeMode: ThemeMode.light, // or system
-
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
@@ -51,7 +44,6 @@ class IsyFitApp extends StatelessWidget {
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
-
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -60,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
     Future.delayed(const Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
@@ -77,8 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final double height = MediaQuery.of(context).size.height * 0.3;
 
     return Scaffold(
-      backgroundColor:
-          Colors.white, // or Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -96,8 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   textStyle: const TextStyle(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors
-                        .blue, // or use Theme.of(context).colorScheme.primary
+                    color: Colors.blue,
                   ),
                   speed: const Duration(milliseconds: 100),
                 ),
@@ -113,7 +102,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
