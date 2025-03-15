@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 
+//TODO: implement the settings part here
+
 class AccountScreen extends StatefulWidget {
   /// If `clientUid` is non-null, show that client's data (PT perspective).
   /// If `clientUid` is null, show the logged-in user's data (self).
@@ -400,6 +402,23 @@ class _AccountScreenState extends State<AccountScreen> {
             style: TextStyle(color: theme.colorScheme.onPrimary)),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
+        actions: [
+                  // Add a "Home" icon that takes the PT back to the main flow.
+                  IconButton(
+                    icon: Icon(Icons.home,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                    onPressed: () {
+                      // For example, pushReplacement to the main BaseScreen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BaseScreen()),
+                      );
+                    },
+                  ),
+                ],
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

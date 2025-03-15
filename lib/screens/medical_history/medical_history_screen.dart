@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:isyfit/screens/base_screen.dart';
+import 'package:isyfit/screens/home_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
@@ -41,8 +43,10 @@ class MedicalHistoryScreen extends StatefulWidget {
 class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   /// The main medical_history document for the target user.
   late Future<Map<String, dynamic>?> medicalHistory;
+
   /// A list of uploaded documents for the user.
   late Future<List<Map<String, dynamic>>> medicalDocuments;
+
   /// If a PT is viewing, fetch that client’s minimal profile.
   late Future<Map<String, dynamic>?> clientProfile;
 
@@ -156,8 +160,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         );
         return;
       }
-      final storageRef = FirebaseStorage.instance
-          .ref('medical_documents/$uid/$fileName');
+      final storageRef =
+          FirebaseStorage.instance.ref('medical_documents/$uid/$fileName');
       await storageRef.putData(fileBytes);
       final downloadUrl = await storageRef.getDownloadURL();
       await FirebaseFirestore.instance
@@ -185,7 +189,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  Future<void> _deleteDocument(BuildContext context, Map<String, dynamic> doc) async {
+  Future<void> _deleteDocument(
+      BuildContext context, Map<String, dynamic> doc) async {
     final uid = targetUid;
     if (uid == null) return;
     showDialog(
@@ -441,10 +446,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               ),
               if (spineIssues == 'Yes' && spineDetails != 'N/A')
                 _buildDataLine(label: 'Details', value: spineDetails),
-              _buildDataLine(label: 'Injuries or Surgery', value: injuriesOrSurgery),
+              _buildDataLine(
+                  label: 'Injuries or Surgery', value: injuriesOrSurgery),
               if (injuriesOrSurgery == 'Yes' &&
                   injuriesOrSurgeryDetails != 'N/A')
-                _buildDataLine(label: 'Details', value: injuriesOrSurgeryDetails),
+                _buildDataLine(
+                    label: 'Details', value: injuriesOrSurgeryDetails),
               _buildDataLine(label: 'Pathologies', value: pathologies),
               if (pathologies != 'N/A' && pathologiesDetails != 'N/A')
                 _buildDataLine(
@@ -459,8 +466,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             title: 'Training Experience & Goals',
             icon: Icons.fitness_center,
             children: [
-              _buildDataLine(label: 'Sports Experience', value: sportsExperience),
-              _buildDataLine(label: 'Other PT Experience', value: otherPTExperience),
+              _buildDataLine(
+                  label: 'Sports Experience', value: sportsExperience),
+              _buildDataLine(
+                  label: 'Other PT Experience', value: otherPTExperience),
               _buildDataLine(label: 'Fixed Shifts?', value: fixedShifts),
               _buildDataLine(label: 'Gym Experience', value: gymExperience),
               _buildDataLine(label: 'Training Days', value: trainingDays),
@@ -546,10 +555,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   itemCount: visibleDocs.length,
                   itemBuilder: (context, index) {
                     final doc = visibleDocs[index];
-                    final icon =
-                        _getFileTypeIcon(doc['fileType'] ?? '');
-                    final timestamp =
-                        doc['uploadedAt'] as Timestamp?;
+                    final icon = _getFileTypeIcon(doc['fileType'] ?? '');
+                    final timestamp = doc['uploadedAt'] as Timestamp?;
                     final uploadDate = timestamp != null
                         ? DateFormat.yMMMd().format(timestamp.toDate())
                         : 'N/A';
@@ -803,13 +810,28 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             appBar: AppBar(
               title: Text(
                 'isy-check',
-                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
               ),
               backgroundColor: Theme.of(context).primaryColor,
               centerTitle: true,
               iconTheme: IconThemeData(
                 color: Theme.of(context).colorScheme.onPrimary,
               ),
+              actions: [
+                // Add a "Home" icon that takes the PT back to the main flow.
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    // For example, pushReplacement to the main BaseScreen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
             body: Center(
               child: CircularProgressIndicator(
@@ -835,6 +857,20 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 iconTheme: IconThemeData(
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
+                actions: [
+                  // Add a "Home" icon that takes the PT back to the main flow.
+                  IconButton(
+                    icon: Icon(Icons.home,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                    onPressed: () {
+                      // For example, pushReplacement to the main BaseScreen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BaseScreen()),
+                      );
+                    },
+                  ),
+                ],
               ),
               bottomNavigationBar: const TabBar(
                 tabs: [
@@ -881,13 +917,30 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     iconTheme: IconThemeData(
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
+                    actions: [
+                      // Add a "Home" icon that takes the PT back to the main flow.
+                      IconButton(
+                        icon: Icon(Icons.home,
+                            color: Theme.of(context).colorScheme.onPrimary),
+                        onPressed: () {
+                          // For example, pushReplacement to the main BaseScreen
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const BaseScreen()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   bottomNavigationBar: const TabBar(
                     tabs: [
                       Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
                       Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
                       Tab(icon: Icon(Icons.fitness_center), text: "Training"),
-                      Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
+                      Tab(
+                          icon: Icon(Icons.insert_drive_file),
+                          text: "Documents"),
                     ],
                     labelColor: Colors.blue,
                     unselectedLabelColor: Colors.grey,
@@ -923,6 +976,20 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               iconTheme: IconThemeData(
                 color: Theme.of(context).colorScheme.onPrimary,
               ),
+              actions: [
+                // Add a "Home" icon that takes the PT back to the main flow.
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    // For example, pushReplacement to the main BaseScreen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
             bottomNavigationBar: const TabBar(
               tabs: [

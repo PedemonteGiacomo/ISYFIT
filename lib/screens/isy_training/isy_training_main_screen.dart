@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/screens/base_screen.dart';
 
 // Example sub-screens for isy-training
 import 'logbook_screen.dart';
@@ -16,12 +17,27 @@ class IsyTrainingMainScreen extends StatelessWidget {
       length: 2, // We have 2 tabs: Logbook + Library
       child: Scaffold(
         appBar: AppBar(
-          title: Text("isy-training", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+          title: Text("isy-training",
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.primary,
           iconTheme: IconThemeData(
             color: Theme.of(context).colorScheme.onPrimary,
           ),
+          actions: [
+            // Add a "Home" icon that takes the PT back to the main flow.
+            IconButton(
+              icon: Icon(Icons.home,
+                  color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () {
+                // For example, pushReplacement to the main BaseScreen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BaseScreen()),
+                );
+              },
+            ),
+          ],
         ),
         // Put the TabBar in the bottomNavigationBar, just like your sample
         bottomNavigationBar: const TabBar(
@@ -33,10 +49,10 @@ class IsyTrainingMainScreen extends StatelessWidget {
           unselectedLabelColor: Colors.grey,
         ),
         // Each tab gets its own page in the TabBarView
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            LogbookScreen(), //TODO: pass the clientUid here to separate the PT view of the client's logbook
-            LibraryScreen(), //TODO: pass the clientUid here to separate the PT view of the client's library
+            LogbookScreen(clientUid: clientUid),
+            LibraryScreen(clientUid: clientUid),
           ],
         ),
       ),

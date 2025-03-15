@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'manage_clients_screen.dart';
@@ -105,7 +106,7 @@ class PTDashboard extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          MeasurementsHomeScreen(clientUid: clientUid),
+                          IsyLabMainScreen(clientUid: clientUid),
                     ),
                   );
                 },
