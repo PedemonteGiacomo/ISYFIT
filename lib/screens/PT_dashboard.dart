@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+// Your other local screens
 import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
@@ -9,7 +11,6 @@ import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
 import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
-
 
 class PTDashboard extends StatelessWidget {
   const PTDashboard({Key? key}) : super(key: key);
@@ -62,7 +63,8 @@ class PTDashboard extends StatelessWidget {
     return clients;
   }
 
-  /// Show popup with 4 options
+  /// When tapping a client from the "Recent" list, let the PT choose which
+  /// area to go to: isy-training, isy-lab, etc.
   void _showClientOptions(
     BuildContext context, {
     required String clientUid,
@@ -72,19 +74,25 @@ class PTDashboard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
+        final theme = Theme.of(context);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
+          surfaceTintColor: theme.colorScheme.surface,
           title: Text(
-            clientName + " " + clientSurname,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            "$clientName $clientSurname",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.fitness_center, color: Colors.orange),
+                leading: Icon(Icons.fitness_center,
+                    color: theme.colorScheme.primary),
                 title: const Text('isy-training'),
                 onTap: () {
                   Navigator.pop(context);
@@ -96,17 +104,17 @@ class PTDashboard extends StatelessWidget {
                     ),
                   );
                 },
-              ),       
+              ),
               ListTile(
-                leading: const Icon(Icons.straighten, color: Colors.green),
+                leading: Icon(Icons.straighten,
+                    color: theme.colorScheme.secondary),
                 title: const Text('isy-lab'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          IsyLabMainScreen(clientUid: clientUid),
+                      builder: (_) => IsyLabMainScreen(clientUid: clientUid),
                     ),
                   );
                 },
@@ -126,7 +134,7 @@ class PTDashboard extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.info, color: Colors.blue),
+                leading: Icon(Icons.info, color: theme.colorScheme.tertiary),
                 title: const Text('account'),
                 onTap: () {
                   Navigator.pop(context);
@@ -145,12 +153,17 @@ class PTDashboard extends StatelessWidget {
     );
   }
 
+  /// Builds the list of up to 3 recent clients
   Widget _buildClientList(BuildContext context) {
+    final theme = Theme.of(context);
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _fetchClients(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(color: theme.colorScheme.primary),
+          );
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -165,210 +178,277 @@ class PTDashboard extends StatelessWidget {
         final clients = snapshot.data!;
         return Column(
           children: [
-            ...clients.map((client) {
-              final clientName = client['name'] ?? ' ';
-              final clientSurname = client['surname'] ?? ' ';
-              final isPaying = client['isPaying'] ?? false;
-
-              return InkWell(
-                onTap: () {
-                  _showClientOptions(
-                    context,
-                    clientUid: client['uid'],
-                    clientName: clientName,
-                    clientSurname: clientSurname,
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        child: Text(
-                          clientName.isNotEmpty
-                              ? clientName[0].toUpperCase() +
-                                  clientSurname[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        backgroundColor: Colors.blue.shade400,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          clientName + " " + clientSurname,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: isPaying ? Colors.green : Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isPaying ? 'Paying' : 'Not Paying',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isPaying ? Colors.green : Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-            const SizedBox(height: 12),
+            for (final client in clients) ...[
+              _buildClientRow(context, client),
+            ],
           ],
         );
       },
     );
   }
 
+  /// Renders a single row for a client, with avatar + pay status
+  Widget _buildClientRow(BuildContext context, Map<String, dynamic> client) {
+    final theme = Theme.of(context);
+    final String clientName = client['name'] ?? ' ';
+    final String clientSurname = client['surname'] ?? ' ';
+    final bool isPaying = client['isPaying'] ?? false;
+
+    return InkWell(
+      onTap: () {
+        _showClientOptions(
+          context,
+          clientUid: client['uid'],
+          clientName: clientName,
+          clientSurname: clientSurname,
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            // Avatar with initials
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.75),
+              child: Text(
+                _buildClientInitials(clientName, clientSurname),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Client name
+            Expanded(
+              child: Text(
+                "$clientName $clientSurname",
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Payment status
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: isPaying ? Colors.green : theme.colorScheme.error,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isPaying ? 'Paying' : 'Not Paying',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isPaying ? Colors.green : theme.colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build 2-letter initials from name + surname
+  String _buildClientInitials(String name, String surname) {
+    if (name.isNotEmpty && surname.isNotEmpty) {
+      return name[0].toUpperCase() + surname[0].toUpperCase();
+    }
+    return 'U';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const LoginScreen();
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('PT Dashboard',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
+        title: Text(
+          'PT Dashboard',
+          style: TextStyle(color: colorScheme.onPrimary),
         ),
+        centerTitle: true,
+        backgroundColor: colorScheme.primary,
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: FutureBuilder<String>(
-            future: _fetchUserName(),
-            builder: (context, snapshot) {
-              final userName =
-                  snapshot.connectionState == ConnectionState.done &&
-                          snapshot.hasData
-                      ? snapshot.data!
-                      : "User";
+      body: FutureBuilder<String>(
+        future: _fetchUserName(),
+        builder: (context, snapshot) {
+          final userName =
+              snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasData
+                  ? snapshot.data!
+                  : "User";
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                /// 1) "Welcome" Card
+                Card(
+                  // This uses the M3 card shape from your theme or you can override:
+                  margin: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    ),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.grey.shade300,
-                        child: const Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.white,
-                        ),
+                      radius: 28,
+                      backgroundColor:
+                        Theme.of(context).colorScheme.onPrimary,
+                      child: Icon(
+                        Icons.person,
+                        size: 30,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        "Welcome $userName",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                      child: Text(
+                        "Welcome, $userName",
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Search and actions
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //       child: TextField(
-                  //         decoration: InputDecoration(
-                  //           hintText: "Search...",
-                  //           prefixIcon: const Icon(Icons.search),
-                  //           border: OutlineInputBorder(
-                  //             borderRadius: BorderRadius.circular(12.0),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //     const SizedBox(width: 8),
-                  //     ElevatedButton.icon(
-                  //       onPressed: () {},
-                  //       icon: const Icon(Icons.add),
-                  //       label: const Text("Add New"),
-                  //     ),
-                  //     const SizedBox(width: 8),
-                  //     ElevatedButton(
-                  //       onPressed: () {},
-                  //       child: const Text("Filter"),
-                  //     ),
-                  //   ],
-                  // ),
-                  // const SizedBox(height: 16),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Recent Clients",
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ManageClientsScreen(),
-                            ),
-                          );
-                        },
-                        child: Text("View All", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: screenHeight * 0.4,
-                    ),
-                    child: SingleChildScrollView(
-                      child: _buildClientList(context),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  ),
+                ),
 
-                  // Weekly Checks Placeholder
-                  // const Divider(thickness: 1.5),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "All Weekly Checks",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 24),
+
+                /// 2) Recent Clients + "View All" Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Recent Clients",
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // We'll use a FilledButton (Material 3)
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ManageClientsScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text("View All"),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                /// 3) Card containing the clients list
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildClientList(context),
                   ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+
+                const SizedBox(height: 32),
+
+                /// 4) Weekly Checks placeholder
+                Row(
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      "All Weekly Checks",
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "This is a placeholder for weekly checks data.",
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
       ),
+
+      // /// 5) FAB (optional) to add new clients or handle other actions
+      // floatingActionButton: FloatingActionButton.extended(
+      //   onPressed: () {
+      //     // Example: jump to client creation or ManageClientsScreen
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(builder: (_) => const ManageClientsScreen()),
+      //     );
+      //   },
+      //   icon: const Icon(Icons.group_add),
+      //   label: const Text("Add Client"),
+      //   backgroundColor: colorScheme.primary,
+      //   foregroundColor: colorScheme.onPrimary,
+      // ),
     );
   }
 }
