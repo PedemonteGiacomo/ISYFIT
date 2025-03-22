@@ -156,7 +156,7 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
     final theme = Theme.of(context);
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'isy-check - Anamnesis',
+        title: 'isy-check - Anamnesis Data Insertion',
         actions: [
           IconButton(
             icon: Icon(Icons.home, color: theme.colorScheme.onPrimary),

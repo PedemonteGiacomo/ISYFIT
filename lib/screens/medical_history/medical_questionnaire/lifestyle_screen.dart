@@ -3,7 +3,7 @@ import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/gradient_button.dart';
 import 'medical_history_screen.dart';
 
-/// Optional model for icon-labeled choices
+/// Example model for icon-labeled choice
 class _IconChoice {
   final String label;
   final IconData icon;
@@ -34,19 +34,18 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
   // Water intake from 0 to 5 liters
   double _waterIntakeLiters = 2.0;
 
-  // Alcohol frequency if toggled On
-  String? _alcoholFrequency;
+  // If user toggles "Yes" for alcohol, pick from an icon-labeled row
+  String? _selectedAlcoholFreq;
+  final TextEditingController _alcoholOtherController = TextEditingController();
 
-  // Cigarettes per day if smoking toggled On
+  // Smoking details: user picks daily amount from slider
   double _cigarettesPerDay = 0;
 
   // --------------------------- Breakfast Additions ---------------------------
   bool eatsBreakfast = false;
-  // We'll store the breakfast choice from our icon-labeled row
   String? _selectedBreakfastChoice;
   final TextEditingController _breakfastOtherController = TextEditingController();
 
-  // Some example breakfast choices with icons
   final List<_IconChoice> _breakfastOptions = [
     _IconChoice('Light (coffee + pastry)', Icons.coffee),
     _IconChoice('Standard (cereal/toast)', Icons.breakfast_dining),
@@ -54,25 +53,33 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     _IconChoice('Other', Icons.help_outline),
   ];
 
+  /// Icon-labeled choices for alcohol frequency
+  final List<_IconChoice> _alcoholFrequencyOptions = [
+    _IconChoice('Occasional', Icons.hourglass_bottom),
+    _IconChoice('1-2 drinks/day', Icons.wine_bar),
+    _IconChoice('3+ drinks/day', Icons.local_bar),
+    _IconChoice('Other', Icons.help_outline),
+  ];
+
   @override
   void initState() {
     super.initState();
 
-    // 1) Initialize toggles from widget.data
+    // 1) Initialize toggles from widget.data if they exist
     widget.data['alcohol'] ??= 'No';
     widget.data['smokes'] ??= 'No';
     widget.data['fixedWorkShifts'] ??= 'No';
     widget.data['waterIntake'] ??= '';
-
-    // 2) Breakfast
     widget.data['breakfast'] ??= 'No';
     widget.data['breakfastDetails'] ??= '';
+    widget.data['alcohol_details'] ??= '';
 
     // Convert "Yes"/"No" to booleans
     drinksAlcohol   = (widget.data['alcohol'] == 'Yes');
     smokes          = (widget.data['smokes'] == 'Yes');
     fixedWorkShifts = (widget.data['fixedWorkShifts'] == 'Yes');
 
+    // Breakfast
     eatsBreakfast   = (widget.data['breakfast'] == 'Yes');
 
     // If there's a numeric water intake, parse it
@@ -84,14 +91,24 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
       }
     }
 
-    // 3) If user had chosen a breakfast detail previously:
+    // If user had chosen an alcohol detail previously
+    if (drinksAlcohol) {
+      final oldAlcohol = widget.data['alcohol_details'] ?? '';
+      // If it matches one of our labels, pick it. Else "Other"
+      if (_alcoholFrequencyOptions.any((o) => o.label == oldAlcohol)) {
+        _selectedAlcoholFreq = oldAlcohol;
+      } else if (oldAlcohol.isNotEmpty) {
+        _selectedAlcoholFreq = 'Other';
+        _alcoholOtherController.text = oldAlcohol;
+      }
+    }
+
+    // If user had chosen a breakfast detail previously:
     if (eatsBreakfast) {
       final oldDetails = widget.data['breakfastDetails'] ?? '';
-      // Check if it matches one of the _breakfastOptions labels
       if (_breakfastOptions.any((o) => o.label == oldDetails)) {
         _selectedBreakfastChoice = oldDetails;
       } else if (oldDetails.isNotEmpty) {
-        // Otherwise, we assume "Other"
         _selectedBreakfastChoice = 'Other';
         _breakfastOtherController.text = oldDetails;
       }
@@ -100,6 +117,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
 
   @override
   void dispose() {
+    _alcoholOtherController.dispose();
     _breakfastOtherController.dispose();
     super.dispose();
   }
@@ -107,16 +125,20 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
   // Save and navigate to medical screen
   void _goToNextScreen() {
     // Convert toggles to "Yes"/"No"
-    widget.data['alcohol'] = drinksAlcohol ? 'Yes' : 'No';
-    widget.data['smokes']  = smokes ? 'Yes' : 'No';
+    widget.data['alcohol']       = drinksAlcohol ? 'Yes' : 'No';
+    widget.data['smokes']        = smokes ? 'Yes' : 'No';
     widget.data['fixedWorkShifts'] = fixedWorkShifts ? 'Yes' : 'No';
 
     // Water intake
     widget.data['waterIntake'] = _waterIntakeLiters.toStringAsFixed(1);
 
     // Alcohol details
-    if (drinksAlcohol && _alcoholFrequency != null) {
-      widget.data['alcohol_details'] = _alcoholFrequency;
+    if (drinksAlcohol && _selectedAlcoholFreq != null) {
+      if (_selectedAlcoholFreq == 'Other') {
+        widget.data['alcohol_details'] = _alcoholOtherController.text.trim();
+      } else {
+        widget.data['alcohol_details'] = _selectedAlcoholFreq;
+      }
     } else {
       widget.data['alcohol_details'] = '';
     }
@@ -128,12 +150,12 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
       widget.data['smoking_details'] = '';
     }
 
-    // --------------------- Save Breakfast Info ---------------------
+    // Breakfast
     widget.data['breakfast'] = eatsBreakfast ? 'Yes' : 'No';
     if (eatsBreakfast && _selectedBreakfastChoice != null) {
-      // If they picked "Other," store the text from the controller
       if (_selectedBreakfastChoice == 'Other') {
-        widget.data['breakfastDetails'] = _breakfastOtherController.text.trim();
+        widget.data['breakfastDetails'] =
+            _breakfastOtherController.text.trim();
       } else {
         widget.data['breakfastDetails'] = _selectedBreakfastChoice;
       }
@@ -141,6 +163,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
       widget.data['breakfastDetails'] = '';
     }
 
+    // Go next
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -213,7 +236,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           icon: Icons.local_bar_outlined,
                           onChanged: (v) => setState(() => drinksAlcohol = v),
                         ),
-                        if (drinksAlcohol) _buildAlcoholDropDown(),
+                        if (drinksAlcohol) _buildAlcoholIconRow(),
+                        if (drinksAlcohol && _selectedAlcoholFreq == 'Other')
+                          _buildAlcoholOtherField(),
                         const SizedBox(height: 16),
 
                         // 3) Smoking
@@ -277,10 +302,16 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     );
   }
 
-  // Alcohol frequency: e.g., "Occasional," "1-2 drinks/day," "3+ drinks/day"
-  Widget _buildAlcoholDropDown() {
+  // Replaces the old dropdown with a single-row icon-labeled approach
+  Widget _buildAlcoholIconRow() {
     final theme = Theme.of(context);
-    final alcoholOptions = ['Occasional', '1-2 drinks/day', '3+ drinks/day'];
+    // These replicate your old text-based options + "Other"
+    final List<_IconChoice> alcoholChoices = [
+      _IconChoice('Occasional', Icons.hourglass_bottom),
+      _IconChoice('1-2 drinks/day', Icons.wine_bar),
+      _IconChoice('3+ drinks/day', Icons.local_bar),
+      _IconChoice('Other', Icons.help_outline),
+    ];
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -288,21 +319,74 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('How often/how much?', style: theme.textTheme.labelLarge),
-          DropdownButtonFormField<String>(
-            value: _alcoholFrequency,
-            items: alcoholOptions.map((opt) {
-              return DropdownMenuItem<String>(value: opt, child: Text(opt));
-            }).toList(),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: theme.colorScheme.surface,
+          const SizedBox(height: 6),
+
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: alcoholChoices.map((choice) {
+                final bool isSelected = (_selectedAlcoholFreq == choice.label);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: InkWell(
+                    onTap: () => setState(() => _selectedAlcoholFreq = choice.label),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.colorScheme.primary.withOpacity(0.2)
+                            : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            choice.icon,
+                            color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            choice.label,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.black,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-            onChanged: (val) {
-              setState(() => _alcoholFrequency = val);
-            },
           ),
         ],
+      ),
+    );
+  }
+
+  // If "Other" => show text field
+  Widget _buildAlcoholOtherField() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TextFormField(
+        controller: _alcoholOtherController,
+        decoration: InputDecoration(
+          labelText: 'Describe your drinking frequency',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: theme.colorScheme.surface,
+        ),
       ),
     );
   }
@@ -364,7 +448,6 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
           Text('What kind of breakfast?', style: theme.textTheme.labelLarge),
           const SizedBox(height: 6),
 
-          // Single row horizontally (scroll if needed)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -373,9 +456,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 12.0),
                   child: InkWell(
-                    onTap: () => setState(() {
-                      _selectedBreakfastChoice = option.label;
-                    }),
+                    onTap: () => setState(() => _selectedBreakfastChoice = option.label),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -393,10 +474,10 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(option.icon,
-                              color: isSelected
-                                  ? theme.colorScheme.primary
-                                  : Colors.grey),
+                          Icon(
+                            option.icon,
+                            color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             option.label,
@@ -418,7 +499,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     );
   }
 
-  // If "Other" is selected, we show a text field
+  // If "Other" is selected for breakfast => show text field
   Widget _buildBreakfastOtherField() {
     final theme = Theme.of(context);
     return Padding(

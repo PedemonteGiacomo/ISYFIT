@@ -50,22 +50,19 @@ class QuestionnaireScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // GradientButton instead of ElevatedButton
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.7,
-                    child: GradientButton(
-                      label: 'Start',
-                      icon: Icons.arrow_forward,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PersonalInformationScreen(
-                              clientUid: clientUid,
-                            ),
+                  GradientButton(
+                    label: 'Start',
+                    icon: Icons.arrow_forward,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PersonalInformationScreen(
+                            clientUid: clientUid,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
