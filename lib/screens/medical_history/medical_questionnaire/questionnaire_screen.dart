@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/widgets/gradient_button.dart'; // <-- Import your GradientButton
 import 'personal_information_screen.dart';
 
 class QuestionnaireScreen extends StatelessWidget {
@@ -11,12 +12,6 @@ class QuestionnaireScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: theme.colorScheme.primary,
-      //   title: Text('Medical Questionnaire',
-      //       style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-      //   centerTitle: true,
-      // ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -30,8 +25,11 @@ class QuestionnaireScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.medical_services,
-                      size: 64, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.medical_services,
+                    size: 64,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Welcome to the Medical History Questionnaire!',
@@ -42,17 +40,21 @@ class QuestionnaireScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'This questionnaire will help us understand your background, lifestyle, and goals. '
-                    'Please take a few minutes to complete it.',
+                    'This questionnaire will help us understand your background, '
+                    'lifestyle, and goals. Please take a few minutes to complete it.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // GradientButton instead of ElevatedButton
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.7,
-                    child: ElevatedButton.icon(
+                    child: GradientButton(
+                      label: 'Start',
+                      icon: Icons.arrow_forward,
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -63,16 +65,6 @@ class QuestionnaireScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.onPrimary),
-                      label: Text('Start', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: theme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        foregroundColor: Colors.white,
-                      ),
                     ),
                   ),
                 ],

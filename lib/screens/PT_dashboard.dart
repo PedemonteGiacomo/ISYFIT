@@ -8,7 +8,7 @@ import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'manage_clients_screen.dart';
-import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
+import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
 import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';

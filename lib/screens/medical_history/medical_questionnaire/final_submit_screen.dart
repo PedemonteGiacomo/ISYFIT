@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:isyfit/screens/base_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/gradient_button_for_final_submit_screen.dart';
 
 class FinalSubmitScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -25,14 +27,9 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Finalize',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+      // 1) Use your GradientAppBar
+      appBar: GradientAppBar(
+        title: 'isy-check - Anamnesis Data Insertion',
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -49,7 +46,7 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      // ✅ Success Icon with Theme
+                      // ✅ Success Icon
                       Icon(
                         Icons.check_circle_outline,
                         size: 64,
@@ -67,7 +64,8 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
                       const SizedBox(height: 8),
 
                       Text(
-                        'You’ve successfully completed the questionnaire. Please review your data and submit it.',
+                        'You’ve successfully completed the questionnaire. '
+                        'Please review your data and submit it.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withOpacity(0.7),
@@ -79,37 +77,12 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
                       _buildDataSummary(),
                       const SizedBox(height: 24),
 
-                      // ✅ Submit Button
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.75,
-                        child: ElevatedButton.icon(
-                          onPressed: isSubmitting ? null : _handleSubmit,
-                          icon: isSubmitting
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Icon(Icons.send,
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary),
-                          label: Text(
-                            isSubmitting ? 'Submitting...' : 'Submit',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: theme.colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
+                      // ✅ GradientButton for submission
+                      GradientButtonFFSS(
+                        label: isSubmitting ? 'Submitting...' : 'Submit',
+                        // If submitting, show a small spinner icon. Otherwise, show send icon.
+                        icon: isSubmitting ? Icons.hourglass_empty : Icons.send,
+                        onPressed: isSubmitting ? null : _handleSubmit,
                       ),
                     ],
                   ),
@@ -124,21 +97,18 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
 
   /// 🔹 **Summary Data Display**
   Widget _buildDataSummary() {
-    List<Widget> rows = [];
-    List<MapEntry<String, dynamic>> entries = widget.data.entries.toList();
+    final entries = widget.data.entries.toList();
+    final rows = <Widget>[];
 
+    // We group them in pairs of 2 per row
     for (int i = 0; i < entries.length; i += 2) {
       rows.add(
         Row(
           children: [
-            Expanded(
-              child: _buildDataCard(entries[i]),
-            ),
+            Expanded(child: _buildDataCard(entries[i])),
             if (i + 1 < entries.length) const SizedBox(width: 16),
             if (i + 1 < entries.length)
-              Expanded(
-                child: _buildDataCard(entries[i + 1]),
-              ),
+              Expanded(child: _buildDataCard(entries[i + 1])),
           ],
         ),
       );
@@ -151,6 +121,11 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
   /// 🔹 **Single Data Card**
   Widget _buildDataCard(MapEntry<String, dynamic> entry) {
     final theme = Theme.of(context);
+    final keyLabel = entry.key;
+    final val = entry.value is List
+        ? (entry.value as List).join(', ')
+        : entry.value.toString();
+
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
@@ -162,7 +137,7 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            entry.key,
+            keyLabel,
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.primary,
@@ -170,9 +145,7 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            entry.value is List
-                ? (entry.value as List).join(', ')
-                : entry.value.toString(),
+            val,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
             ),
@@ -194,15 +167,16 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
         throw Exception('User not logged in');
       }
 
-      // Use `clientUid` if provided (PT submitting for a client), else use own UID
+      // If this was PT-submitted for a client, we use their UID; otherwise, use the logged-in user’s UID
       final targetUid = widget.clientUid ?? user.uid;
 
+      // Merge the data into the "medical_history/{targetUid}" doc
       await FirebaseFirestore.instance
           .collection('medical_history')
           .doc(targetUid)
           .set(widget.data, SetOptions(merge: true));
 
-      // ✅ Success Snackbar
+      // ✅ Show success
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -215,14 +189,12 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
         ),
       );
 
-      // ✅ Redirect to BaseScreen
+      // ✅ Go back to BaseScreen
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const BaseScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const BaseScreen()),
       );
     } catch (e) {
-      // ❌ Error Snackbar
+      // ❌ Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

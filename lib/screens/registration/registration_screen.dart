@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'registration_client_screen.dart';
 import 'registration_PT_screen.dart';
 
@@ -58,7 +59,8 @@ class RegistrationScreen extends StatelessWidget {
               ),
 
               // Arrow
-              Icon(Icons.arrow_forward_ios, size: 20, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.arrow_forward_ios,
+                  size: 20, color: Theme.of(context).colorScheme.primary),
             ],
           ),
         ),
@@ -68,54 +70,58 @@ class RegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //final theme = Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text(''), // Use an empty title but preserve the app bar
-      //   backgroundColor: theme.primaryColor, // or theme.colorScheme.primary
-      //   elevation: 8,
-      // ),
+      appBar: GradientAppBar(
+        title: 'Registration',
+      ),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: _buildOptionCard(
-                  context: context,
-                  icon: Icons.person,
-                  title: 'Register as Client',
-                  description:
-                      'Create an account to be guided by a Personal Trainer or use limited features.',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterClientScreen(),
-                    ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height -
+                  AppBar().preferredSize.height -
+                  MediaQuery.of(context).padding.top,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildOptionCard(
+                        context: context,
+                        icon: Icons.person,
+                        title: 'Register as Client',
+                        description:
+                            'Create an account to be guided by a Personal Trainer or use limited features.',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterClientScreen(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildOptionCard(
+                        context: context,
+                        icon: Icons.fitness_center,
+                        title: 'Register as PT',
+                        description:
+                            'Sign up as a Personal Trainer to manage your clients and grow your business.',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterPTScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: _buildOptionCard(
-                  context: context,
-                  icon: Icons.fitness_center,
-                  title: 'Register as PT',
-                  description:
-                      'Sign up as a Personal Trainer to manage your clients and grow your business.',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterPTScreen(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/gradient_button.dart';
 import 'training_goals_screen.dart';
 
 class SleepEnergyScreen extends StatefulWidget {
@@ -31,7 +33,12 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
   TimeOfDay? _parseTime(String? time) {
     if (time == null) return null;
     final parts = time.split(':');
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    if (parts.length == 2) {
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    }
+    return null;
   }
 
   Future<void> _selectTime(
@@ -39,7 +46,7 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     TimeOfDay? initialTime,
     Function(TimeOfDay) onTimeSelected,
   ) async {
-    final TimeOfDay? picked = await showTimePicker(
+    final picked = await showTimePicker(
       context: context,
       initialTime: initialTime ?? TimeOfDay.now(),
     );
@@ -48,20 +55,41 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     }
   }
 
+  void _goNext() {
+    if (sleepTime == null || wakeTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your sleep and wake-up times.'),
+        ),
+      );
+      return;
+    }
+    // Save to data
+    widget.data['sleep_time'] = '${sleepTime!.hour}:${sleepTime!.minute}';
+    widget.data['wake_time'] = '${wakeTime!.hour}:${wakeTime!.minute}';
+    widget.data['energetic'] = feelsEnergetic ? 'Yes' : 'No';
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TrainingGoalsScreen(
+          data: widget.data,
+          clientUid: widget.clientUid,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
-        title: Text('Sleep & Energy',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+      // 1) Use GradientAppBar
+      appBar: GradientAppBar(
+        title: 'isy-check - Anamnesis Data Insertion',
       ),
+
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -82,12 +110,13 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'Sleep & Energy',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Help us understand your sleep patterns and energy levels.',
+                        'Help us understand your sleep patterns and energy levels to refine your plan.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withOpacity(0.7),
@@ -95,93 +124,52 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Sleep Time Picker
+                      // Sleep Time
                       _buildTimePicker(
                         context,
-                        label: 'What time do you sleep?',
+                        label: 'What time do you usually go to sleep?',
                         time: sleepTime,
                         icon: Icons.bedtime_outlined,
                         onTimeSelected: (time) {
                           setState(() {
                             sleepTime = time;
-                            widget.data['sleep_time'] =
-                                '${time.hour}:${time.minute}';
                           });
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Wake Time Picker
+                      // Wake Time
                       _buildTimePicker(
                         context,
-                        label: 'What time do you wake up?',
+                        label: 'What time do you usually wake up?',
                         time: wakeTime,
                         icon: Icons.wb_sunny_outlined,
                         onTimeSelected: (time) {
                           setState(() {
                             wakeTime = time;
-                            widget.data['wake_time'] =
-                                '${time.hour}:${time.minute}';
                           });
                         },
                       ),
                       const SizedBox(height: 24),
 
-                      // Energetic Toggle
+                      // Feels Energetic toggle
                       _buildToggleOption(
-                        label: 'Do you feel energetic when you wake up?',
+                        label: 'Do you feel energetic upon waking?',
                         value: feelsEnergetic,
                         icon: Icons.battery_charging_full_outlined,
                         onChanged: (value) {
                           setState(() {
                             feelsEnergetic = value;
-                            widget.data['energetic'] = value ? 'Yes' : 'No';
                           });
                         },
                       ),
                       const SizedBox(height: 32),
 
-                      // Next Button
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.75,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (sleepTime == null || wakeTime == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                      'Please select your sleep and wake-up times.'),
-                                  backgroundColor:
-                                      theme.colorScheme.errorContainer,
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TrainingGoalsScreen(
-                                  data: widget.data,
-                                  clientUid: widget.clientUid,
-                                ),
-                              ),
-                            );
-                          },
-                          icon: Icon(Icons.arrow_forward,
-                              color: Theme.of(context).colorScheme.onPrimary),
-                          label: Text('Next',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary)),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: theme.primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
+                      // 2) Use GradientButton for Next
+                      GradientButton(
+                        label: 'Next',
+                        icon: Icons.arrow_forward,
+                        onPressed: _goNext,
                       ),
                     ],
                   ),
@@ -201,35 +189,43 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     required IconData icon,
     required Function(TimeOfDay) onTimeSelected,
   }) {
-    return Row(
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: InkWell(
-              onTap: () => _selectTime(context, time, onTimeSelected),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      time != null ? time.format(context) : label,
+        Text(label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            )),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: InkWell(
+            onTap: () => _selectTime(context, time, onTimeSelected),
+            child: Row(
+              children: [
+                Icon(icon, color: theme.colorScheme.primary, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Text(
+                      time != null ? time.format(context) : 'Tap to select time',
                       style: TextStyle(
                         fontSize: 14,
                         color: time != null ? Colors.black : Colors.grey,
                       ),
                     ),
-                    const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                  ],
+                  ),
                 ),
-              ),
+                const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+              ],
             ),
           ),
         ),
@@ -243,28 +239,35 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
     required IconData icon,
     required Function(bool) onChanged,
   }) {
-    return Row(
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 14)),
-                Switch(
-                  value: value,
-                  onChanged: onChanged,
-                  activeColor: Theme.of(context).colorScheme.primary,
-                ),
-              ],
-            ),
+        Text(label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            )),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(label, style: const TextStyle(fontSize: 14)),
+              ),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeColor: theme.colorScheme.primary,
+              ),
+            ],
           ),
         ),
       ],

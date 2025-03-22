@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
-import 'package:isyfit/screens/medical_history/medical_history_screen.dart';
+import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';

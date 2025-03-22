@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:isyfit/screens/base_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/gradient_button.dart'; // <-- Import your new widget
 import 'physical_measurements_screen.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
@@ -9,8 +12,7 @@ class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
-  _PersonalInformationScreenState createState() =>
-      _PersonalInformationScreenState();
+  _PersonalInformationScreenState createState() => _PersonalInformationScreenState();
 }
 
 class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
@@ -18,9 +20,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   String? surname;
   String? email;
   String? phone;
-  String? dateOfBirth;
+  String? dateOfBirth; // raw date string
   String? role;
-  String? profession;
 
   bool isLoading = true;
 
@@ -49,7 +50,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
           phone = data?['phone'];
           dateOfBirth = data?['dateOfBirth'];
           role = data?['role'];
-          profession = data?['profession'];
           isLoading = false;
         });
       } else {
@@ -63,6 +63,23 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     }
   }
 
+  /// Helper to calculate age from the dateOfBirth string
+  int? _calculateAge(String? dateOfBirth) {
+    if (dateOfBirth == null) return null;
+    try {
+      final dob = DateTime.parse(dateOfBirth);
+      final now = DateTime.now();
+      int age = now.year - dob.year;
+      if (now.month < dob.month ||
+          (now.month == dob.month && now.day < dob.day)) {
+        age--;
+      }
+      return age;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -73,15 +90,24 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       );
     }
 
+    // Convert dateOfBirth to age
+    final age = _calculateAge(dateOfBirth);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Personal Information',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+      appBar: GradientAppBar(
+        title: 'isy-check - Anamnesis Data Insertion',
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -98,7 +124,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      // Header Section
+                      // Header
                       Icon(Icons.person,
                           size: 64, color: theme.colorScheme.primary),
                       const SizedBox(height: 16),
@@ -117,97 +143,54 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Form Fields
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Name',
-                              name ?? 'N/A',
-                              Icons.badge_outlined,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Surname',
-                              surname ?? 'N/A',
-                              Icons.person_outline,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
+                      // Each field is a vertical block
+                      _buildFieldWithIcon(
+                          'Name', name ?? 'N/A', Icons.badge_outlined),
+                      _buildFieldWithIcon(
+                          'Surname', surname ?? 'N/A', Icons.person_outline),
                       _buildFieldWithIcon(
                           'Email', email ?? 'N/A', Icons.email_outlined),
-                      const SizedBox(height: 16),
-
                       _buildFieldWithIcon(
                           'Phone', phone ?? 'N/A', Icons.phone_outlined),
-                      const SizedBox(height: 16),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Date of Birth',
-                              dateOfBirth ?? 'N/A',
-                              Icons.calendar_today_outlined,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildFieldWithIcon(
-                              'Role',
-                              role ?? 'N/A',
-                              role == 'PT'
-                                  ? Icons.medical_services
-                                  : Icons.person,
-                            ),
-                          ),
-                        ],
+                      // Age instead of dateOfBirth
+                      _buildFieldWithIcon(
+                        'Age',
+                        age == null ? 'N/A' : '$age years',
+                        Icons.cake_outlined,
                       ),
+
+                      // Role
+                      _buildFieldWithIcon(
+                        'Role',
+                        role ?? 'N/A',
+                        role == 'PT' ? Icons.medical_services : Icons.person,
+                      ),
+
                       const SizedBox(height: 32),
 
-                      // Next Button -> Pass clientUid forward
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PhysicalMeasurementsScreen(
-                                  data: {
-                                    'name': name,
-                                    'surname': surname,
-                                    'email': email,
-                                    'phone': phone,
-                                    'dateOfBirth': dateOfBirth,
-                                    'role': role,
-                                  },
-                                  clientUid: widget.clientUid,
-                                ),
+                      // Use the custom GradientButton here
+                      GradientButton(
+                        label: 'Next',
+                        icon: Icons.arrow_forward,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PhysicalMeasurementsScreen(
+                                data: {
+                                  'name': name,
+                                  'surname': surname,
+                                  'email': email,
+                                  'phone': phone,
+                                  'dateOfBirth': dateOfBirth,
+                                  'role': role,
+                                },
+                                clientUid: widget.clientUid,
                               ),
-                            );
-                          },
-                          icon: Icon(Icons.arrow_forward,
-                              color: Theme.of(context).colorScheme.onPrimary),
-                          label: Text('Next',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary)),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: theme.primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
                             ),
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -222,18 +205,19 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
 
   /// Reusable field with an icon
   Widget _buildFieldWithIcon(String label, String value, IconData icon) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+          Icon(icon, color: theme.colorScheme.primary, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border.all(color: Theme.of(context).dividerColor),
+                color: theme.colorScheme.surface,
+                border: Border.all(color: theme.dividerColor),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Column(
@@ -241,20 +225,17 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 children: [
                   Text(
                     label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.7),
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),

@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/base_screen.dart';
 import 'screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
-import 'screens/medical_history/medical_history_screen.dart';
+import 'screens/medical_history/anamnesis_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {

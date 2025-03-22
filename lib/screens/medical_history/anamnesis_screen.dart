@@ -7,12 +7,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:isyfit/screens/base_screen.dart';
-import 'package:isyfit/screens/home_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/medical_history/pdf_view_screen.dart';
 import 'package:isyfit/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/gradient_button.dart'; // <-- Import your custom GradientButton
 
 /// Helper function: Calculate age from dateOfBirth string
 int calculateAge(String? dateOfBirth) {
@@ -42,13 +42,8 @@ class MedicalHistoryScreen extends StatefulWidget {
 }
 
 class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
-  /// The main medical_history document for the target user.
   late Future<Map<String, dynamic>?> medicalHistory;
-
-  /// A list of uploaded documents for the user.
   late Future<List<Map<String, dynamic>>> medicalDocuments;
-
-  /// If a PT is viewing, fetch that client’s minimal profile.
   late Future<Map<String, dynamic>?> clientProfile;
 
   bool showAllDocuments = false;
@@ -65,7 +60,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     }
   }
 
-  /// If PT is viewing, use clientUid; otherwise, use the current user's uid.
   String? get targetUid {
     if (widget.clientUid != null) return widget.clientUid;
     return FirebaseAuth.instance.currentUser?.uid;
@@ -508,16 +502,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  // Convert this to a GradientButton
+                  GradientButton(
+                    label: 'Upload Document',
+                    icon: Icons.upload_file,
                     onPressed: () => _uploadFile(context),
-                    icon: Icon(
-                      Icons.upload_file,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    label: Text(
-                      'Upload Document',
-                      style: TextStyle(color: theme.colorScheme.onPrimary),
-                    ),
                   ),
                 ],
               ),
@@ -537,16 +526,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     style: theme.textTheme.headlineSmall
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  ElevatedButton.icon(
+                  // Another button becomes a GradientButton
+                  GradientButton(
+                    label: 'Upload',
+                    icon: Icons.upload_file,
                     onPressed: () => _uploadFile(context),
-                    icon: Icon(
-                      Icons.upload_file,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    label: Text(
-                      'Upload',
-                      style: TextStyle(color: theme.colorScheme.onPrimary),
-                    ),
                   ),
                 ],
               ),
@@ -667,10 +651,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           const SizedBox(height: 16),
                           Text(
                             'No Medical Data Found',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: theme.colorScheme.error,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -682,14 +663,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.assignment_outlined,
-                                color: theme.colorScheme.onPrimary),
-                            label: Text(
-                              'Fill Questionnaire',
-                              style:
-                                  TextStyle(color: theme.colorScheme.onPrimary),
-                            ),
+
+                          // Convert ElevatedButton to GradientButton
+                          GradientButton(
+                            label: 'Fill Questionnaire',
+                            icon: Icons.assignment_outlined,
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -700,29 +678,14 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                                 ),
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.arrow_back,
-                                color: theme.colorScheme.onPrimary),
-                            label: Text('Return to Clients',
-                                style: TextStyle(
-                                    color: theme.colorScheme.onPrimary)),
+
+                          // Another gradient button for returning
+                          GradientButton(
+                            label: 'Return to Clients',
+                            icon: Icons.arrow_back,
                             onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.secondary,
-                              foregroundColor: theme.colorScheme.onSecondary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -811,12 +774,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             appBar: GradientAppBar(
               title: 'isi-check',
               actions: [
-                // Add a "Home" icon that takes the PT back to the main flow.
                 IconButton(
                   icon: Icon(Icons.home,
                       color: Theme.of(context).colorScheme.onPrimary),
                   onPressed: () {
-                    // For example, pushReplacement to the main BaseScreen
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const BaseScreen()),
@@ -833,107 +794,57 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           );
         }
 
-        // If no data and non-PT view => show the questionnaire in Tab[0].
+        // If no data and non-PT view => show questionnaire
         if (!isPTView && (!snapshot.hasData || snapshot.data == null)) {
-          return DefaultTabController(
-            length: 4,
-            child: Scaffold(
-              appBar: GradientAppBar(
-                title: 'isi-check',
-                actions: [
-                  // Add a "Home" icon that takes the PT back to the main flow.
-                  IconButton(
-                    icon: Icon(Icons.home,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    onPressed: () {
-                      // For example, pushReplacement to the main BaseScreen
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BaseScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              bottomNavigationBar: const TabBar(
-                tabs: [
-                  Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
-                  Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
-                  Tab(icon: Icon(Icons.fitness_center), text: "Training"),
-                  Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
-                ],
-                labelColor: Colors.blue,
-                unselectedLabelColor: Colors.grey,
-              ),
-              body: TabBarView(
-                children: [
-                  // Tab 0 -> show the user questionnaire
-                  _buildNoMedicalHistoryForUser(),
-                  // The other tabs are just empty placeholders in this no-data scenario
-                  Container(),
-                  Container(),
-                  Container(),
-                ],
-              ),
+          return Scaffold(
+            appBar: GradientAppBar(
+              title: 'isi-check',
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
+            body: _buildNoMedicalHistoryForUser(),
           );
         }
 
-        // If no data but PT view => show "No Medical Data Found" screen in Tab[0].
+        // If no data but PT view => show "No Medical Data Found"
         if (isPTView && (!snapshot.hasData || snapshot.data == null)) {
           return FutureBuilder<Map<String, dynamic>?>(
             future: clientProfile,
             builder: (context, ptSnapshot) {
               final profileData = ptSnapshot.data;
-              return DefaultTabController(
-                length: 4,
-                child: Scaffold(
-                  appBar: GradientAppBar(
-                    title: 'isi-check',
-                    actions: [
-                      // Add a "Home" icon that takes the PT back to the main flow.
-                      IconButton(
-                        icon: Icon(Icons.home,
-                            color: Theme.of(context).colorScheme.onPrimary),
-                        onPressed: () {
-                          // For example, pushReplacement to the main BaseScreen
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const BaseScreen()),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  bottomNavigationBar: const TabBar(
-                    tabs: [
-                      Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
-                      Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
-                      Tab(icon: Icon(Icons.fitness_center), text: "Training"),
-                      Tab(
-                          icon: Icon(Icons.insert_drive_file),
-                          text: "Documents"),
-                    ],
-                    labelColor: Colors.blue,
-                    unselectedLabelColor: Colors.grey,
-                  ),
-                  body: TabBarView(
-                    children: [
-                      // Tab 0 -> PT "No Medical Data Found" screen
-                      _buildNoMedicalHistoryForPT(profileData),
-                      Container(),
-                      Container(),
-                      Container(),
-                    ],
-                  ),
+              return Scaffold(
+                appBar: GradientAppBar(
+                  title: 'isi-check',
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.home,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BaseScreen()),
+                        );
+                      },
+                    ),
+                  ],
                 ),
+                body: _buildNoMedicalHistoryForPT(profileData),
               );
             },
           );
         }
 
-        // Otherwise, we have valid medical data => show the normal 4-tab layout.
+        // Otherwise, we have valid medical data => show the normal 4-tab layout
         final data = snapshot.data!;
         return DefaultTabController(
           length: 4,
@@ -941,12 +852,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             appBar: GradientAppBar(
               title: 'isi-check',
               actions: [
-                // Add a "Home" icon that takes the PT back to the main flow.
                 IconButton(
                   icon: Icon(Icons.home,
                       color: Theme.of(context).colorScheme.onPrimary),
                   onPressed: () {
-                    // For example, pushReplacement to the main BaseScreen
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const BaseScreen()),
@@ -967,13 +876,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
             ),
             body: TabBarView(
               children: [
-                // Tab 0 -> Personal Info
                 _tabWithPossibleHeader(child: _buildPersonalInfoTab(data)),
-                // Tab 1 -> Lifestyle
                 _tabWithPossibleHeader(child: _buildLifestyleTab(data)),
-                // Tab 2 -> Training
                 _tabWithPossibleHeader(child: _buildTrainingTab(data)),
-                // Tab 3 -> Documents
                 _tabWithPossibleHeader(child: _buildDocumentsTab(context)),
               ],
             ),
@@ -983,7 +888,6 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     );
   }
 
-  /// Helper to optionally show the PT dashboard header if isPTView is true.
   Widget _tabWithPossibleHeader({required Widget child}) {
     if (!isPTView) {
       return child;

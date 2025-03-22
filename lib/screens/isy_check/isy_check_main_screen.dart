@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../medical_history/medical_history_screen.dart';
+import '../medical_history/anamnesis_screen.dart';
 
 class IsyCheckMainScreen extends StatelessWidget {
   final String? clientUid;

@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
-import 'sleep_energy_screen.dart';
+import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/gradient_button.dart';
+import 'medical_history_screen.dart';
+
+/// Optional model for icon-labeled choices
+class _IconChoice {
+  final String label;
+  final IconData icon;
+  const _IconChoice(this.label, this.icon);
+}
 
 class LifestyleScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -16,64 +25,131 @@ class LifestyleScreen extends StatefulWidget {
 }
 
 class _LifestyleScreenState extends State<LifestyleScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   bool drinksAlcohol = false;
   bool smokes = false;
   bool fixedWorkShifts = false;
-  bool spineJointMuscleIssues = false;
-  bool injuriesOrSurgery = false;
-  bool pathologies = false;
-  bool asthmatic = false;
 
-  final _formKey = GlobalKey<FormState>();
+  // Water intake from 0 to 5 liters
+  double _waterIntakeLiters = 2.0;
 
-  final TextEditingController alcoholDetailsController =
-      TextEditingController();
-  final TextEditingController smokingDetailsController =
-      TextEditingController();
-  final TextEditingController waterIntakeController = TextEditingController();
-  final TextEditingController spineJointMuscleDetailsController =
-      TextEditingController();
-  final TextEditingController injuriesOrSurgeryDetailsController =
-      TextEditingController();
-  final TextEditingController pathologiesDetailsController =
-      TextEditingController();
-  final TextEditingController breakfastDetailsController =
-      TextEditingController();
+  // Alcohol frequency if toggled On
+  String? _alcoholFrequency;
+
+  // Cigarettes per day if smoking toggled On
+  double _cigarettesPerDay = 0;
+
+  // --------------------------- Breakfast Additions ---------------------------
+  bool eatsBreakfast = false;
+  // We'll store the breakfast choice from our icon-labeled row
+  String? _selectedBreakfastChoice;
+  final TextEditingController _breakfastOtherController = TextEditingController();
+
+  // Some example breakfast choices with icons
+  final List<_IconChoice> _breakfastOptions = [
+    _IconChoice('Light (coffee + pastry)', Icons.coffee),
+    _IconChoice('Standard (cereal/toast)', Icons.breakfast_dining),
+    _IconChoice('Hearty (eggs, bacon)', Icons.local_dining),
+    _IconChoice('Other', Icons.help_outline),
+  ];
 
   @override
   void initState() {
     super.initState();
+
+    // 1) Initialize toggles from widget.data
     widget.data['alcohol'] ??= 'No';
     widget.data['smokes'] ??= 'No';
     widget.data['fixedWorkShifts'] ??= 'No';
     widget.data['waterIntake'] ??= '';
-    widget.data['spineJointMuscleIssues'] ??= 'No';
-    widget.data['injuriesOrSurgery'] ??= 'No';
-    widget.data['pathologies'] ??= 'No';
-    widget.data['asthmatic'] ??= 'No';
-    widget.data['breakfast'] ??= 'No';
 
-    alcoholDetailsController.text = widget.data['alcohol_details'] ?? '';
-    smokingDetailsController.text = widget.data['smoking_details'] ?? '';
-    waterIntakeController.text = widget.data['waterIntake'];
-    spineJointMuscleDetailsController.text =
-        widget.data['spineJointMuscleIssuesDetails'] ?? '';
-    injuriesOrSurgeryDetailsController.text =
-        widget.data['injuriesOrSurgeryDetails'] ?? '';
-    pathologiesDetailsController.text = widget.data['pathologiesDetails'] ?? '';
-    breakfastDetailsController.text = widget.data['breakfastDetails'] ?? '';
+    // 2) Breakfast
+    widget.data['breakfast'] ??= 'No';
+    widget.data['breakfastDetails'] ??= '';
+
+    // Convert "Yes"/"No" to booleans
+    drinksAlcohol   = (widget.data['alcohol'] == 'Yes');
+    smokes          = (widget.data['smokes'] == 'Yes');
+    fixedWorkShifts = (widget.data['fixedWorkShifts'] == 'Yes');
+
+    eatsBreakfast   = (widget.data['breakfast'] == 'Yes');
+
+    // If there's a numeric water intake, parse it
+    if (widget.data['waterIntake'] != null &&
+        widget.data['waterIntake']!.isNotEmpty) {
+      final parsed = double.tryParse(widget.data['waterIntake']!);
+      if (parsed != null && parsed >= 0 && parsed <= 5) {
+        _waterIntakeLiters = parsed;
+      }
+    }
+
+    // 3) If user had chosen a breakfast detail previously:
+    if (eatsBreakfast) {
+      final oldDetails = widget.data['breakfastDetails'] ?? '';
+      // Check if it matches one of the _breakfastOptions labels
+      if (_breakfastOptions.any((o) => o.label == oldDetails)) {
+        _selectedBreakfastChoice = oldDetails;
+      } else if (oldDetails.isNotEmpty) {
+        // Otherwise, we assume "Other"
+        _selectedBreakfastChoice = 'Other';
+        _breakfastOtherController.text = oldDetails;
+      }
+    }
   }
 
   @override
   void dispose() {
-    alcoholDetailsController.dispose();
-    smokingDetailsController.dispose();
-    waterIntakeController.dispose();
-    spineJointMuscleDetailsController.dispose();
-    injuriesOrSurgeryDetailsController.dispose();
-    pathologiesDetailsController.dispose();
-    breakfastDetailsController.dispose();
+    _breakfastOtherController.dispose();
     super.dispose();
+  }
+
+  // Save and navigate to medical screen
+  void _goToNextScreen() {
+    // Convert toggles to "Yes"/"No"
+    widget.data['alcohol'] = drinksAlcohol ? 'Yes' : 'No';
+    widget.data['smokes']  = smokes ? 'Yes' : 'No';
+    widget.data['fixedWorkShifts'] = fixedWorkShifts ? 'Yes' : 'No';
+
+    // Water intake
+    widget.data['waterIntake'] = _waterIntakeLiters.toStringAsFixed(1);
+
+    // Alcohol details
+    if (drinksAlcohol && _alcoholFrequency != null) {
+      widget.data['alcohol_details'] = _alcoholFrequency;
+    } else {
+      widget.data['alcohol_details'] = '';
+    }
+
+    // Smoking details
+    if (smokes) {
+      widget.data['smoking_details'] = _cigarettesPerDay.toStringAsFixed(1);
+    } else {
+      widget.data['smoking_details'] = '';
+    }
+
+    // --------------------- Save Breakfast Info ---------------------
+    widget.data['breakfast'] = eatsBreakfast ? 'Yes' : 'No';
+    if (eatsBreakfast && _selectedBreakfastChoice != null) {
+      // If they picked "Other," store the text from the controller
+      if (_selectedBreakfastChoice == 'Other') {
+        widget.data['breakfastDetails'] = _breakfastOtherController.text.trim();
+      } else {
+        widget.data['breakfastDetails'] = _selectedBreakfastChoice;
+      }
+    } else {
+      widget.data['breakfastDetails'] = '';
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MedicalHistoryScreen(
+          data: widget.data,
+          clientUid: widget.clientUid,
+        ),
+      ),
+    );
   }
 
   @override
@@ -81,178 +157,96 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Lifestyle',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+      appBar: GradientAppBar(
+        title: 'isy-check - Anamnesis Data Insertion',
       ),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        Icon(Icons.medical_services_outlined,
+                        // Header
+                        Icon(Icons.local_drink_outlined,
                             size: 64, color: theme.colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
-                          'Lifestyle and Medical History',
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          'Lifestyle Details',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Provide lifestyle and medical details to help us tailor the best plan for you.',
+                          'Your daily habits help us tailor a plan that suits your routine.',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         const SizedBox(height: 24),
-                        _buildToggleOption(
+
+                        // 1) Work Shifts
+                        _buildSwitchOption(
                           label: 'Are your work shifts fixed?',
                           value: fixedWorkShifts,
                           icon: Icons.schedule_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              fixedWorkShifts = value;
-                              widget.data['fixedWorkShifts'] =
-                                  value ? 'Yes' : 'No';
-                            });
-                          },
+                          onChanged: (v) => setState(() => fixedWorkShifts = v),
                         ),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
+                        const SizedBox(height: 16),
+
+                        // 2) Alcohol
+                        _buildSwitchOption(
                           label: 'Do you drink alcohol?',
                           value: drinksAlcohol,
                           icon: Icons.local_bar_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              drinksAlcohol = value;
-                              widget.data['alcohol'] = value ? 'Yes' : 'No';
-                              if (!value) alcoholDetailsController.clear();
-                            });
-                          },
+                          onChanged: (v) => setState(() => drinksAlcohol = v),
                         ),
-                        if (drinksAlcohol)
-                          _buildTextInput(
-                              'If yes, how much?', alcoholDetailsController),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
+                        if (drinksAlcohol) _buildAlcoholDropDown(),
+                        const SizedBox(height: 16),
+
+                        // 3) Smoking
+                        _buildSwitchOption(
                           label: 'Do you smoke?',
                           value: smokes,
                           icon: Icons.smoking_rooms_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              smokes = value;
-                              widget.data['smokes'] = value ? 'Yes' : 'No';
-                              if (!value) smokingDetailsController.clear();
-                            });
-                          },
+                          onChanged: (v) => setState(() => smokes = v),
                         ),
-                        if (smokes)
-                          _buildTextInput(
-                              'If yes, how much?', smokingDetailsController),
-                        const SizedBox(height: 24),
-                        _buildTextInput('How much water do you drink daily?',
-                            waterIntakeController),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
-                          label: 'Do you have spine, joint, or muscle issues?',
-                          value: spineJointMuscleIssues,
-                          icon: Icons.accessibility_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              spineJointMuscleIssues = value;
-                              widget.data['spineJointMuscleIssues'] =
-                                  value ? 'Yes' : 'No';
-                              if (!value)
-                                spineJointMuscleDetailsController.clear();
-                            });
-                          },
+                        if (smokes) _buildSmokingSlider(),
+                        const SizedBox(height: 16),
+
+                        // 4) Water intake slider
+                        _buildWaterSlider(),
+                        const SizedBox(height: 16),
+
+                        // -------------------- 5) Breakfast Q  --------------------
+                        _buildSwitchOption(
+                          label: 'Do you usually eat breakfast?',
+                          value: eatsBreakfast,
+                          icon: Icons.free_breakfast_outlined,
+                          onChanged: (v) => setState(() => eatsBreakfast = v),
                         ),
-                        if (spineJointMuscleIssues)
-                          _buildTextInput('Describe the issue:',
-                              spineJointMuscleDetailsController),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
-                          label: 'Have you had any injuries or surgery?',
-                          value: injuriesOrSurgery,
-                          icon: Icons.healing_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              injuriesOrSurgery = value;
-                              widget.data['injuriesOrSurgery'] =
-                                  value ? 'Yes' : 'No';
-                              if (!value)
-                                injuriesOrSurgeryDetailsController.clear();
-                            });
-                          },
-                        ),
-                        if (injuriesOrSurgery)
-                          _buildTextInput('Describe your injury/surgery:',
-                              injuriesOrSurgeryDetailsController),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
-                          label: 'Do you have any pathologies?',
-                          value: pathologies,
-                          icon: Icons.local_hospital_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              pathologies = value;
-                              widget.data['pathologies'] = value ? 'Yes' : 'No';
-                              if (!value) pathologiesDetailsController.clear();
-                            });
-                          },
-                        ),
-                        if (pathologies)
-                          _buildTextInput('Describe the pathology:',
-                              pathologiesDetailsController),
-                        const SizedBox(height: 24),
-                        _buildToggleOption(
-                          label: 'Are you asthmatic?',
-                          value: asthmatic,
-                          icon: Icons.air_outlined,
-                          onChanged: (value) {
-                            setState(() {
-                              asthmatic = value;
-                              widget.data['asthmatic'] = value ? 'Yes' : 'No';
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SleepEnergyScreen(
-                                  data: widget.data,
-                                  clientUid: widget.clientUid,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Next',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary),
-                          ),
+                        if (eatsBreakfast) _buildBreakfastIconRow(),
+                        if (eatsBreakfast && _selectedBreakfastChoice == 'Other')
+                          _buildBreakfastOtherField(),
+                        const SizedBox(height: 32),
+
+                        // Next button
+                        GradientButton(
+                          label: 'Next',
+                          icon: Icons.arrow_forward,
+                          onPressed: _goToNextScreen,
                         ),
                       ],
                     ),
@@ -266,25 +260,178 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     );
   }
 
-  Widget _buildToggleOption({
+  // Reusable switch
+  Widget _buildSwitchOption({
     required String label,
     required bool value,
     required IconData icon,
     required ValueChanged<bool> onChanged,
   }) {
+    final theme = Theme.of(context);
     return SwitchListTile(
       title: Text(label),
       value: value,
-      secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      secondary: Icon(icon, color: theme.colorScheme.primary),
       onChanged: onChanged,
+      activeColor: theme.colorScheme.primary,
     );
   }
 
-  Widget _buildTextInput(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      decoration:
-          InputDecoration(labelText: label, border: const OutlineInputBorder()),
+  // Alcohol frequency: e.g., "Occasional," "1-2 drinks/day," "3+ drinks/day"
+  Widget _buildAlcoholDropDown() {
+    final theme = Theme.of(context);
+    final alcoholOptions = ['Occasional', '1-2 drinks/day', '3+ drinks/day'];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('How often/how much?', style: theme.textTheme.labelLarge),
+          DropdownButtonFormField<String>(
+            value: _alcoholFrequency,
+            items: alcoholOptions.map((opt) {
+              return DropdownMenuItem<String>(value: opt, child: Text(opt));
+            }).toList(),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: theme.colorScheme.surface,
+            ),
+            onChanged: (val) {
+              setState(() => _alcoholFrequency = val);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Smoking slider from 0..20 cigs/day
+  Widget _buildSmokingSlider() {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cigarettes per day', style: theme.textTheme.labelLarge),
+        const SizedBox(height: 6),
+        Slider(
+          value: _cigarettesPerDay,
+          min: 0,
+          max: 20,
+          divisions: 20,
+          label: '${_cigarettesPerDay.round()} cigs/day',
+          activeColor: theme.colorScheme.primary,
+          onChanged: (val) {
+            setState(() => _cigarettesPerDay = val);
+          },
+        ),
+      ],
+    );
+  }
+
+  // Water slider 0..5 liters
+  Widget _buildWaterSlider() {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Daily Water Intake (liters)', style: theme.textTheme.labelLarge),
+        const SizedBox(height: 6),
+        Slider(
+          value: _waterIntakeLiters,
+          min: 0,
+          max: 5,
+          divisions: 25, // step of 0.2 liters if you want
+          label: '${_waterIntakeLiters.toStringAsFixed(1)} L',
+          activeColor: theme.colorScheme.primary,
+          onChanged: (val) {
+            setState(() => _waterIntakeLiters = val);
+          },
+        ),
+      ],
+    );
+  }
+
+  // ---------------------- Breakfast details with single-row icons ----------------------
+  Widget _buildBreakfastIconRow() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('What kind of breakfast?', style: theme.textTheme.labelLarge),
+          const SizedBox(height: 6),
+
+          // Single row horizontally (scroll if needed)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _breakfastOptions.map((option) {
+                final bool isSelected = (_selectedBreakfastChoice == option.label);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: InkWell(
+                    onTap: () => setState(() {
+                      _selectedBreakfastChoice = option.label;
+                    }),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.colorScheme.primary.withOpacity(0.2)
+                            : theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(option.icon,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            option.label,
+                            style: TextStyle(
+                              color: isSelected ? theme.colorScheme.primary : Colors.black,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // If "Other" is selected, we show a text field
+  Widget _buildBreakfastOtherField() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TextFormField(
+        controller: _breakfastOtherController,
+        decoration: InputDecoration(
+          labelText: 'Describe your breakfast',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: theme.colorScheme.surface,
+        ),
+      ),
     );
   }
 }
