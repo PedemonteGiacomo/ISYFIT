@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../widgets/country_codes.dart'; // Import your expanded country codes
-import 'package:dropdown_button2/dropdown_button2.dart'; // Import dropdown_button2 package
+import '../../widgets/country_codes.dart'; // Expanded country codes
+import 'package:dropdown_button2/dropdown_button2.dart'; // Note: Corrected package name
 import '../base_screen.dart';
+import '../../widgets/gradient_app_bar.dart';
 
 class RegisterPTScreen extends StatefulWidget {
   const RegisterPTScreen({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class RegisterPTScreen extends StatefulWidget {
 }
 
 class _RegisterPTScreenState extends State<RegisterPTScreen> {
+  // -------------------- Controllers --------------------
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -21,6 +23,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   final TextEditingController _legalInfoController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  // -------------------- State Variables --------------------
   String? _selectedCountryCode;
   DateTime? _selectedDate;
   bool _isLoading = false;
@@ -28,7 +31,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   bool _showPasswordInfo = false;
   bool _emailFieldTouched = false;
 
-  // Password requirements
+  // -------------------- Gender Field --------------------
+  String? _gender; // "Male" or "Female"
+
+  // -------------------- Password Requirements --------------------
   bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
   bool get _hasLowercase => _passwordController.text.contains(RegExp(r'[a-z]'));
   bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
@@ -47,6 +53,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       _hasSpecialChar &&
       _hasMinLength;
 
+  // ===================================================================
+  //                    Registration Logic
+  // ===================================================================
   Future<void> _registerPT() async {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,25 +79,26 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     setState(() => _isLoading = true);
 
     try {
-      UserCredential userCredential =
+      final userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Save PT information in Firestore
+      // Save PT information in Firestore including gender
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set({
         'role': 'PT',
-        'email': _emailController.text,
-        'name': _nameController.text,
-        'surname': _surnameController.text,
-        'vat': _vatController.text,
-        'legalInfo': _legalInfoController.text,
-        'phone': '$_selectedCountryCode ${_phoneController.text}',
+        'email': _emailController.text.trim(),
+        'name': _nameController.text.trim(),
+        'surname': _surnameController.text.trim(),
+        'vat': _vatController.text.trim(),
+        'legalInfo': _legalInfoController.text.trim(),
+        'phone': '$_selectedCountryCode ${_phoneController.text.trim()}',
         'dateOfBirth': _selectedDate?.toIso8601String(),
+        'gender': _gender,
       });
 
       // Redirect to PT Dashboard (or BaseScreen)
@@ -121,6 +131,26 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     }
   }
 
+  // ===================================================================
+  //                             UI Helpers
+  // ===================================================================
+  Widget _buildPasswordRequirement(String text, bool isSatisfied) {
+    return Row(
+      children: [
+        Icon(
+          isSatisfied ? Icons.check_circle : Icons.cancel,
+          color: isSatisfied ? Colors.green : Colors.red,
+          size: 20,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(color: isSatisfied ? Colors.green : Colors.red),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPasswordInfo() {
     return Visibility(
       visible: _showPasswordInfo,
@@ -148,42 +178,113 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     );
   }
 
-  Widget _buildPasswordRequirement(String text, bool isSatisfied) {
-    // Keeping green/red for form feedback clarity:
-    return Row(
-      children: [
-        Icon(
-          isSatisfied ? Icons.check_circle : Icons.cancel,
-          color: isSatisfied ? Colors.green : Colors.red,
-          size: 20,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(color: isSatisfied ? Colors.green : Colors.red),
-        ),
-      ],
+  /// Gender selection with icon buttons for Male and Female.
+  Widget _buildGenderSelection() {
+    final theme = Theme.of(context);
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          //const Text("Gender: "),
+          const SizedBox(width: 12),
+          // Male Icon Button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _gender = "Male";
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: _gender == "Male"
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _gender == "Male"
+                      ? theme.colorScheme.primary
+                      : Colors.grey,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.male,
+                      color: _gender == "Male"
+                          ? theme.colorScheme.primary
+                          : Colors.grey),
+                  const SizedBox(width: 8),
+                  Text("Male",
+                      style: TextStyle(
+                          color: _gender == "Male"
+                              ? theme.colorScheme.primary
+                              : Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Female Icon Button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _gender = "Female";
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: _gender == "Female"
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _gender == "Female"
+                      ? theme.colorScheme.primary
+                      : Colors.grey,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.female,
+                      color: _gender == "Female"
+                          ? theme.colorScheme.primary
+                          : Colors.grey),
+                  const SizedBox(width: 8),
+                  Text("Female",
+                      style: TextStyle(
+                          color: _gender == "Female"
+                              ? theme.colorScheme.primary
+                              : Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
+  // ===================================================================
+  //                             Build Method
+  // ===================================================================
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: theme.colorScheme.primary,
-      //   elevation: 8,
-      // ),
+      appBar: GradientAppBar(
+        title: 'Registration',
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-            ),
+                borderRadius: BorderRadius.circular(16.0)),
             shadowColor: theme.colorScheme.primary.withOpacity(0.5),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -192,15 +293,15 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title
-                    Text(
-                      'Register as PT',
-                      style: textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    // // Title
+                    // Text(
+                    //   'Register as PT',
+                    //   style: textTheme.headlineLarge?.copyWith(
+                    //     fontWeight: FontWeight.bold,
+                    //     color: theme.colorScheme.onSurface,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 24),
 
                     // Name and Surname Fields
                     Row(
@@ -211,9 +312,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             decoration: InputDecoration(
                               labelText: 'Name',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                                  borderRadius: BorderRadius.circular(12.0)),
+                              prefixIcon: Icon(Icons.person,
+                                  color: theme.colorScheme.primary),
                             ),
                           ),
                         ),
@@ -224,14 +325,18 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             decoration: InputDecoration(
                               labelText: 'Surname',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              prefixIcon: Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary),
+                                  borderRadius: BorderRadius.circular(12.0)),
+                              prefixIcon: Icon(Icons.person_outline,
+                                  color: theme.colorScheme.primary),
                             ),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+
+                    // Gender selection with icons
+                    _buildGenderSelection(),
                     const SizedBox(height: 16),
 
                     // Email Field
@@ -246,15 +351,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                       child: TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        onChanged: (value) {
-                          setState(() {});
-                        },
+                        onChanged: (value) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: 'Email',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
+                              borderRadius: BorderRadius.circular(12.0)),
+                          prefixIcon: Icon(Icons.email,
+                              color: theme.colorScheme.primary),
                           suffixIcon: _emailFieldTouched
                               ? Icon(
                                   _isEmailValid
@@ -275,15 +378,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         TextField(
                           controller: _passwordController,
                           obscureText: true,
-                          onChanged: (value) {
-                            setState(() {});
-                          },
+                          onChanged: (value) => setState(() {}),
                           decoration: InputDecoration(
                             labelText: 'Password',
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
+                                borderRadius: BorderRadius.circular(12.0)),
+                            prefixIcon: Icon(Icons.lock,
+                                color: theme.colorScheme.primary),
                           ),
                         ),
                         Positioned(
@@ -297,7 +398,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             },
                             child: Icon(
                               Icons.info_outline,
-                              color: _allRequirementsMet ? Colors.green : Colors.red,
+                              color: _allRequirementsMet
+                                  ? Colors.green
+                                  : Colors.red,
                             ),
                           ),
                         ),
@@ -307,39 +410,59 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     const SizedBox(height: 16),
 
                     // Phone Number Field with Prefix Dropdown
+                    // ---------------------------------------------------
+                    // Phone Prefix + Number
+                    // ---------------------------------------------------
                     Row(
                       children: [
                         SizedBox(
-                          width: 120,
+                          width: 100,
                           child: DropdownButton2<String>(
-                            hint: const Text('Prefix'),
+                            isExpanded: true,
                             value: _selectedCountryCode,
-                            items: countryCodes
-                                .map(
-                                  (country) => DropdownMenuItem<String>(
-                                    value: country['code'],
-                                    child: Row(
-                                      children: [
-                                        Text(country['flag']!,
-                                            style:
-                                                const TextStyle(fontSize: 18)),
-                                        const SizedBox(width: 8),
-                                        Text(country['code']!),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                            hint: const Text('Prefix'),
+                            items: countryCodes.map((country) {
+                              final code = country['code']!;
+                              final flag = country['flag']!;
+                              final name = country['name']!;
+                              return DropdownMenuItem<String>(
+                                value: code,
+                                child: Row(
+                                  children: [
+                                    Text(flag,
+                                        style: const TextStyle(fontSize: 18)),
+                                    const SizedBox(width: 8),
+                                    Text('$name ($code)'),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                            selectedItemBuilder: (context) =>
+                                countryCodes.map((country) {
+                              return Row(
+                                children: [
+                                  Text(country['flag']!,
+                                      style: const TextStyle(fontSize: 18)),
+                                  const SizedBox(width: 4),
+                                  Text(country['code']!),
+                                ],
+                              );
+                            }).toList(),
                             onChanged: (value) {
                               setState(() {
                                 _selectedCountryCode = value;
                               });
                             },
                             dropdownStyleData: DropdownStyleData(
+                              width: 250,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.0),
+                                borderRadius: BorderRadius.circular(8),
                                 color: theme.colorScheme.surface,
                               ),
+                            ),
+                            buttonStyleData: const ButtonStyleData(
+                              height: 48,
+                              padding: EdgeInsets.symmetric(horizontal: 8),
                             ),
                           ),
                         ),
@@ -351,7 +474,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             decoration: InputDecoration(
                               labelText: 'Phone Number',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
@@ -366,9 +489,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                       decoration: InputDecoration(
                         labelText: 'VAT/P.IVA',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        prefixIcon: Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
+                            borderRadius: BorderRadius.circular(12.0)),
+                        prefixIcon: Icon(Icons.business,
+                            color: theme.colorScheme.primary),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -379,9 +502,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                       decoration: InputDecoration(
                         labelText: 'Legal Information',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        prefixIcon: Icon(Icons.gavel, color: Theme.of(context).colorScheme.primary),
+                            borderRadius: BorderRadius.circular(12.0)),
+                        prefixIcon:
+                            Icon(Icons.gavel, color: theme.colorScheme.primary),
                       ),
                       maxLines: 3,
                     ),
@@ -394,9 +517,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         decoration: InputDecoration(
                           labelText: 'Date of Birth',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          prefixIcon: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
+                              borderRadius: BorderRadius.circular(12.0)),
+                          prefixIcon: Icon(Icons.calendar_today,
+                              color: theme.colorScheme.primary),
                         ),
                         child: Text(
                           _selectedDate == null
@@ -424,15 +547,46 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                           },
                         ),
                         Expanded(
-                          child: GestureDetector(
+                          child: InkWell(
                             onTap: () {
-                              // Handle privacy policy navigation
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Terms and Conditions'),
+                                  content: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Text(
+                                          'By using this app, you agree to:\n\n'
+                                          '1. Share your personal information for account creation\n'
+                                          '2. Allow us to process your data according to GDPR\n'
+                                          '3. Receive notifications about your training\n'
+                                          '4. Follow safety guidelines during workouts\n\n'
+                                          'For full terms and privacy policy, visit our website.',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
-                            child: Text(
-                              'I accept all the conditions and privacy policy.',
-                              style: TextStyle(
-                                color: theme.primaryColorDark,
-                                decoration: TextDecoration.underline,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 1),
+                              child: Text(
+                                'I accept all the conditions and privacy policy.',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
                             ),
                           ),
@@ -458,7 +612,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             ),
                             child: Text(
                               'Register',
-                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: theme.colorScheme.onPrimary),
                             ),
                           ),
                   ],

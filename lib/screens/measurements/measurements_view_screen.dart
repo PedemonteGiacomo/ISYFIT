@@ -1,8 +1,8 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// For convenience, a function returning submetrics for each type:
 List<String> getSubmetricsFor(String type) {
   switch (type) {
     case 'BIA':
@@ -16,33 +16,32 @@ List<String> getSubmetricsFor(String type) {
         'waistHipRatio',
         'visceralFatLevel',
         'targetWeight',
+        'isyScore',
       ];
     case 'USArmy':
       return [
         'heightInCm',
         'neck',
-        'shoulders',
-        'chest',
-        'navel',
         'waist',
-        'glutes',
-        'rightArm',
-        'leftArm',
-        'rightLeg',
-        'leftLeg',
+        'hips',
+        'wrist',
+        'usArmyBodyFatPercent',
+        'morphology',
+        'idealWeight',
+        'isyScore',
       ];
     case 'Plicometro':
       return [
-        'pliche1',
-        'pliche2',
-        'tricepsPlic',
-        'subscapularPlic',
-        'suprailiapplic',
-        'thighPlic',
         'chestplic',
+        'abdominalPlic',
+        'thighPlic',
+        'tricepsPlic',
+        'suprailiapplic',
+        'plicBodyFatPercent',
+        'isyScore',
       ];
     default:
-      return [];
+      return ['isyScore']; // fallback
   }
 }
 
@@ -62,7 +61,6 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
 
   String _selectedMeasurementType = '';
 
-  // A simple route or popup for the "Full History"
   void _navigateToFullHistory(BuildContext context, String measurementType) {
     Navigator.push(
       context,
@@ -76,58 +74,37 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
   }
 
   @override
-Widget build(BuildContext context) {
-  super.build(context); // keepAlive
+  Widget build(BuildContext context) {
+    super.build(context);
 
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return Container(
+      // decoration: BoxDecoration(
+      //   gradient: LinearGradient(
+      //     colors: [
+      //       Colors.blueGrey.shade50,
+      //       Colors.blueGrey.shade100,
+      //     ],
+      //     begin: Alignment.topLeft,
+      //     end: Alignment.bottomRight,
+      //   ),
+      // ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildMeasurementTypeSelection(context),
+            const SizedBox(height: 12),
+            if (_selectedMeasurementType.isEmpty)
+              _buildNoMeasurementSelectedUI()
+            else
+              _buildTwoLastMeasuresView(_selectedMeasurementType),
+          ],
+        ),
+      ),
+    );
+  }
 
-        // 1) Measurement type selection
-        _buildMeasurementTypeSelection(context),
-        const SizedBox(height: 12),
-
-        // 2) Content that may expand
-        if (_selectedMeasurementType.isEmpty)
-          _buildNoMeasurementSelectedUI()
-        else
-          _buildTwoLastMeasuresView(_selectedMeasurementType),
-
-        const SizedBox(height: 16),
-
-        // 3) Buttons
-        if (_selectedMeasurementType.isNotEmpty)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              //const Spacer(), // Push everything to center and right
-              ElevatedButton.icon(
-          onPressed: () =>
-              _navigateToFullHistory(context, _selectedMeasurementType),
-          icon: Icon(Icons.history, color: Theme.of(context).colorScheme.onPrimary),
-          label: Text('View Full History', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-              ),
-              IconButton(
-          onPressed: () => setState(() {}),
-          icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh Measurements',
-              ),
-            ],
-          ),
-      ],
-    ),
-  );
-}
-
-
-  // Let user choose BIA / USArmy / Plicometro
   Widget _buildMeasurementTypeSelection(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -144,14 +121,12 @@ Widget build(BuildContext context) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected ? color : color.withOpacity(0.7),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       icon: Icon(icon, color: Colors.white),
       label: Text(
         type,
-        style:
-            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       onPressed: () {
         setState(() => _selectedMeasurementType = type);
@@ -165,11 +140,10 @@ Widget build(BuildContext context) {
         color: Colors.blueGrey.shade50,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
           child: Text(
             'Select a measurement type above to see the last 2 measures.',
-            style: TextStyle(color: Colors.blueGrey.shade800),
             textAlign: TextAlign.center,
           ),
         ),
@@ -177,7 +151,6 @@ Widget build(BuildContext context) {
     );
   }
 
-  // Only show the last 2 docs
   Widget _buildTwoLastMeasuresView(String measurementType) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -193,7 +166,7 @@ Widget build(BuildContext context) {
       future: collectionRef
           .where('type', isEqualTo: measurementType)
           .orderBy('timestamp', descending: true)
-          .limit(2) // limit to last 2
+          .limit(2)
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -213,14 +186,12 @@ Widget build(BuildContext context) {
         }
 
         final docs = snapshot.data!.docs;
-        // last measure => docs[0], second last => docs[1] if exists
         final newestData =
             docs.isNotEmpty ? docs[0].data() as Map<String, dynamic> : null;
         final secondNewestData =
             docs.length > 1 ? docs[1].data() as Map<String, dynamic> : null;
 
-        return _buildSimplifiedTable(
-            measurementType, newestData, secondNewestData);
+        return _buildSimplifiedTable(measurementType, newestData, secondNewestData);
       },
     );
   }
@@ -241,31 +212,37 @@ Widget build(BuildContext context) {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('$type - Last 2 Measurements',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    )),
-                
+                Text(
+                  '$type - Last 2 Measurements',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                // "View Full History" button
+                ElevatedButton.icon(
+                  onPressed: () => _navigateToFullHistory(context, type),
+                  icon: Icon(Icons.history, color: Theme.of(context).colorScheme.onPrimary),
+                  label: Text('Full History', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // The simplified table: submetric, newVal, arrow icon
-            // or difference, oldVal
+            // The table listing each submetric
             Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 4,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: submetrics.map((sub) {
-                    final newValRaw = newDoc[sub.toLowerCase()] ?? newDoc[sub];
-                    final oldValRaw =
-                        oldDoc?[sub.toLowerCase()] ?? oldDoc?[sub];
-                    final newVal = double.tryParse(newValRaw?.toString() ?? '');
-                    final oldVal = double.tryParse(oldValRaw?.toString() ?? '');
+                    final newValRaw = newDoc[sub] ?? newDoc[sub.toLowerCase()];
+                    final oldValRaw = oldDoc == null
+                        ? null
+                        : oldDoc[sub] ?? oldDoc[sub.toLowerCase()];
+                    double? newVal = double.tryParse(newValRaw?.toString() ?? '');
+                    double? oldVal = double.tryParse(oldValRaw?.toString() ?? '');
                     return _buildMetricRow(sub, newVal, oldVal);
                   }).toList(),
                 ),
@@ -278,13 +255,11 @@ Widget build(BuildContext context) {
   }
 
   Widget _buildMetricRow(String sub, double? newVal, double? oldVal) {
-    // Calculate trend
     Widget trendIcon = const Text('–');
     if (newVal != null && oldVal != null) {
       final diff = newVal - oldVal;
       if (diff.abs() < 0.001) {
-        trendIcon =
-            const Text('↔', style: TextStyle(color: Colors.grey, fontSize: 18));
+        trendIcon = const Text('↔', style: TextStyle(color: Colors.grey, fontSize: 18));
       } else if (diff > 0) {
         trendIcon = Row(
           mainAxisSize: MainAxisSize.min,
@@ -306,13 +281,15 @@ Widget build(BuildContext context) {
       }
     }
 
-    final newValText = newVal?.toStringAsFixed(1) ?? 'N/A';
-    final oldValText = oldVal?.toStringAsFixed(1) ?? '—';
+    final newValText =
+        (newVal == null) ? 'N/A' : newVal.toStringAsFixed(1);
+    final oldValText =
+        (oldVal == null) ? '—' : oldVal.toStringAsFixed(1);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          // Sub name
           Expanded(
             flex: 3,
             child: Text(
@@ -320,14 +297,11 @@ Widget build(BuildContext context) {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          // newest
           Expanded(
             flex: 2,
             child: Text(newValText, textAlign: TextAlign.center),
           ),
-          // arrow
           SizedBox(width: 40, child: Center(child: trendIcon)),
-          // old
           Expanded(
             flex: 2,
             child: Text(oldValText, textAlign: TextAlign.center),
@@ -338,8 +312,7 @@ Widget build(BuildContext context) {
   }
 }
 
-// -------------- A separate route for Full History -------------- //
-
+/// A separate route for Full History
 class FullHistoryScreen extends StatelessWidget {
   final String clientUid;
   final String measurementType;
@@ -359,13 +332,8 @@ class FullHistoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$measurementType - Full History',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        title: Text('$measurementType - Full History'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
       ),
       body: FutureBuilder<QuerySnapshot>(
         future: collectionRef
@@ -405,7 +373,7 @@ class FullHistoryScreen extends StatelessWidget {
             // each doc
             for (final doc in docs) {
               final data = doc.data() as Map<String, dynamic>;
-              final rawVal = data[sub.toLowerCase()] ?? data[sub];
+              final rawVal = data[sub] ?? data[sub.toLowerCase()];
               final valStr = rawVal?.toString() ?? '—';
               cells.add(DataCell(Text(valStr)));
             }
