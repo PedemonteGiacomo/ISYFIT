@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Import your reusable tab bar widget:
+import 'package:isyfit/widgets/measurement_type_tab_bar_widget.dart';
+
 /// For convenience, a function returning submetrics for each type:
 List<String> getSubmetricsFor(String type) {
   switch (type) {
@@ -55,11 +58,59 @@ class MeasurementsViewScreen extends StatefulWidget {
 }
 
 class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   @override
   bool get wantKeepAlive => true;
 
-  String _selectedMeasurementType = '';
+  /// A TabController for the 3 measurement types
+  late TabController _tabController;
+
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _allRecords = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // We have 3 tabs: BIA, USArmy, Plicometro
+    _tabController = TabController(length: 3, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
+    try {
+      final collectionRef = FirebaseFirestore.instance
+          .collection('measurements')
+          .doc(widget.clientUid)
+          .collection('records');
+
+      final querySnap = await collectionRef
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      _allRecords = querySnap.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching data in MeasurementsViewScreen: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  /// Filter to get the last 2 records for a given measure type
+  List<Map<String, dynamic>> _getLastTwoRecords(String measureType) {
+    final filtered = _allRecords.where((m) => m['type'] == measureType).toList();
+    if (filtered.isEmpty) return [];
+    // Already sorted descending in _fetchData, so the first 2 are the newest
+    return filtered.take(2).toList();
+  }
 
   void _navigateToFullHistory(BuildContext context, String measurementType) {
     Navigator.push(
@@ -77,237 +128,172 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Container(
-      // decoration: BoxDecoration(
-      //   gradient: LinearGradient(
-      //     colors: [
-      //       Colors.blueGrey.shade50,
-      //       Colors.blueGrey.shade100,
-      //     ],
-      //     begin: Alignment.topLeft,
-      //     end: Alignment.bottomRight,
-      //   ),
-      // ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildMeasurementTypeSelection(context),
-            const SizedBox(height: 12),
-            if (_selectedMeasurementType.isEmpty)
-              _buildNoMeasurementSelectedUI()
-            else
-              _buildTwoLastMeasuresView(_selectedMeasurementType),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMeasurementTypeSelection(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildTypeButton('BIA', Icons.biotech, Colors.indigo),
-        _buildTypeButton('USArmy', Icons.military_tech, Colors.green),
-        _buildTypeButton('Plicometro', Icons.content_cut, Colors.red),
-      ],
-    );
-  }
-
-  Widget _buildTypeButton(String type, IconData icon, Color color) {
-    final isSelected = (_selectedMeasurementType == type);
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? color : color.withOpacity(0.7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-      icon: Icon(icon, color: Colors.white),
-      label: Text(
-        type,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-      onPressed: () {
-        setState(() => _selectedMeasurementType = type);
-      },
-    );
-  }
-
-  Widget _buildNoMeasurementSelectedUI() {
-    return Center(
-      child: Card(
-        color: Colors.blueGrey.shade50,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 4,
-        child: const Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Text(
-            'Select a measurement type above to see the last 2 measures.',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTwoLastMeasuresView(String measurementType) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return const Center(child: Text("Not logged in."));
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_allRecords.isEmpty) {
+      return const Center(child: Text('No measurement data found.'));
     }
 
-    final collectionRef = FirebaseFirestore.instance
-        .collection('measurements')
-        .doc(widget.clientUid)
-        .collection('records');
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Column(
+        children: [
+          /// Our new measurement type tab bar
+          MeasurementTypeTabBarWidget(tabController: _tabController),
 
-    return FutureBuilder<QuerySnapshot>(
-      future: collectionRef
-          .where('type', isEqualTo: measurementType)
-          .orderBy('timestamp', descending: true)
-          .limit(2)
-          .get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Card(
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Text(
-                'No data found for $measurementType',
-                style: TextStyle(color: Colors.blueGrey.shade800),
-              ),
-            ),
-          );
-        }
-
-        final docs = snapshot.data!.docs;
-        final newestData =
-            docs.isNotEmpty ? docs[0].data() as Map<String, dynamic> : null;
-        final secondNewestData =
-            docs.length > 1 ? docs[1].data() as Map<String, dynamic> : null;
-
-        return _buildSimplifiedTable(measurementType, newestData, secondNewestData);
-      },
-    );
-  }
-
-  Widget _buildSimplifiedTable(
-      String type, Map<String, dynamic>? newDoc, Map<String, dynamic>? oldDoc) {
-    final submetrics = getSubmetricsFor(type);
-    if (newDoc == null) {
-      return const SizedBox.shrink();
-    }
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Table heading
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          /// Each tab shows the "last 2 measures" for that measure type
+          Expanded(
+            child: Stack(
               children: [
-                Text(
-                  '$type - Last 2 Measurements',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildTabContent('BIA'),
+                    _buildTabContent('USArmy'),
+                    _buildTabContent('Plicometro'),
+                  ],
                 ),
-                // "View Full History" button
-                ElevatedButton.icon(
-                  onPressed: () => _navigateToFullHistory(context, type),
-                  icon: Icon(Icons.history, color: Theme.of(context).colorScheme.onPrimary),
-                  label: Text('Full History', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+
+                /// A floating action button in the bottom-right corner
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'refreshView',
+                    onPressed: _fetchData,
+                    child: const Icon(Icons.refresh),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-
-            // The table listing each submetric
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: submetrics.map((sub) {
-                    final newValRaw = newDoc[sub] ?? newDoc[sub.toLowerCase()];
-                    final oldValRaw = oldDoc == null
-                        ? null
-                        : oldDoc[sub] ?? oldDoc[sub.toLowerCase()];
-                    double? newVal = double.tryParse(newValRaw?.toString() ?? '');
-                    double? oldVal = double.tryParse(oldValRaw?.toString() ?? '');
-                    return _buildMetricRow(sub, newVal, oldVal);
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMetricRow(String sub, double? newVal, double? oldVal) {
-    Widget trendIcon = const Text('–');
-    if (newVal != null && oldVal != null) {
-      final diff = newVal - oldVal;
-      if (diff.abs() < 0.001) {
-        trendIcon = const Text('↔', style: TextStyle(color: Colors.grey, fontSize: 18));
-      } else if (diff > 0) {
-        trendIcon = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.arrow_upward, color: Colors.red, size: 20),
-            SizedBox(width: 4),
-            Text('↑', style: TextStyle(color: Colors.red, fontSize: 18)),
-          ],
-        );
-      } else {
-        trendIcon = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.arrow_downward, color: Colors.green, size: 20),
-            SizedBox(width: 4),
-            Text('↓', style: TextStyle(color: Colors.green, fontSize: 18)),
-          ],
-        );
-      }
+  /// Builds the content for each tab:
+  ///  - The "last two" measure records for the given measureType
+  ///  - If none found, show "No data"
+  Widget _buildTabContent(String measureType) {
+    final lastTwo = _getLastTwoRecords(measureType);
+    if (lastTwo.isEmpty) {
+      return Center(child: Text('No data found for $measureType'));
     }
 
-    final newValText =
-        (newVal == null) ? 'N/A' : newVal.toStringAsFixed(1);
-    final oldValText =
-        (oldVal == null) ? '—' : oldVal.toStringAsFixed(1);
+    final newestData = lastTwo[0];
+    final secondNewestData = (lastTwo.length > 1) ? lastTwo[1] : null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              sub,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          // Table heading
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$measureType - Last 2 Measurements',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _navigateToFullHistory(context, measureType),
+                icon: Icon(Icons.history, color: Theme.of(context).colorScheme.onPrimary,),
+                label: Text('Full History', style: TextStyle(color:  Theme.of(context).colorScheme.onPrimary),),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // The table listing each submetric
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildSimplifiedTable(measureType, newestData, secondNewestData),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(newValText, textAlign: TextAlign.center),
-          ),
-          SizedBox(width: 40, child: Center(child: trendIcon)),
-          Expanded(
-            flex: 2,
-            child: Text(oldValText, textAlign: TextAlign.center),
           ),
         ],
       ),
+    );
+  }
+
+  /// Builds a mini-table for newest & secondNewest records
+  Widget _buildSimplifiedTable(
+    String measureType,
+    Map<String, dynamic> newest,
+    Map<String, dynamic>? secondNewest,
+  ) {
+    final submetrics = getSubmetricsFor(measureType);
+
+    return Column(
+      children: submetrics.map((sub) {
+        final newValRaw = newest[sub] ?? newest[sub.toLowerCase()];
+        final oldValRaw = (secondNewest == null)
+            ? null
+            : secondNewest[sub] ?? secondNewest[sub.toLowerCase()];
+
+        final newVal = double.tryParse(newValRaw?.toString() ?? '');
+        final oldVal = double.tryParse(oldValRaw?.toString() ?? '');
+        final newValText = (newVal == null) ? 'N/A' : newVal.toStringAsFixed(1);
+        final oldValText = (oldVal == null) ? '—' : oldVal.toStringAsFixed(1);
+
+        Widget trendIcon = const Text('–');
+        if (newVal != null && oldVal != null) {
+          final diff = newVal - oldVal;
+          if (diff.abs() < 0.001) {
+            trendIcon = const Text('↔', style: TextStyle(color: Colors.grey, fontSize: 18));
+          } else if (diff > 0) {
+            trendIcon = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.arrow_upward, color: Colors.red, size: 20),
+                SizedBox(width: 4),
+                Text('↑', style: TextStyle(color: Colors.red, fontSize: 18)),
+              ],
+            );
+          } else {
+            trendIcon = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.arrow_downward, color: Colors.green, size: 20),
+                SizedBox(width: 4),
+                Text('↓', style: TextStyle(color: Colors.green, fontSize: 18)),
+              ],
+            );
+          }
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Text(
+                  sub,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(newValText, textAlign: TextAlign.center),
+              ),
+              SizedBox(width: 40, child: Center(child: trendIcon)),
+              Expanded(
+                flex: 2,
+                child: Text(oldValText, textAlign: TextAlign.center),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }

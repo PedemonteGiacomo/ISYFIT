@@ -11,6 +11,9 @@ import 'package:printing/printing.dart';
 // FL Chart import
 import 'package:fl_chart/fl_chart.dart';
 
+// Import the new reusable widget
+import 'package:isyfit/widgets/measurement_type_tab_bar_widget.dart';
+
 /// We skip 'targetWeight' from displayed cards, but it's in the data model if needed.
 final Map<String, List<String>> allMeasurementFields = {
   'BIA': [
@@ -91,8 +94,8 @@ class MeasurementsCompleteViewScreen extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<MeasurementsCompleteViewScreen> createState() =>
-      _MeasurementsCompleteViewScreenState();
+  State<MeasurementsCompleteViewScreen> createState()
+      => _MeasurementsCompleteViewScreenState();
 }
 
 class _MeasurementsCompleteViewScreenState
@@ -110,6 +113,7 @@ class _MeasurementsCompleteViewScreenState
   @override
   void initState() {
     super.initState();
+    // Initialize our TabController for the 3 measurement types
     _tabController = TabController(length: 3, vsync: this);
     _fetchData();
   }
@@ -123,7 +127,9 @@ class _MeasurementsCompleteViewScreenState
           .collection('records')
           .orderBy('timestamp', descending: false)
           .get();
-      _allRecords = querySnap.docs.map((d) => d.data() as Map<String, dynamic>).toList();
+      _allRecords = querySnap.docs
+          .map((d) => d.data() as Map<String, dynamic>)
+          .toList();
     } catch (e) {
       debugPrint('Error fetching data: $e');
     } finally {
@@ -145,6 +151,7 @@ class _MeasurementsCompleteViewScreenState
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -152,80 +159,57 @@ class _MeasurementsCompleteViewScreenState
       return const Center(child: Text('No measurement data found.'));
     }
 
-    return DefaultTabController(
-      length: 3,
-      child: Container(
-        color: Colors.blueGrey.shade50,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Column(
-            children: [
-              // Gradient tab bar
-              Container(
-                margin: const EdgeInsets.only(top: 8.0),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Column(
+        children: [
+          // Our new reusable tab bar with no extra margin
+          MeasurementTypeTabBarWidget(tabController: _tabController),
+
+          // TabBarView for the 3 measurement types
+          Expanded(
+            child: Stack(
+                children: [
+                TabBarView(
+                  controller: _tabController,
+                  children: [
+                  _buildTabContent('BIA'),
+                  _buildTabContent('USArmy'),
+                  _buildTabContent('Plicometro'),
+                  ],
+                ),
+                // FABs positioned in two rows at bottom-right
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      FloatingActionButton(
+                      heroTag: 'refresh',
+                      onPressed: _fetchData,
+                      child: const Icon(Icons.refresh),
+                      ),
+                      const SizedBox(height: 12),
+                      FloatingActionButton.extended(
+                      heroTag: 'pdf',
+                      onPressed: _generatePdfReport,
+                      label: const Text("Export PDF"),
+                      icon: const Icon(Icons.picture_as_pdf),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    ),
+                  ],
                   ),
                 ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white70,
-                  tabs: const [
-                    Tab(text: 'BIA'),
-                    Tab(text: 'USArmy'),
-                    Tab(text: 'Plicometro'),
-                  ],
-                ),
-              ),
-
-              // TabBarView
-              Expanded(
-                child: Stack(
-                  children: [
-                    TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildTabContent('BIA'),
-                        _buildTabContent('USArmy'),
-                        _buildTabContent('Plicometro'),
-                      ],
-                    ),
-                    Positioned(
-                      right: 16,
-                      bottom: 16,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FloatingActionButton.extended(
-                            heroTag: 'pdf',
-                            onPressed: _generatePdfReport,
-                            label: const Text("Export PDF"),
-                            icon: const Icon(Icons.picture_as_pdf),
-                          ),
-                          const SizedBox(height: 12),
-                          FloatingActionButton(
-                            heroTag: 'refresh',
-                            onPressed: _fetchData,
-                            child: const Icon(Icons.refresh),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -251,12 +235,14 @@ class _MeasurementsCompleteViewScreenState
     final chartWidget = _buildFeaturedChart(measureType, docs);
 
     final allSubs = allMeasurementFields[measureType] ?? [];
-    final cardSubs = allSubs.where((s) => s != 'isyScore' && s != 'targetWeight').toList();
+    final cardSubs =
+        allSubs.where((s) => s != 'isyScore' && s != 'targetWeight').toList();
     final cardsRow = _buildMeasurementCardsRow(cardSubs, docs);
 
-    final isyScorePresent = allSubs.contains('isyScore') &&
-        docs.any((d) => d['isyScore'] != null);
-    final isyScoreRow = isyScorePresent ? _buildIsyScoreRow(docs) : const SizedBox.shrink();
+    final isyScorePresent =
+        allSubs.contains('isyScore') && docs.any((d) => d['isyScore'] != null);
+    final isyScoreRow =
+        isyScorePresent ? _buildIsyScoreRow(docs) : const SizedBox.shrink();
 
     final dataTable = _buildTypeDataTable(measureType, docs);
 
@@ -314,7 +300,8 @@ class _MeasurementsCompleteViewScreenState
     final xLabels = <int, String>{};
     for (int i = 0; i < chartData.length; i++) {
       final d = chartData[i].date;
-      xLabels[i] = '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+      xLabels[i] =
+          '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
     }
 
     final subLabel = prettyLabels[sub] ?? sub;
@@ -327,7 +314,8 @@ class _MeasurementsCompleteViewScreenState
         child: Column(
           children: [
             Text('$subLabel Trend',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             SizedBox(
               height: 240,
@@ -380,8 +368,10 @@ class _MeasurementsCompleteViewScreenState
                         },
                       ),
                     ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   lineBarsData: [
                     LineChartBarData(
@@ -402,10 +392,11 @@ class _MeasurementsCompleteViewScreenState
   }
 
   /// Build a row/wrap of submetric cards, sized bigger
-  Widget _buildMeasurementCardsRow(List<String> submetrics, List<Map<String, dynamic>> docs) {
+  Widget _buildMeasurementCardsRow(
+      List<String> submetrics, List<Map<String, dynamic>> docs) {
     final cards = submetrics.map((sub) => _buildSubmetricCard(sub, docs)).toList();
 
-    // We'll place them in a Wrap, so if there's not enough horizontal space, 
+    // We'll place them in a Wrap, so if there's not enough horizontal space,
     // they automatically flow to a new line.
     return Wrap(
       spacing: 12,
@@ -512,7 +503,9 @@ class _MeasurementsCompleteViewScreenState
     for (final doc in docs) {
       final dt = (doc['timestamp'] as Timestamp?)?.toDate();
       if (dt != null) {
-        dtStrings.add('${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}');
+        dtStrings.add(
+          '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}',
+        );
       } else {
         dtStrings.add('Unknown');
       }
@@ -605,7 +598,8 @@ class _MeasurementsCompleteViewScreenState
     final xLabels = <int, String>{};
     for (int i = 0; i < chartData.length; i++) {
       final d = chartData[i].date;
-      xLabels[i] = '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+      xLabels[i] =
+          '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
     }
 
     return SizedBox(
@@ -699,7 +693,7 @@ class _MeasurementsCompleteViewScreenState
   }
 
   // ---------------------------------------------------------------------------
-  // PDF generation unchanged
+  // PDF generation (unchanged)
   // ---------------------------------------------------------------------------
   Future<void> _generatePdfReport() async {
     final pdf = pw.Document();
@@ -764,7 +758,8 @@ class _MeasurementsCompleteViewScreenState
               }
             }
             for (final ds in dateStrings) {
-              headers.add(pw.Text(ds, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
+              headers.add(
+                  pw.Text(ds, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
             }
 
             final tableRows = <List<pw.Widget>>[];
