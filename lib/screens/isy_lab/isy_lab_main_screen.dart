@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/screens/isy_lab/pt_clients_measurements_list_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/screens/isy_lab/photo_section/photo_home_screen.dart';
 
 /// The main isy-lab “entry point”.
 /// 1) If clientUid is provided => show that client’s normal 3-tab lab screen
@@ -57,7 +58,7 @@ class _IsyLabMainScreenState extends State<IsyLabMainScreen> {
         }
         // 2) If user is not PT => show *own* 3-tab isy-lab
         if (!isPT) {
-          return _IsyLabThreeTabScreen(clientUid: null); 
+          return _IsyLabThreeTabScreen(clientUid: null);
         }
         // 3) Otherwise user is PT => show PT clients list
         return const PTClientsIsyLabListScreen();
@@ -74,7 +75,8 @@ class _IsyLabThreeTabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String actualClientUid = clientUid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+    final String actualClientUid =
+        clientUid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
     return DefaultTabController(
       length: 3,
       initialIndex: 1, // If you want "Measurements" as default
@@ -82,7 +84,9 @@ class _IsyLabThreeTabScreen extends StatelessWidget {
         bottomNavigationBar: const TabBar(
           tabs: [
             Tab(icon: Icon(Icons.photo_camera), text: "Photo"),
-            Tab(icon: Icon(Icons.monitor_weight_outlined), text: "Measurements"),
+            Tab(
+                icon: Icon(Icons.monitor_weight_outlined),
+                text: "Measurements"),
             Tab(icon: Icon(Icons.insights_outlined), text: "Bodyfat"),
           ],
           labelColor: Colors.blue,
@@ -93,7 +97,7 @@ class _IsyLabThreeTabScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            Center(child: Text("Photo Screen")),
+            PhotoHomeScreen(clientUid: actualClientUid),
             MeasurementsHomeScreen(clientUid: actualClientUid),
             Center(child: Text("Bodyfat Comparison Screen")),
           ],

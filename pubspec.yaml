@@ -79,6 +79,14 @@ flutter:
   assets:
     - assets/images/ISYFIT_LOGO.jpg
     - assets/images/silhoutte.png
+    - assets/images/woman_silhouette_back.jpg
+    - assets/images/woman_silhouette_front.jpg
+    - assets/images/woman_silhouette_lateral_left.jpg
+    - assets/images/woman_silhouette_lateral_right.jpg
+    - assets/images/man_silhouette_back.jpg
+    - assets/images/man_silhouette_front.jpg
+    - assets/images/man_silhouette_lateral_left.jpg
+    - assets/images/man_silhouette_lateral_right.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
