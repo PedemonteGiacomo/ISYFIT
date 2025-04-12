@@ -35,8 +35,14 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
   late Future<DocumentSnapshot<Map<String, dynamic>>> _userFuture;
   late List<PoseCategory> _poses;
 
+  /// Stores the image File for each pose category (if selected)
   final Map<String, File?> _selectedImages = {};
+
+  /// Tracks whether we are currently uploading an image for each pose
   final Map<String, bool> _isUploading = {};
+
+  /// Which category is selected in portrait mode (only one card is shown)
+  String? _selectedCategory;
 
   @override
   bool get wantKeepAlive => true; // preserve tab state
@@ -55,7 +61,7 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
     final lowerGender = gender.toLowerCase();
     final isMale = lowerGender.contains('male');
     if (isMale) {
-      // Ordered: Front, Back, Lateral Left, Lateral Right
+      // Ordered: Front, Back, Left, Right
       return [
         PoseCategory(
           key: 'frontale',
@@ -69,12 +75,12 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
         ),
         PoseCategory(
           key: 'laterale sx',
-          displayName: 'Lateral Left',
+          displayName: 'Left',
           assetPlaceholder: 'assets/images/man_silhouette_lateral_left.jpg',
         ),
         PoseCategory(
           key: 'laterale dx',
-          displayName: 'Lateral Right',
+          displayName: 'Right',
           assetPlaceholder: 'assets/images/man_silhouette_lateral_right.jpg',
         ),
       ];
@@ -93,12 +99,12 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
         ),
         PoseCategory(
           key: 'laterale sx',
-          displayName: 'Lateral Left',
+          displayName: 'Left',
           assetPlaceholder: 'assets/images/woman_silhouette_lateral_left.jpg',
         ),
         PoseCategory(
           key: 'laterale dx',
-          displayName: 'Lateral Right',
+          displayName: 'Right',
           assetPlaceholder: 'assets/images/woman_silhouette_lateral_right.jpg',
         ),
       ];
@@ -126,7 +132,6 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storagePath = 'clientPhotos/${widget.clientUid}/$fileName';
-
       final storageRef = FirebaseStorage.instance.ref().child(storagePath);
       await storageRef.putFile(file);
       final downloadUrl = await storageRef.getDownloadURL();
@@ -160,69 +165,66 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
     }
   }
 
-  /// Single function to build each card so we can reuse it in either layout
+  /// Builds the single upload card for a pose, used in portrait mode.
   Widget _buildPoseCard(BuildContext context, PoseCategory pose) {
     final selectedFile = _selectedImages[pose.key];
     final isUploading = _isUploading[pose.key] == true;
+    final theme = Theme.of(context);
 
-    // Colors for the upload button from the app theme
-    final onPrimary = Theme.of(context).colorScheme.onPrimary;
-    final primary = Theme.of(context).colorScheme.primary;
+    // We expand the card's height in portrait so it fills the screen more.
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final cardHeight = isPortrait
+        ? MediaQuery.of(context).size.height * 0.75 // bigger fraction for more vertical fill
+        : 450.0; // fixed in landscape
 
-    // Define a fixed total height for each card so they align.
-    const double cardHeight = 320;
+    // Make the image region a bigger fraction so there's less empty space
+    final imageRegionHeight = isPortrait
+        ? cardHeight * 0.60  // 60% of the card
+        : cardHeight * 0.40;
 
     return Card(
       margin: const EdgeInsets.all(8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: SizedBox(
-        height: cardHeight, // ensure all cards have the same total height
+        height: cardHeight,
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Column(
-            // We'll align everything to the top to keep the
-            // heights consistent regardless of content differences.
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Pose label
               Text(
                 pose.displayName,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              // Keep the image region a fixed height so it doesn't resize the card
+
+              // Image region
               SizedBox(
-                height: 160,
+                height: imageRegionHeight,
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: selectedFile == null
-                      ? Image.asset(
-                          pose.assetPlaceholder,
-                          fit: BoxFit.contain,
-                        )
+                      ? Image.asset(pose.assetPlaceholder, fit: BoxFit.contain)
                       : ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            selectedFile,
-                            fit: BoxFit.cover,
-                          ),
+                          child: Image.file(selectedFile, fit: BoxFit.cover),
                         ),
                 ),
               ),
               const SizedBox(height: 8),
 
-              // Row with camera & gallery icons
+              // Row of camera & gallery icons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.camera_alt),
+                    icon: const Icon(Icons.camera_alt),
                     onPressed: () => _pickImage(pose.key, ImageSource.camera),
                   ),
                   IconButton(
@@ -233,7 +235,7 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
               ),
               const SizedBox(height: 8),
 
-              // Show upload button if there's a file selected, otherwise placeholder text.
+              // Upload button or placeholder text
               Expanded(
                 child: Center(
                   child: selectedFile != null
@@ -241,18 +243,16 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
                           ? const CircularProgressIndicator()
                           : ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primary,
-                                foregroundColor: onPrimary,
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
                               ),
-                              icon: Icon(Icons.cloud_upload, color: Theme.of(context).colorScheme.onPrimary,),
-                              label: Text('Upload', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                              icon: Icon(Icons.cloud_upload, color: theme.colorScheme.onPrimary),
+                              label: Text('Upload', style: TextStyle(color: theme.colorScheme.onPrimary)),
                               onPressed: () => _uploadPhoto(pose.key),
                             )
                       : Text(
                           'Take a picture or select it from the gallery',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                 ),
@@ -264,13 +264,42 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
     );
   }
 
+  /// Builds the row of category buttons shown in portrait mode.
+  Widget _buildCategorySelectorRow(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: SizedBox(
+        height: 120,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var cat in _poses)
+              Expanded(
+                child: _CategoryCardWidget(
+                  data: cat,
+                  // If you prefer a per-category male/female logic,
+                  // you might pass a separate param. Currently it's the same placeholder.
+                  isSelected: (_selectedCategory == cat.key),
+                  onTap: () {
+                    setState(() {
+                      if (_selectedCategory == cat.key) {
+                        _selectedCategory = null;
+                      } else {
+                        _selectedCategory = cat.key;
+                      }
+                    });
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    super.build(context); // for AutomaticKeepAliveClientMixin
-
-    final orientation = MediaQuery.of(context).orientation;
-    final isPortrait = orientation == Orientation.portrait;
-
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -287,6 +316,8 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
           final gender = userData?['gender'] ?? 'Male';
           _poses = _buildPosesForGender(gender);
 
+          final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -300,15 +331,36 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Tap the camera icon to shoot or the gallery icon to upload for each view.',
+                  'Tap the camera icon to shoot or the gallery icon to upload for the selected view.',
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
 
-                // 1) If portrait => 2x2 grid
-                // 2) If landscape => Row with 4 expanded children
+                // If portrait: show the row of category buttons, then one card for the selected category
                 if (isPortrait)
+                  Column(
+                    children: [
+                      _buildCategorySelectorRow(context),
+                      const SizedBox(height: 16),
+                      if (_selectedCategory != null)
+                        _buildPoseCard(
+                          context,
+                          _poses.firstWhere(
+                            (p) => p.key == _selectedCategory,
+                            orElse: () => _poses.first,
+                          ),
+                        )
+                      else
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text('Select a category to upload a photo.'),
+                        ),
+                    ],
+                  )
+
+                // If landscape: show all 4 cards in a grid
+                else
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -319,21 +371,80 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
                     children: _poses
                         .map((pose) => _buildPoseCard(context, pose))
                         .toList(),
-                  )
-                else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _poses
-                        .map((pose) => Expanded(
-                              child: _buildPoseCard(context, pose),
-                            ))
-                        .toList(),
                   ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// A card widget that displays a category silhouette and label.
+/// Used in the top row (portrait mode) for the user to pick which category
+/// they want to work with.
+class _CategoryCardWidget extends StatelessWidget {
+  final PoseCategory data;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryCardWidget({
+    Key? key,
+    required this.data,
+    required this.isSelected,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardDecoration = isSelected
+        ? BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withOpacity(0.4),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          )
+        : BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          );
+
+    final textColor = isSelected
+        ? theme.colorScheme.onPrimary
+        : Colors.black87;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: Colors.transparent,
+        child: Container(
+          decoration: cardDecoration,
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Image.asset(data.assetPlaceholder, height: 70),
+              Text(
+                data.displayName,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

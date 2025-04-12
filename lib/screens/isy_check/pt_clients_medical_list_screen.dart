@@ -106,7 +106,7 @@ class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen>
     final theme = Theme.of(context);
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'isy-check- My Clients',
+        title: 'IsyCheck- My Clients',
       ),
       body: Column(
         children: [

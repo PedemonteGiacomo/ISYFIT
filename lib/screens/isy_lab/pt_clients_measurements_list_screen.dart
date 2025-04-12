@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Import the screen that shows the tabbed 3-tab layout for isy-lab
+// Import the screen that shows the tabbed 3-tab layout for IsyLab
 import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 // Or if you want to go to a direct measurements screen, import that:
 // import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
@@ -11,7 +11,7 @@ import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/gradient_button.dart';
 
-/// This screen shows the PT’s clients for isy-lab.
+/// This screen shows the PT’s clients for IsyLab.
 ///  - By default, shows only clients who DO have measurement data
 ///  - We have a toggle to “Show clients WITHOUT measurement data”
 ///  - A Search bar to filter by name/email
@@ -123,7 +123,7 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'My Clients - isy-lab',
+        title: 'My Clients - IsyLab',
       ),
       body: Column(
         children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/gradient_button.dart';
 import 'medical_history_screen.dart';
@@ -181,7 +182,19 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'isy-check - Anamnesis Data Insertion',
+        title: 'IsyCheck - Anamnesis Data Insertion',
+        actions: [
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
       ),
       body: SingleChildScrollView(
         child: Center(

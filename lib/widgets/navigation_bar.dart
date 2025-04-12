@@ -26,15 +26,15 @@ class NavigationBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.fitness_center),
-          label: "isy-training",
+          label: "IsyTraining",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.science_outlined),
-          label: "isy-lab",
+          label: "IsyLab",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.check_circle_outline),
-          label: "isy-check",
+          label: "IsyCheck",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),

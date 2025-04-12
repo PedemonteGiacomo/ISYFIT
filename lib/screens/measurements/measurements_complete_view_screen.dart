@@ -64,7 +64,6 @@ final Map<String, String> prettyLabels = {
   'visceralFatLevel': 'Visceral Fat Level',
   'targetWeight': 'Target Weight',
   'isyScore': 'IsyScore',
-
   'neck': 'Neck (cm)',
   'waist': 'Waist (cm)',
   'hips': 'Hips (cm)',
@@ -72,7 +71,6 @@ final Map<String, String> prettyLabels = {
   'usArmyBodyFatPercent': 'Army BF (%)',
   'morphology': 'Morphology',
   'idealWeight': 'Ideal Weight',
-
   'chestplic': 'Chest Plic (mm)',
   'abdominalPlic': 'Abdomen Plic (mm)',
   'thighPlic': 'Thigh Plic (mm)',
@@ -94,8 +92,8 @@ class MeasurementsCompleteViewScreen extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<MeasurementsCompleteViewScreen> createState()
-      => _MeasurementsCompleteViewScreenState();
+  State<MeasurementsCompleteViewScreen> createState() =>
+      _MeasurementsCompleteViewScreenState();
 }
 
 class _MeasurementsCompleteViewScreenState
@@ -127,9 +125,8 @@ class _MeasurementsCompleteViewScreenState
           .collection('records')
           .orderBy('timestamp', descending: false)
           .get();
-      _allRecords = querySnap.docs
-          .map((d) => d.data() as Map<String, dynamic>)
-          .toList();
+      _allRecords =
+          querySnap.docs.map((d) => d.data() as Map<String, dynamic>).toList();
     } catch (e) {
       debugPrint('Error fetching data: $e');
     } finally {
@@ -169,13 +166,13 @@ class _MeasurementsCompleteViewScreenState
           // TabBarView for the 3 measurement types
           Expanded(
             child: Stack(
-                children: [
+              children: [
                 TabBarView(
                   controller: _tabController,
                   children: [
-                  _buildTabContent('BIA'),
-                  _buildTabContent('USArmy'),
-                  _buildTabContent('Plicometro'),
+                    _buildTabContent('BIA'),
+                    _buildTabContent('USArmy'),
+                    _buildTabContent('Plicometro'),
                   ],
                 ),
                 // FABs positioned in two rows at bottom-right
@@ -183,27 +180,39 @@ class _MeasurementsCompleteViewScreenState
                   right: 16,
                   bottom: 16,
                   child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      FloatingActionButton(
-                      heroTag: 'refresh',
-                      onPressed: _fetchData,
-                      child: const Icon(Icons.refresh),
-                      ),
-                      const SizedBox(height: 12),
-                      FloatingActionButton.extended(
-                      heroTag: 'pdf',
-                      onPressed: _generatePdfReport,
-                      label: const Text("Export PDF"),
-                      icon: const Icon(Icons.picture_as_pdf),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'refreshFab',
+                            onPressed: _fetchData,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            child: Icon(
+                              Icons.refresh,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FloatingActionButton.extended(
+                            heroTag: 'pdf',
+                            onPressed: _generatePdfReport,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            label: Text("Export PDF",
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
+                            icon: Icon(Icons.picture_as_pdf,
+                                color: Theme.of(context).colorScheme.onPrimary),
+                          ),
+                        ],
                       ),
                     ],
-                    ),
-                  ],
                   ),
                 ),
               ],
@@ -264,7 +273,8 @@ class _MeasurementsCompleteViewScreenState
   }
 
   /// The "featured" submetric line chart for each measure type
-  Widget _buildFeaturedChart(String measureType, List<Map<String, dynamic>> docs) {
+  Widget _buildFeaturedChart(
+      String measureType, List<Map<String, dynamic>> docs) {
     final Map<String, String> featured = {
       'BIA': 'weightInKg',
       'USArmy': 'usArmyBodyFatPercent',
@@ -354,7 +364,8 @@ class _MeasurementsCompleteViewScreenState
                         interval: 1,
                         getTitlesWidget: (value, meta) {
                           final label = xLabels[value.toInt()] ?? '';
-                          return Text(label, style: const TextStyle(fontSize: 10));
+                          return Text(label,
+                              style: const TextStyle(fontSize: 10));
                         },
                       ),
                     ),
@@ -394,7 +405,8 @@ class _MeasurementsCompleteViewScreenState
   /// Build a row/wrap of submetric cards, sized bigger
   Widget _buildMeasurementCardsRow(
       List<String> submetrics, List<Map<String, dynamic>> docs) {
-    final cards = submetrics.map((sub) => _buildSubmetricCard(sub, docs)).toList();
+    final cards =
+        submetrics.map((sub) => _buildSubmetricCard(sub, docs)).toList();
 
     // We'll place them in a Wrap, so if there's not enough horizontal space,
     // they automatically flow to a new line.
@@ -464,9 +476,12 @@ class _MeasurementsCompleteViewScreenState
     // color code
     Color color = Colors.blueGrey.shade800;
     if (valDouble != null) {
-      if (valDouble < 40) color = Colors.redAccent;
-      else if (valDouble < 70) color = Colors.orange;
-      else color = Colors.green;
+      if (valDouble < 40)
+        color = Colors.redAccent;
+      else if (valDouble < 70)
+        color = Colors.orange;
+      else
+        color = Colors.green;
     }
 
     return GestureDetector(
@@ -485,10 +500,12 @@ class _MeasurementsCompleteViewScreenState
             Icon(Icons.star, color: color, size: 20),
             const SizedBox(width: 8),
             Text('IsyScore',
-                style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14)),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: color, fontSize: 14)),
             const SizedBox(width: 16),
             Text(displayVal,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: color)),
           ],
         ),
       ),
@@ -496,7 +513,8 @@ class _MeasurementsCompleteViewScreenState
   }
 
   /// Build a DataTable with all historical data for the measure type
-  Widget _buildTypeDataTable(String measureType, List<Map<String, dynamic>> docs) {
+  Widget _buildTypeDataTable(
+      String measureType, List<Map<String, dynamic>> docs) {
     final submetrics = allMeasurementFields[measureType] ?? [];
     // Build columns => first is "Metric", then one col per doc
     final dtStrings = <String>[];
@@ -512,7 +530,8 @@ class _MeasurementsCompleteViewScreenState
     }
 
     final columns = <DataColumn>[
-      const DataColumn(label: Text('Metric', style: TextStyle(fontWeight: FontWeight.bold))),
+      const DataColumn(
+          label: Text('Metric', style: TextStyle(fontWeight: FontWeight.bold))),
     ];
     for (final dtStr in dtStrings) {
       columns.add(DataColumn(label: Text(dtStr)));
@@ -522,7 +541,8 @@ class _MeasurementsCompleteViewScreenState
     for (final sub in submetrics) {
       final label = prettyLabels[sub] ?? sub;
       final cells = <DataCell>[];
-      cells.add(DataCell(Text(label, style: const TextStyle(fontWeight: FontWeight.bold))));
+      cells.add(DataCell(
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold))));
 
       for (int i = 0; i < docs.length; i++) {
         final doc = docs[i];
@@ -671,7 +691,8 @@ class _MeasurementsCompleteViewScreenState
   }
 
   /// Returns the latest value for sub in docs
-  dynamic _getLatestValueForSubmetric(List<Map<String, dynamic>> docs, String sub) {
+  dynamic _getLatestValueForSubmetric(
+      List<Map<String, dynamic>> docs, String sub) {
     for (int i = docs.length - 1; i >= 0; i--) {
       final doc = docs[i];
       if (doc.containsKey(sub)) {
@@ -683,7 +704,8 @@ class _MeasurementsCompleteViewScreenState
 
   IconData _chooseIconForSubmetric(String sub) {
     if (sub.toLowerCase().contains('height')) return Icons.height;
-    if (sub.toLowerCase().contains('weight')) return Icons.monitor_weight_outlined;
+    if (sub.toLowerCase().contains('weight'))
+      return Icons.monitor_weight_outlined;
     if (sub.toLowerCase().contains('score')) return Icons.star;
     if (sub.toLowerCase().contains('waist')) return Icons.accessibility_new;
     if (sub.toLowerCase().contains('hips')) return Icons.accessibility;
@@ -724,7 +746,8 @@ class _MeasurementsCompleteViewScreenState
             pw.Center(
               child: pw.Text(
                 'Measurement Report',
-                style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold),
               ),
             ),
           );
@@ -736,14 +759,16 @@ class _MeasurementsCompleteViewScreenState
             widgets.add(
               pw.Text(
                 type,
-                style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
               ),
             );
             widgets.add(pw.SizedBox(height: 8));
 
             final submetrics = allMeasurementFields[type] ?? [];
             final headers = <pw.Widget>[
-              pw.Text('Metric', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.Text('Metric',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
             ];
 
             // Each doc => date
@@ -758,8 +783,8 @@ class _MeasurementsCompleteViewScreenState
               }
             }
             for (final ds in dateStrings) {
-              headers.add(
-                  pw.Text(ds, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
+              headers.add(pw.Text(ds,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold)));
             }
 
             final tableRows = <List<pw.Widget>>[];
@@ -768,7 +793,8 @@ class _MeasurementsCompleteViewScreenState
               final label = prettyLabels[sub] ?? sub;
               final isIsy = (sub == 'isyScore');
               final subStyle = isIsy
-                  ? pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.purple)
+                  ? pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, color: PdfColors.purple)
                   : pw.TextStyle(fontWeight: pw.FontWeight.bold);
               rowCells.add(pw.Text(label, style: subStyle));
 
@@ -815,6 +841,7 @@ class _MeasurementsCompleteViewScreenState
     );
 
     // Let user pick how to save/print PDF
-    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+    await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save());
   }
 }

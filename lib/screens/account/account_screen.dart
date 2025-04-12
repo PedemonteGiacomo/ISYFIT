@@ -525,24 +525,24 @@ class _AccountScreenState extends State<AccountScreen> {
 
             const SizedBox(height: 20),
 
-            /// 3) Return button to go back
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.arrow_back,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              label: Text('Return',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              ),
-            ),
+            // /// 3) Return button to go back
+            // ElevatedButton.icon(
+            //   onPressed: () => Navigator.pop(context),
+            //   icon: Icon(Icons.arrow_back,
+            //       color: Theme.of(context).colorScheme.onPrimary),
+            //   label: Text('Return',
+            //       style: TextStyle(
+            //           color: Theme.of(context).colorScheme.onPrimary)),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: theme.colorScheme.primary,
+            //     foregroundColor: theme.colorScheme.onPrimary,
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(12.0),
+            //     ),
+            //     padding:
+            //         const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            //   ),
+            // ),
           ],
         ),
       ),

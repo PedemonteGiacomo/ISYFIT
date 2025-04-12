@@ -7,6 +7,7 @@ import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
+import 'package:isyfit/widgets/isy_client_options_dialog.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
@@ -46,9 +47,10 @@ class PTDashboard extends StatelessWidget {
       return [];
     }
 
-    final clientIds = (ptData['clients'] as List<dynamic>).take(3).toList();
-    List<Map<String, dynamic>> clients = [];
+    final clientIds = (ptData['clients'] as List<dynamic>);
+    final List<Map<String, dynamic>> clients = [];
 
+    // gather them
     for (String clientId in clientIds) {
       final clientDoc = await FirebaseFirestore.instance
           .collection('users')
@@ -61,11 +63,23 @@ class PTDashboard extends StatelessWidget {
         clients.add(clientData);
       }
     }
-    return clients;
+
+    // sort by lastInteractionTime descending
+    clients.sort((a, b) {
+      final aTime = a['lastInteractionTime'] as Timestamp?;
+      final bTime = b['lastInteractionTime'] as Timestamp?;
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime);
+    });
+
+    // Return only the first 3 clients
+    return clients.take(3).toList();
   }
 
   /// When tapping a client from the "Recent" list, let the PT choose which
-  /// area to go to: isy-training, isy-lab, etc.
+  /// area to go to: IsyTraining, IsyLab, etc.
   void _showClientOptions(
     BuildContext context, {
     required String clientUid,
@@ -74,82 +88,11 @@ class PTDashboard extends StatelessWidget {
   }) {
     showDialog(
       context: context,
-      builder: (context) {
-        final theme = Theme.of(context);
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          surfaceTintColor: theme.colorScheme.surface,
-          title: Text(
-            "$clientName $clientSurname",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.fitness_center,
-                    color: theme.colorScheme.primary),
-                title: const Text('isy-training'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          IsyTrainingMainScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading:
-                    Icon(Icons.straighten, color: theme.colorScheme.secondary),
-                title: const Text('isy-lab'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => IsyLabMainScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.medical_services, color: Colors.red),
-                title: const Text('isi-check'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => IsyCheckMainScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.info, color: theme.colorScheme.tertiary),
-                title: const Text('account'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AccountScreen(clientUid: clientUid),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (_) => IsyClientOptionsDialog(
+        clientUid: clientUid,
+        clientName: clientName,
+        clientSurname: clientSurname,
+      ),
     );
   }
 
@@ -354,32 +297,64 @@ class PTDashboard extends StatelessWidget {
 
                 /// 2) Recent Clients + "View All" Button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Recent Clients",
-                      style: theme.textTheme.titleLarge?.copyWith(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                    Row(
+                      children: [
+                      Icon(Icons.group, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Recent Clients",
+                        style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    // We'll use a FilledButton (Material 3)
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
+                      ],
+                    ),
+                    Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Ink(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ManageClientsScreen(),
+                          builder: (_) => const ManageClientsScreen(),
                           ),
                         );
-                      },
-                      child: const Text("View All"),
+                        },
+                        child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                          Icon(Icons.settings, color: Theme.of(context).colorScheme.onPrimary),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Manage",
+                            style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          ],
+                        ),
+                        ),
+                      ),
+                      ),
                     ),
                   ],
                 ),
@@ -431,13 +406,11 @@ class PTDashboard extends StatelessWidget {
         },
       ),
 
-      // /// 5) FAB (optional) to add new clients or handle other actions
       // floatingActionButton: FloatingActionButton.extended(
       //   onPressed: () {
-      //     // Example: jump to client creation or ManageClientsScreen
       //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (_) => const ManageClientsScreen()),
+      //   context,
+      //   MaterialPageRoute(builder: (_) => const ManageClientsScreen()),
       //     );
       //   },
       //   icon: const Icon(Icons.group_add),

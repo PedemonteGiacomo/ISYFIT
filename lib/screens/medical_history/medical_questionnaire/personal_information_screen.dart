@@ -95,7 +95,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'isy-check - Anamnesis Data Insertion',
+        title: 'IsyCheck - Anamnesis Data Insertion',
         actions: [
           IconButton(
             icon: Icon(Icons.home,

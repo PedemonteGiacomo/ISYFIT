@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/screens/isy_lab/pt_clients_measurements_list_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/screens/isy_lab/photo_section/photo_home_screen.dart';
 
-/// The main isy-lab “entry point”.
+/// The main IsyLab “entry point”.
 /// 1) If clientUid is provided => show that client’s normal 3-tab lab screen
-/// 2) Otherwise, if user is PT => show the PT’s client list for isy-lab
+/// 2) Otherwise, if user is PT => show the PT’s client list for IsyLab
 /// 3) Otherwise => show the user’s own 3-tab lab screen
 class IsyLabMainScreen extends StatefulWidget {
   final String? clientUid;
@@ -52,13 +53,13 @@ class _IsyLabMainScreenState extends State<IsyLabMainScreen> {
         }
         final isPT = snapshot.data ?? false;
 
-        // 1) If we have a clientUid => show that client's 3-tab isy-lab
+        // 1) If we have a clientUid => show that client's 3-tab IsyLab
         if (_clientUid != null) {
-          return _IsyLabThreeTabScreen(clientUid: _clientUid);
+          return _IsyLabTwoTabScreen(clientUid: _clientUid);
         }
-        // 2) If user is not PT => show *own* 3-tab isy-lab
+        // 2) If user is not PT => show *own* 3-tab IsyLab
         if (!isPT) {
-          return _IsyLabThreeTabScreen(clientUid: null);
+          return _IsyLabTwoTabScreen(clientUid: null);
         }
         // 3) Otherwise user is PT => show PT clients list
         return const PTClientsIsyLabListScreen();
@@ -67,18 +68,18 @@ class _IsyLabMainScreenState extends State<IsyLabMainScreen> {
   }
 }
 
-/// The normal 3-tab screen for isy-lab
+/// The normal 2-tab screen for IsyLab
 /// We embed it in a separate widget for clarity
-class _IsyLabThreeTabScreen extends StatelessWidget {
+class _IsyLabTwoTabScreen extends StatelessWidget {
   final String? clientUid;
-  const _IsyLabThreeTabScreen({Key? key, this.clientUid}) : super(key: key);
+  const _IsyLabTwoTabScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final String actualClientUid =
         clientUid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
     return DefaultTabController(
-      length: 3,
+      length: 2,  // Changed from 3 to 2
       initialIndex: 1, // If you want "Measurements" as default
       child: Scaffold(
         bottomNavigationBar: const TabBar(
@@ -87,19 +88,31 @@ class _IsyLabThreeTabScreen extends StatelessWidget {
             Tab(
                 icon: Icon(Icons.monitor_weight_outlined),
                 text: "Measurements"),
-            Tab(icon: Icon(Icons.insights_outlined), text: "Bodyfat"),
+            // Removed bodyfat tab
           ],
           labelColor: Colors.blue,
           unselectedLabelColor: Colors.grey,
         ),
         appBar: GradientAppBar(
-          title: "isy-lab",
+          title: "IsyLab",
+          actions: [
+                IconButton(
+                  icon: Icon(Icons.home,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BaseScreen()),
+                    );
+                  },
+                ),
+              ],
         ),
         body: TabBarView(
           children: [
             PhotoHomeScreen(clientUid: actualClientUid),
             MeasurementsHomeScreen(clientUid: actualClientUid),
-            Center(child: Text("Bodyfat Comparison Screen")),
+            // Removed bodyfat widget
           ],
         ),
       ),

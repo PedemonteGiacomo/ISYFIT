@@ -67,7 +67,19 @@ class _FinalSubmitScreenState extends State<FinalSubmitScreen> {
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'isy-check - Anamnesis Data Insertion',
+        title: 'IsyCheck - Anamnesis Data Insertion',
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(

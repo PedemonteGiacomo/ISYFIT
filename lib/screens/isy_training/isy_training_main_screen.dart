@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 
-// Example sub-screens for isy-training
+// Example sub-screens for IsyTraining
 import 'logbook_screen.dart';
 import 'library_screen.dart';
 
@@ -18,7 +18,7 @@ class IsyTrainingMainScreen extends StatelessWidget {
       length: 2, // We have 2 tabs: Logbook + Library
       child: Scaffold(
         appBar: GradientAppBar(
-          title: 'isi-training',
+          title: 'IsyTraining',
           actions: [
             // Add a "Home" icon that takes the PT back to the main flow.
             IconButton(

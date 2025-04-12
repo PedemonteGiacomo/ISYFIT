@@ -625,8 +625,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
   /// If no medical history for a PT’s client, show a message.
   Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
-    final theme = Theme.of(context);
-    return Column(
+  final theme = Theme.of(context);
+  return Scaffold(
+    backgroundColor: Colors.white, // keep screen white if desired
+    body: Column(
       children: [
         Expanded(
           child: Center(
@@ -637,7 +639,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Card(
                     elevation: 4,
-                    color: theme.colorScheme.errorContainer.withOpacity(0.2),
+                    // Now white:
+                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -647,27 +650,33 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.warning,
-                              size: 48, color: theme.colorScheme.error),
+                              size: 48,
+                              color: theme.colorScheme.error),
                           const SizedBox(height: 16),
                           Text(
                             'No Medical Data Found',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.error,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'This user has not yet provided any medical history.\nYou can fill out the questionnaire for them or ask the user to do it.',
+                            'This user has not yet provided any medical history.\n'
+                            'You can fill out the questionnaire for them or ask the user to do it.',
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: theme.textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 24),
-
-                          // Convert ElevatedButton to GradientButton
-                          GradientButton(
-                            label: 'Fill Questionnaire',
-                            icon: Icons.assignment_outlined,
+                          // Fill Questionnaire -> route that keeps an AppBar
+                          ElevatedButton.icon(
+                            icon: Icon(Icons.assignment_outlined, 
+                              color: Theme.of(context).colorScheme.onPrimary),
+                            label: Text('Fill Questionnaire', 
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                            ),
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -680,11 +689,14 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-
-                          // Another gradient button for returning
-                          GradientButton(
-                            label: 'Return to Clients',
-                            icon: Icons.arrow_back,
+                          ElevatedButton.icon(
+                            icon: Icon(Icons.arrow_back, 
+                              color: Theme.of(context).colorScheme.onPrimary),
+                            label: Text('Return to Clients', 
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                            ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -697,8 +709,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
+
 
   /// ---------------- Helper UI Builders ----------------
 
@@ -772,7 +786,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: GradientAppBar(
-              title: 'isi-check',
+              title: 'IsyCheck',
               actions: [
                 IconButton(
                   icon: Icon(Icons.home,
@@ -798,7 +812,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
         if (!isPTView && (!snapshot.hasData || snapshot.data == null)) {
           return Scaffold(
             appBar: GradientAppBar(
-              title: 'isi-check',
+              title: 'IsyCheck',
               actions: [
                 IconButton(
                   icon: Icon(Icons.home,
@@ -824,7 +838,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               final profileData = ptSnapshot.data;
               return Scaffold(
                 appBar: GradientAppBar(
-                  title: 'isi-check',
+                  title: 'IsyCheck',
                   actions: [
                     IconButton(
                       icon: Icon(Icons.home,
@@ -850,7 +864,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
           length: 4,
           child: Scaffold(
             appBar: GradientAppBar(
-              title: 'isi-check',
+              title: 'IsyCheck',
               actions: [
                 IconButton(
                   icon: Icon(Icons.home,

@@ -228,8 +228,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSaveBIA(gender, age),
-            icon: const Icon(Icons.save),
-            label: const Text("Save BIA"),
+            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
+            label: Text("Save BIA", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
           ),
         ],
       ),
@@ -319,8 +319,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSaveUSArmy(gender, age),
-            icon: const Icon(Icons.save),
-            label: const Text("Save U.S. Army"),
+            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
+            label: Text("Save U.S. Army", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
           ),
         ],
       ),
@@ -432,8 +432,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSavePlic(gender, age),
-            icon: const Icon(Icons.save),
-            label: const Text("Save Plicometer"),
+            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
+            label: Text("Save Plicometer", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
           ),
         ],
       ),
