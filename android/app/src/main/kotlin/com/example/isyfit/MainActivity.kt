@@ -1,5 +1,7 @@
 package com.isyfit.app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity  // ← cambia qui
 
-class MainActivity: FlutterActivity()
+class MainActivity: FlutterFragmentActivity() {
+    // non serve altro
+}

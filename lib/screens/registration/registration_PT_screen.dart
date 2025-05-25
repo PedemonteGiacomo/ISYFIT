@@ -1,10 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../widgets/country_codes.dart'; // Expanded country codes
-import 'package:dropdown_button2/dropdown_button2.dart'; // Note: Corrected package name
-import '../base_screen.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
+
+import '../../widgets/country_codes.dart';
 import '../../widgets/gradient_app_bar.dart';
+import '../base_screen.dart';
 
 class RegisterPTScreen extends StatefulWidget {
   const RegisterPTScreen({Key? key}) : super(key: key);
@@ -15,81 +19,91 @@ class RegisterPTScreen extends StatefulWidget {
 
 class _RegisterPTScreenState extends State<RegisterPTScreen> {
   // -------------------- Controllers --------------------
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _surnameController = TextEditingController();
-  final TextEditingController _vatController = TextEditingController();
-  final TextEditingController _legalInfoController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _surnameController = TextEditingController();
+  final _vatController = TextEditingController();
+  final _legalInfoController = TextEditingController();
+  final _phoneController = TextEditingController();
 
-  // -------------------- State Variables --------------------
+  // -------------------- State --------------------
   String? _selectedCountryCode;
   DateTime? _selectedDate;
-  bool _isLoading = false;
   bool _agreeToTerms = false;
-  bool _showPasswordInfo = false;
-  bool _emailFieldTouched = false;
+  bool _showPwdInfo = false;
+  bool _emailTouched = false;
+  bool _isLoading = false; // register + Firestore
+  bool _isPayLoading = false; // wait PaymentSheet
 
-  // -------------------- Gender Field --------------------
-  String? _gender; // "Male" or "Female"
+  String? _gender; // "Male" | "Female"
 
-  // -------------------- Password Requirements --------------------
-  bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
-  bool get _hasLowercase => _passwordController.text.contains(RegExp(r'[a-z]'));
-  bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
-  bool get _hasSpecialChar =>
-      _passwordController.text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-  bool get _hasMinLength => _passwordController.text.length >= 8;
+  // ---------- Stripe plans ----------
+  List<QueryDocumentSnapshot<Map<String, dynamic>>>? _plans;
+  QueryDocumentSnapshot<Map<String, dynamic>>? _selectedPlan;
 
-  bool get _isEmailValid => RegExp(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-      ).hasMatch(_emailController.text);
+  // listener on checkout_session
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sessionSub;
 
-  bool get _allRequirementsMet =>
-      _hasUppercase &&
-      _hasLowercase &&
-      _hasNumber &&
-      _hasSpecialChar &&
-      _hasMinLength;
+  // -------------------- Validators --------------------
+  bool get _isEmailValid {
+    final email = _emailController.text.trim();
+    final regex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return regex.hasMatch(email);
+  }
+  bool get _pwdUpper => _passwordController.text.contains(RegExp(r'[A-Z]'));
+  bool get _pwdLower => _passwordController.text.contains(RegExp(r'[a-z]'));
+  bool get _pwdNum => _passwordController.text.contains(RegExp(r'[0-9]'));
+  bool get _pwdSpec =>
+      _passwordController.text.contains(RegExp(r'[!@#\\$%^&*(),.?":{}|<>]'));
+  bool get _pwdLen => _passwordController.text.length >= 8;
+  bool get _pwdOk => _pwdUpper && _pwdLower && _pwdNum && _pwdSpec && _pwdLen;
 
   // ===================================================================
-  //                    Registration Logic
+  //                              INIT
+  // ===================================================================
+  @override
+  void initState() {
+    super.initState();
+    _loadPlans();
+  }
+
+  @override
+  void dispose() {
+    _sessionSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadPlans() async {
+    final snap = await FirebaseFirestore.instance
+        .collection('products')
+        .where('active', isEqualTo: true)
+        .get();
+    setState(() => _plans = snap.docs);
+  }
+
+  // ===================================================================
+  //                       REGISTRATION + PAYMENT SHEET
   // ===================================================================
   Future<void> _registerPT() async {
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('You must agree to the terms and conditions to register.'),
-        ),
-      );
-      return;
-    }
-
-    if (!_isEmailValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address.'),
-        ),
-      );
-      return;
-    }
+    // ── validation ───────────────────────────────────────────
+    if (!_agreeToTerms) return _msg('You must accept terms.');
+    if (!_isEmailValid) return _msg('Invalid email.');
+    if (!_pwdOk) return _msg('Password not strong enough.');
+    if (_selectedPlan == null) return _msg('Choose a subscription plan.');
 
     setState(() => _isLoading = true);
 
     try {
-      final userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      // 1. Firebase Auth
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      final uid = cred.user!.uid;
 
-      // Save PT information in Firestore including gender
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
+      // 2. Firestore user document
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'role': 'PT',
         'email': _emailController.text.trim(),
         'name': _nameController.text.trim(),
@@ -101,264 +115,201 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         'gender': _gender,
       });
 
-      // Redirect to PT Dashboard (or BaseScreen)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const BaseScreen()),
-      );
+      // 3. get priceId of chosen plan
+      final priceSnap = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(_selectedPlan!.id)
+          .collection('prices')
+          .where('active', isEqualTo: true)
+          .limit(1)
+          .get();
+      final priceId = priceSnap.docs.first.id;
+
+      // 4. create checkout_session for mobile flow (Payment Sheet)
+      setState(() => _isPayLoading = true);
+      final sessionRef = await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(uid)
+          .collection('checkout_sessions')
+          .add({
+        'price': priceId,
+        'mode': 'setup', // oppure 'subscription' se usi la versione "next" dell'estensione
+        'client': 'mobile',
+      });
+
+      // 5. Wait for the extension to populate the secrets
+      _sessionSub?.cancel();
+      _sessionSub = sessionRef.snapshots().listen((snap) async {
+        final data = snap.data();
+        if (data == null) return; // documento vuoto
+
+        // Gestione errori Stripe
+        final err = data['error'];
+        if (err != null) {
+          setState(() => _isPayLoading = false);
+          return _msg(err['message'] ?? 'Stripe error');
+        }
+
+        final clientSecret = data['setupIntentClientSecret'] ??
+            data['paymentIntentClientSecret'];
+        final eKey = data['ephemeralKeySecret'];
+        final customer = data['customer'];
+
+        if (clientSecret == null || eKey == null || customer == null) return;
+
+        // ho tutto ciò che mi serve → annullo il listener per evitare doppie esecuzioni
+        await _sessionSub?.cancel();
+
+        try {
+          await Stripe.instance.initPaymentSheet(
+            paymentSheetParameters: SetupPaymentSheetParameters(
+              merchantDisplayName: 'IsyFit',
+              customerId: customer,
+              customerEphemeralKeySecret: eKey,
+              setupIntentClientSecret: clientSecret,
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+              billingDetails: BillingDetails(
+                email: _emailController.text.trim(),
+                phone: _phoneController.text.trim(),
+                name:
+                    '${_nameController.text.trim()} ${_surnameController.text.trim()}',
+              ),
+            ),
+          );
+
+          await Stripe.instance.presentPaymentSheet();
+
+          // pagamento ok ----------------------------------------------------------------
+          if (mounted) {
+            setState(() => _isPayLoading = false);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const BaseScreen()),
+              (_) => false,
+            );
+          }
+        } on StripeException catch (e) {
+          setState(() => _isPayLoading = false);
+          _msg(e.error.message ?? 'Payment cancelled');
+        } catch (e) {
+          setState(() => _isPayLoading = false);
+          _msg('Payment error: $e');
+        }
+      });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('An error occurred during registration. Please try again.'),
-        ),
-      );
+      _msg('Registration error: $e');
+      setState(() => _isPayLoading = false);
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  // ===================================================================
+  //                           UI HELPERS
+  // ===================================================================
+  void _msg(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
   Future<void> _pickDate() async {
-    DateTime? pickedDate = await showDatePicker(
+    final d = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime(1990, 1, 1),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-
-    if (pickedDate != null) {
-      setState(() => _selectedDate = pickedDate);
-    }
+    if (d != null) setState(() => _selectedDate = d);
   }
 
-  // ===================================================================
-  //                             UI Helpers
-  // ===================================================================
-  Widget _buildPasswordRequirement(String text, bool isSatisfied) {
-    return Row(
-      children: [
-        Icon(
-          isSatisfied ? Icons.check_circle : Icons.cancel,
-          color: isSatisfied ? Colors.green : Colors.red,
-          size: 20,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(color: isSatisfied ? Colors.green : Colors.red),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordInfo() {
-    return Visibility(
-      visible: _showPasswordInfo,
-      child: Container(
-        padding: const EdgeInsets.all(12.0),
-        margin: const EdgeInsets.only(top: 8.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPasswordRequirement('At least 8 characters', _hasMinLength),
-            _buildPasswordRequirement(
-                'At least one uppercase letter', _hasUppercase),
-            _buildPasswordRequirement(
-                'At least one lowercase letter', _hasLowercase),
-            _buildPasswordRequirement('At least one number', _hasNumber),
-            _buildPasswordRequirement(
-                'At least one special character', _hasSpecialChar),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Gender selection with icon buttons for Male and Female.
-  Widget _buildGenderSelection() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _pwdRow(String txt, bool ok) => Row(
         children: [
-          //const Text("Gender: "),
-          const SizedBox(width: 12),
-          // Male Icon Button
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Male";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Male"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Male"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.male,
-                      color: _gender == "Male"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Male",
-                      style: TextStyle(
-                          color: _gender == "Male"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Female Icon Button
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Female";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Female"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Female"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.female,
-                      color: _gender == "Female"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Female",
-                      style: TextStyle(
-                          color: _gender == "Female"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
-              ),
-            ),
-          ),
+          Icon(ok ? Icons.check_circle : Icons.cancel,
+              color: ok ? Colors.green : Colors.red, size: 18),
+          const SizedBox(width: 6),
+          Text(txt, style: TextStyle(color: ok ? Colors.green : Colors.red)),
         ],
+      );
+
+  Widget _genderOpt(String g, IconData icn) {
+    final c = Theme.of(context).colorScheme;
+    final sel = _gender == g;
+    return GestureDetector(
+      onTap: () => setState(() => _gender = g),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: sel ? c.primary : Colors.grey),
+          color: sel ? c.primary.withOpacity(.15) : Colors.transparent,
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icn, color: sel ? c.primary : Colors.grey),
+          const SizedBox(width: 8),
+          Text(g, style: TextStyle(color: sel ? c.primary : Colors.grey)),
+        ]),
       ),
     );
   }
 
   // ===================================================================
-  //                             Build Method
+  //                             BUILD
   // ===================================================================
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
+    final t = Theme.of(context);
     return Scaffold(
-      appBar: GradientAppBar(
-        title: 'Registration',
-      ),
+      appBar: GradientAppBar(title: 'Registration'),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0)),
-            shadowColor: theme.colorScheme.primary.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(16)),
+            shadowColor: t.colorScheme.primary.withOpacity(.5),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // // Title
-                    // Text(
-                    //   'Register as PT',
-                    //   style: textTheme.headlineLarge?.copyWith(
-                    //     fontWeight: FontWeight.bold,
-                    //     color: theme.colorScheme.onSurface,
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 24),
+                    // ---------------- Name & Surname ----------------
+                    Row(children: [
+                      Expanded(
+                          child: _textField(
+                              _nameController, 'Name', Icons.person)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                          child: _textField(_surnameController, 'Surname',
+                              Icons.person_outline)),
+                    ]),
+                    const SizedBox(height: 16),
 
-                    // Name and Surname Fields
+                    // ---------------- Gender ----------------
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: 'Name',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0)),
-                              prefixIcon: Icon(Icons.person,
-                                  color: theme.colorScheme.primary),
-                            ),
-                          ),
-                        ),
+                        _genderOpt('Male', Icons.male),
                         const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: _surnameController,
-                            decoration: InputDecoration(
-                              labelText: 'Surname',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0)),
-                              prefixIcon: Icon(Icons.person_outline,
-                                  color: theme.colorScheme.primary),
-                            ),
-                          ),
-                        ),
+                        _genderOpt('Female', Icons.female),
                       ],
                     ),
                     const SizedBox(height: 16),
 
-                    // Gender selection with icons
-                    _buildGenderSelection(),
-                    const SizedBox(height: 16),
-
-                    // Email Field
+                    // ---------------- Email ----------------
                     Focus(
-                      onFocusChange: (hasFocus) {
-                        if (!hasFocus) {
-                          setState(() {
-                            _emailFieldTouched = true;
-                          });
-                        }
-                      },
+                      onFocusChange: (f) => setState(() => _emailTouched = !f),
                       child: TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        onChanged: (value) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0)),
-                          prefixIcon: Icon(Icons.email,
-                              color: theme.colorScheme.primary),
-                          suffixIcon: _emailFieldTouched
+                          border: outline,
+                          prefixIcon:
+                              Icon(Icons.email, color: t.colorScheme.primary),
+                          suffixIcon: _emailTouched
                               ? Icon(
                                   _isEmailValid
                                       ? Icons.check_circle
@@ -372,249 +323,207 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Password Field with Info Icon
-                    Stack(
-                      children: [
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          onChanged: (value) => setState(() {}),
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0)),
-                            prefixIcon: Icon(Icons.lock,
-                                color: theme.colorScheme.primary),
-                          ),
+                    // ---------------- Password ----------------
+                    Stack(children: [
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: outline,
+                          prefixIcon:
+                              Icon(Icons.lock, color: t.colorScheme.primary),
                         ),
-                        Positioned(
-                          right: 10,
-                          top: 10,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _showPasswordInfo = !_showPasswordInfo;
-                              });
-                            },
-                            child: Icon(
-                              Icons.info_outline,
-                              color: _allRequirementsMet
-                                  ? Colors.green
-                                  : Colors.red,
-                            ),
-                          ),
+                      ),
+                      Positioned(
+                        right: 10,
+                        top: 10,
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _showPwdInfo = !_showPwdInfo),
+                          child: Icon(Icons.info_outline,
+                              color: _pwdOk ? Colors.green : Colors.red),
                         ),
-                      ],
+                      ),
+                    ]),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _showPwdInfo
+                          ? Container(
+                              key: const ValueKey('pwd'),
+                              margin: const EdgeInsets.only(top: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: t.colorScheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _pwdRow('≥ 8 characters', _pwdLen),
+                                  _pwdRow('1 uppercase', _pwdUpper),
+                                  _pwdRow('1 lowercase', _pwdLower),
+                                  _pwdRow('1 number', _pwdNum),
+                                  _pwdRow('1 special', _pwdSpec),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                    _buildPasswordInfo(),
                     const SizedBox(height: 16),
 
-                    // Phone Number Field with Prefix Dropdown
-                    // ---------------------------------------------------
-                    // Phone Prefix + Number
-                    // ---------------------------------------------------
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 100,
-                          child: DropdownButton2<String>(
-                            isExpanded: true,
-                            value: _selectedCountryCode,
-                            hint: const Text('Prefix'),
-                            items: countryCodes.map((country) {
-                              final code = country['code']!;
-                              final flag = country['flag']!;
-                              final name = country['name']!;
-                              return DropdownMenuItem<String>(
-                                value: code,
+                    // ---------------- Phone ----------------
+                    Row(children: [
+                      SizedBox(
+                        width: 100,
+                        child: DropdownButton2<String>(
+                          value: _selectedCountryCode,
+                          isExpanded: true,
+                          hint: const Text('Prefix'),
+                          items: [
+                            for (final c in countryCodes)
+                              DropdownMenuItem(
+                                value: c['code'],
                                 child: Row(
                                   children: [
-                                    Text(flag,
+                                    Text(c['flag']!,
                                         style: const TextStyle(fontSize: 18)),
                                     const SizedBox(width: 8),
-                                    Text('$name ($code)'),
+                                    Text('${c['name']} (${c['code']})'),
                                   ],
                                 ),
-                              );
-                            }).toList(),
-                            selectedItemBuilder: (context) =>
-                                countryCodes.map((country) {
-                              return Row(
-                                children: [
-                                  Text(country['flag']!,
-                                      style: const TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 4),
-                                  Text(country['code']!),
-                                ],
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedCountryCode = value;
-                              });
-                            },
-                            dropdownStyleData: DropdownStyleData(
-                              width: 250,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: theme.colorScheme.surface,
-                              ),
-                            ),
-                            buttonStyleData: const ButtonStyleData(
+                              )
+                          ],
+                          selectedItemBuilder: (ctx) => [
+                            for (final c in countryCodes)
+                              Row(children: [
+                                Text(c['flag']!,
+                                    style: const TextStyle(fontSize: 18)),
+                                const SizedBox(width: 4),
+                                Text(c['code']!),
+                              ]),
+                          ],
+                          onChanged: (v) =>
+                              setState(() => _selectedCountryCode = v),
+                          buttonStyleData: const ButtonStyleData(
                               height: 48,
-                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              padding: EdgeInsets.symmetric(horizontal: 8)),
+                          dropdownStyleData: DropdownStyleData(
+                            width: 260,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: t.colorScheme.surface,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
-                              labelText: 'Phone Number',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // VAT Field
-                    TextField(
-                      controller: _vatController,
-                      decoration: InputDecoration(
-                        labelText: 'VAT/P.IVA',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0)),
-                        prefixIcon: Icon(Icons.business,
-                            color: theme.colorScheme.primary),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                          child: _textField(
+                              _phoneController, 'Phone', Icons.phone,
+                              keyboard: TextInputType.phone)),
+                    ]),
                     const SizedBox(height: 16),
 
-                    // Legal Information Field
-                    TextField(
-                      controller: _legalInfoController,
-                      decoration: InputDecoration(
-                        labelText: 'Legal Information',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0)),
-                        prefixIcon:
-                            Icon(Icons.gavel, color: theme.colorScheme.primary),
-                      ),
-                      maxLines: 3,
-                    ),
+                    // ---------------- VAT & Legal ----------------
+                    _textField(_vatController, 'VAT/P.IVA', Icons.business),
+                    const SizedBox(height: 16),
+                    _textField(_legalInfoController, 'Legal info', Icons.gavel,
+                        maxLines: 3),
                     const SizedBox(height: 16),
 
-                    // Date Picker
+                    // ---------------- Date picker ----------------
                     GestureDetector(
                       onTap: _pickDate,
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Date of Birth',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0)),
+                          labelText: 'Date of birth',
+                          border: outline,
                           prefixIcon: Icon(Icons.calendar_today,
-                              color: theme.colorScheme.primary),
+                              color: t.colorScheme.primary),
                         ),
                         child: Text(
                           _selectedDate == null
-                              ? 'Select Date'
+                              ? 'Select date'
                               : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                           style: TextStyle(
-                            color: _selectedDate == null
-                                ? Colors.grey
-                                : textTheme.bodyMedium?.color,
-                          ),
+                              color: _selectedDate == null
+                                  ? Colors.grey
+                                  : t.textTheme.bodyMedium?.color),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Agreement Checkbox
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _agreeToTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _agreeToTerms = value ?? false;
-                            });
-                          },
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Terms and Conditions'),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Text(
-                                          'By using this app, you agree to:\n\n'
-                                          '1. Share your personal information for account creation\n'
-                                          '2. Allow us to process your data according to GDPR\n'
-                                          '3. Receive notifications about your training\n'
-                                          '4. Follow safety guidelines during workouts\n\n'
-                                          'For full terms and privacy policy, visit our website.',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Close'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 1),
-                              child: Text(
-                                'I accept all the conditions and privacy policy.',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
+                    // ---------------- Plan dropdown ----------------
+                    _plans == null
+                        ? const CircularProgressIndicator()
+                        : DropdownButtonFormField<
+                            QueryDocumentSnapshot<Map<String, dynamic>>>(
+                            value: _selectedPlan,
+                            decoration: InputDecoration(
+                              labelText: 'Subscription plan',
+                              border: outline,
+                              prefixIcon: Icon(Icons.workspace_premium,
+                                  color: t.colorScheme.primary),
                             ),
+                            items: _plans!.map((doc) {
+                              final d = doc.data();
+                              return DropdownMenuItem(
+                                value: doc,
+                                child: Text(d['name'] ?? doc.id),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => _selectedPlan = v),
                           ),
-                        ),
-                      ],
-                    ),
                     const SizedBox(height: 16),
 
-                    // Register Button
-                    _isLoading
+                    // ---------------- Terms ----------------
+                    Row(children: [
+                      Checkbox(
+                        value: _agreeToTerms,
+                        onChanged: (v) =>
+                            setState(() => _agreeToTerms = v ?? false),
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Terms and conditions'),
+                              content: const Text(
+                                  'By using this app you accept our privacy policy…'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'))
+                              ],
+                            ),
+                          ),
+                          child: Text('I accept terms and privacy.',
+                              style: TextStyle(
+                                  color: t.colorScheme.primary,
+                                  decoration: TextDecoration.underline)),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 24),
+
+                    // ---------------- Button ----------------
+                    (_isLoading || _isPayLoading)
                         ? const CircularProgressIndicator()
-                        : ElevatedButton(
+                        : FilledButton(
                             onPressed: _registerPT,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.primaryColor,
+                            style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                vertical: 12.0,
-                                horizontal: 24.0,
-                              ),
+                                  horizontal: 32, vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text(
-                              'Register',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: theme.colorScheme.onPrimary),
+                              _isPayLoading ? 'Processing…' : 'Register & Pay',
+                              style: const TextStyle(fontSize: 16),
                             ),
                           ),
                   ],
@@ -626,4 +535,20 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       ),
     );
   }
+
+  // --------------- small helpers ----------------
+  final outline = OutlineInputBorder(borderRadius: BorderRadius.circular(12));
+
+  Widget _textField(TextEditingController c, String label, IconData icn,
+          {int maxLines = 1, TextInputType keyboard = TextInputType.text}) =>
+      TextField(
+        controller: c,
+        maxLines: maxLines,
+        keyboardType: keyboard,
+        decoration: InputDecoration(
+          labelText: label,
+          border: outline,
+          prefixIcon: Icon(icn, color: Theme.of(context).colorScheme.primary),
+        ),
+      );
 }

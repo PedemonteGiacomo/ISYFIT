@@ -1,48 +1,75 @@
+/*
+ * build.gradle (Modulo: android/app)
+ * Isyfit – configurazione release firmata
+ */
+
 plugins {
-    id "com.android.application"
+    id 'com.android.application'
     // START: FlutterFire Configuration
     id 'com.google.gms.google-services'
     // END: FlutterFire Configuration
-    id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id "dev.flutter.flutter-gradle-plugin"
+    id 'kotlin-android'
+    // Il plugin Flutter va sempre per ultimo
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
+/*───────────────────────────────────────────────────────────────
+  Carichiamo il keystore DOPO il blocco plugins{}, come richiesto
+────────────────────────────────────────────────────────────────*/
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('key.properties')
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
 }
 
 android {
-    namespace = "com.isyfit.app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    namespace 'com.isyfit.app'
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+    compileSdk flutter.compileSdkVersion      // eredita dal plugin Flutter
+    ndkVersion flutter.ndkVersion
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.isyfit.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        minSdkVersion 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId 'com.isyfit.app'
+
+        minSdk    23
+        targetSdk flutter.targetSdkVersion
+
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions { jvmTarget = '1.8' }
+
+    /*───────────────────────────────
+      Config sicurezza / firma release
+    ───────────────────────────────*/
+    signingConfigs {
+        release {
+            keyAlias       keystoreProps['keyAlias']
+            keyPassword    keystoreProps['keyPassword']
+            storeFile      keystoreProps['storeFile'] ? file(keystoreProps['storeFile']) : null
+            storePassword  keystoreProps['storePassword']
+        }
     }
 
     buildTypes {
+        debug {
+            // Così `flutter run` continua a funzionare
+            signingConfig signingConfigs.debug
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled   false    // metti true quando configuri R8/ProGuard
+            shrinkResources false
         }
     }
 }
 
 flutter {
-    source = "../.."
+    // percorso del sorgente Flutter rispetto a questo file
+    source '../..'
 }

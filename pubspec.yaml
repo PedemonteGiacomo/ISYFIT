@@ -52,6 +52,9 @@ dependencies:
   webview_flutter: ^4.10.0
   pdf: ^3.11.3
   printing: ^5.14.2
+  url_launcher: ^6.2.6
+  app_links: ^6.4.0
+  flutter_stripe: ^11.5.0
 
 dev_dependencies:
   flutter_test:
