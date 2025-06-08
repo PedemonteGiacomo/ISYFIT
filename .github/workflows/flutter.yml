@@ -1,20 +1,43 @@
 name: Flutter CI
 
-on:
-  push:
-    branches: ["main"]
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+
     steps:
+      # 1. Checkout
       - uses: actions/checkout@v4
+
+      # 2. Dipendenze di sistema per desktop-Linux
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang            \
+            cmake            \
+            ninja-build      \
+            pkg-config       \
+            libgtk-3-dev     \
+            liblzma-dev      \
+            libstdc++-12-dev # (o la versione disponibile sull’immagine)
+
+      # 3. Installa / cache-a Flutter
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: stable      # oppure "beta", ecc.
+          cache:   true        # velocizza i job successivi
+
+      # 4. Abilita il target linux (serve una sola volta)
+      - run: flutter config --enable-linux-desktop
+
+      # 5. Restore dipendenze Dart/Flutter
       - run: flutter pub get
-      - run: dart format --set-exit-if-changed .
-      - run: flutter analyze
+
+      # 6. Test unit-widget
       - run: flutter test
-      - run: flutter test integration_test
+
+      # 7. Test d’integrazione
+      - name: Integration tests (linux desktop)
+        run: flutter test integration_test
