@@ -777,7 +777,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return const LoginScreen();
+    if (user == null) return LoginScreen();
 
     return FutureBuilder<Map<String, dynamic>?>(
       future: medicalHistory,

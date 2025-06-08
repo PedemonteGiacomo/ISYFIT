@@ -99,7 +99,7 @@ class _IsyFitAppState extends State<IsyFitApp> {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/base': (context) => const BaseScreen(),
         '/questionnaire': (context) => const QuestionnaireScreen(),
         '/medical_history_dashboard': (context) => const MedicalHistoryScreen(),
@@ -170,7 +170,7 @@ class AuthGate extends StatelessWidget {
         } else if (snap.hasData) {
           return const BaseScreen();
         } else {
-          return const LoginScreen();
+          return LoginScreen();
         }
       },
     );

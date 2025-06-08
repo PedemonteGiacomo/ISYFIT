@@ -14,7 +14,7 @@ class ClientDashboard extends StatelessWidget {
 
     // If no user is signed in, immediately return LoginScreen
     if (user == null) {
-      return const LoginScreen();
+      return LoginScreen();
     }
 
     return Scaffold(

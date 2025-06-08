@@ -135,7 +135,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _logout() async {
     await _auth.signOut();
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       (route) => false,
     );
   }
@@ -176,7 +176,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return const LoginScreen();
+      return LoginScreen();
     }
 
     return isOwnAccount

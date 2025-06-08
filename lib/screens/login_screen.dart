@@ -6,7 +6,7 @@ import 'registration/registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final FirebaseAuth auth;
-  const LoginScreen({Key? key, FirebaseAuth? auth})
+  LoginScreen({Key? key, FirebaseAuth? auth})
       : auth = auth ?? FirebaseAuth.instance,
         super(key: key);
 
