@@ -6,7 +6,11 @@ import 'registration/registration_screen.dart';
 import '../utils/firebase_error_translator.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final AuthRepository authRepository;
+
+  const LoginScreen({Key? key, AuthRepository? authRepository})
+      : authRepository = authRepository ?? AuthRepository(),
+        super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -15,7 +19,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthRepository _authRepo = AuthRepository();
 
   bool _isLoading = false;
 
@@ -25,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authRepo.signIn(
+      await widget.authRepository.signIn(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
@@ -37,12 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e as Exception);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       setState(() {
         _isLoading = false;
@@ -130,7 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: Text(
                               'Login',
-                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                     const SizedBox(height: 16),
