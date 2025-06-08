@@ -288,3 +288,7 @@
 
 ### Run in the device
    flutter run -d 192.168.1.135:5555
+
+---
+
+Last version before codex changes
