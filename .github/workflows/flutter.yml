@@ -39,5 +39,5 @@ jobs:
       - run: flutter test
 
       # 7. Test d’integrazione
-      - name: Integration tests (linux desktop) -d linux
-        run: flutter test integration_test
+      - name: Integration tests (linux desktop)
+        run: flutter test integration_test -d linux
