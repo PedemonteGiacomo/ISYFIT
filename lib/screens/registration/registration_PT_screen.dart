@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 import 'package:dropdown_button2/dropdown_button2.dart';
 
 import '../../widgets/country_codes.dart';
 import '../../widgets/gradient_app_bar.dart';
+import "../../utils/firebase_error_translator.dart";
 import '../base_screen.dart';
 import 'plan_selection_screen.dart';
 
@@ -27,6 +29,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   final _vatController        = TextEditingController();
   final _legalInfoController  = TextEditingController();
   final _phoneController      = TextEditingController();
+  final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State --------------------
   String? _selectedCountryCode;
@@ -89,9 +92,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     UserCredential? cred;
     try {
       // ── 3. Crea utente Firebase Auth ─────────────────
-      cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email:    _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      cred = await _authRepo.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
       final uid = cred.user!.uid;
 
@@ -206,8 +209,17 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
           await cred?.user?.delete();
         }
       });
+    } on FirebaseAuthException catch (e) {
+      final msg = FirebaseErrorTranslator.fromException(e);
+      _msg(msg);
+      setState(() {
+        _isLoading    = false;
+        _isPayLoading = false;
+      });
+      if (cred?.user != null) await cred!.user!.delete();
     } catch (e) {
-      _msg('Registration error: $e');
+      final msg = FirebaseErrorTranslator.fromException(e as Exception);
+      _msg(msg);
       setState(() {
         _isLoading    = false;
         _isPayLoading = false;

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_repository.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
+import '../utils/firebase_error_translator.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthRepository _authRepo = AuthRepository();
 
   bool _isLoading = false;
 
@@ -24,9 +25,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _authRepo.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       // Navigate to BaseScreen on success:
@@ -34,12 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (context) => const BaseScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      final msg = FirebaseErrorTranslator.fromException(e);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred during login. Please try again.'),
-        ),
-      );
+      final msg = FirebaseErrorTranslator.fromException(e as Exception);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       setState(() {
         _isLoading = false;
