@@ -3,16 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Your other local screens
-import 'package:isyfit/screens/isy_lab/isy_lab_main_screen.dart';
 import 'package:isyfit/screens/login_screen.dart';
-import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
 import 'manage_clients_screen.dart';
-import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
-import 'package:isyfit/screens/account/account_screen.dart';
-import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
-import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
 
 class PTDashboard extends StatelessWidget {
   const PTDashboard({Key? key}) : super(key: key);
