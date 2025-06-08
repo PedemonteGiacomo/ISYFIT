@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
         } else {
           final role = snapshot.data!.get('role');
           if (role == 'PT') {
-            return const PTDashboard(); // to PT Dashboard
+            return PTDashboard(); // to PT Dashboard
           } else if (role == 'Client') {
             return const ClientDashboard(); // to Client Dashboard
           } else {

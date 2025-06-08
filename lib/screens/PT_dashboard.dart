@@ -8,14 +8,17 @@ import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
+import 'package:isyfit/theme/app_gradients.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
 import 'package:isyfit/screens/isy_training/isy_training_main_screen.dart';
 import 'package:isyfit/screens/isy_check/isy_check_main_screen.dart';
+import '../services/client_repository.dart';
 
 class PTDashboard extends StatelessWidget {
-  const PTDashboard({Key? key}) : super(key: key);
+  PTDashboard({Key? key}) : super(key: key);
+  final ClientRepository _clientRepo = ClientRepository();
 
   /// Fetch logged-in user's name
   Future<String> _fetchUserName() async {
@@ -47,22 +50,10 @@ class PTDashboard extends StatelessWidget {
       return [];
     }
 
-    final clientIds = (ptData['clients'] as List<dynamic>);
-    final List<Map<String, dynamic>> clients = [];
-
-    // gather them
-    for (String clientId in clientIds) {
-      final clientDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(clientId)
-          .get();
-
-      if (clientDoc.exists) {
-        final clientData = clientDoc.data() as Map<String, dynamic>;
-        clientData['uid'] = clientId;
-        clients.add(clientData);
-      }
-    }
+    final clientIds = (ptData['clients'] as List<dynamic>)
+        .map((e) => e.toString())
+        .toList();
+    final clients = await _clientRepo.fetchClientsData(clientIds);
 
     // sort by lastInteractionTime descending
     clients.sort((a, b) {
@@ -252,17 +243,7 @@ class PTDashboard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.6),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        gradient: AppGradients.primary(Theme.of(context)),
                       ),
                       padding: const EdgeInsets.all(16.0),
                       child: Row(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/user_repository.dart';
 
 // Import your existing MedicalHistoryScreen
 import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
@@ -16,6 +15,7 @@ class IsyCheckMainScreen extends StatefulWidget {
 }
 
 class _IsyCheckMainScreenState extends State<IsyCheckMainScreen> {
+  final UserRepository _userRepo = UserRepository();
   late Future<bool> _isPTFuture;
   late String? _clientUid;
 
@@ -26,16 +26,7 @@ class _IsyCheckMainScreenState extends State<IsyCheckMainScreen> {
     _isPTFuture = _fetchIsPT();
   }
 
-  Future<bool> _fetchIsPT() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false; // or throw an error
-    final docSnap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    final data = docSnap.data() ?? {};
-    return (data['role'] == 'PT');
-  }
+  Future<bool> _fetchIsPT() => _userRepo.isCurrentUserPT();
 
   @override
   Widget build(BuildContext context) {

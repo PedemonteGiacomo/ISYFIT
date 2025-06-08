@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
+
+import 'package:isyfit/services/client_repository.dart';
 
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
 
+import "../utils/firebase_error_translator.dart";
 enum ClientSortOption {
   nameAsc,
   surnameAsc,
@@ -27,6 +29,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   bool _showFilterPanel = false;
   ClientSortOption _sortOption = ClientSortOption.nameAsc;
+  final ClientRepository _clientRepo = ClientRepository();
 
   @override
   void dispose() {
@@ -338,20 +341,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchClientsData(
-      List<dynamic> clientIds) async {
-    final List<Map<String, dynamic>> result = [];
-    for (final cId in clientIds) {
-      final docSnap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(cId)
-          .get();
-      if (docSnap.exists) {
-        final data = docSnap.data() as Map<String, dynamic>;
-        data['uid'] = cId;
-        result.add(data);
-      }
-    }
-    return result;
+      List<dynamic> clientIds) {
+    return _clientRepo.fetchClientsData(
+        clientIds.map((e) => e.toString()).toList());
   }
 
   Widget _buildClientTile(Map<String, dynamic> clientData, String clientUid) {
@@ -455,27 +447,10 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Not logged in');
-      final query = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .where('role', isEqualTo: 'Client')
-          .get();
 
-      if (query.docs.isNotEmpty) {
-        final clientDoc = query.docs.first;
-        final clientId = clientDoc.id;
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .update({
-          'clients': FieldValue.arrayUnion([clientId]),
-        });
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(clientId)
-            .update({'isSolo': false, 'supervisorPT': user.uid});
-
+      final clientId = await _clientRepo.findClientByEmail(email);
+      if (clientId != null) {
+        await _clientRepo.linkClientToPT(user.uid, clientId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Client added successfully!')),
@@ -732,44 +707,16 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       final currentPT = FirebaseAuth.instance.currentUser;
       if (currentPT == null) throw Exception('PT not logged in');
 
-      final secondaryApp = await Firebase.initializeApp(
-        name: 'secondaryApp',
-        options: Firebase.app().options,
-      );
-      final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
-
-      final cred = await secondaryAuth.createUserWithEmailAndPassword(
+      await _clientRepo.registerClient(
         email: email,
         password: password,
+        name: name,
+        surname: surname,
+        phone: phone,
+        gender: gender,
+        dob: dob,
+        ptUid: currentPT.uid,
       );
-      final clientUid = cred.user!.uid;
-
-      await secondaryAuth.signOut();
-      await secondaryApp.delete();
-
-      final docData = {
-        'role': 'Client',
-        'email': email,
-        'name': name,
-        'surname': surname,
-        'isSolo': false,
-        'supervisorPT': currentPT.uid,
-      };
-      if (phone.isNotEmpty) docData['phone'] = phone;
-      if (gender != null) docData['gender'] = gender;
-      if (dob != null) docData['dateOfBirth'] = dob.toIso8601String();
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(clientUid)
-          .set(docData);
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentPT.uid)
-          .update({
-        'clients': FieldValue.arrayUnion([clientUid]),
-      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -779,15 +726,15 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       }
     } on FirebaseAuthException catch (fae) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Firebase Auth Error: ${fae.message}')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(fae);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error registering client: $e')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(e as Exception);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -797,17 +744,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Not authenticated.');
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-        'clients': FieldValue.arrayRemove([clientId])
-      });
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(clientId)
-          .update({'isSolo': true, 'supervisorPT': FieldValue.delete()});
+      await _clientRepo.unlinkClientFromPT(user.uid, clientId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -817,9 +754,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error removing client: $e')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(e as Exception);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
