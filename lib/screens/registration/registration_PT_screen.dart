@@ -149,6 +149,11 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
           await Stripe.instance.presentPaymentSheet();
 
           // ── 8. Successo → salva utente su Firestore ──
+          if (_selectedCountryCode == null) {
+            setState(() => _isPayLoading = false);
+            return _msg('Please select a country code.');
+          }
+
           await FirebaseFirestore.instance
               .collection('users')
               .doc(uid)

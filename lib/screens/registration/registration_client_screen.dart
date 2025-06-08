@@ -91,6 +91,14 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       );
 
       // 4) Prepare doc for Firestore
+      if (_selectedCountryCode == null) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a country code.')),
+        );
+        return;
+      }
+
       final clientData = <String, dynamic>{
         'role': 'Client',
         'email': _emailController.text.trim(),
