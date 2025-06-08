@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_gradients.dart';
 
 class GradientButton extends StatelessWidget {
   final String label;
@@ -23,10 +24,7 @@ class GradientButton extends StatelessWidget {
     final theme = Theme.of(context);
     // If no custom gradient colors are provided,
     // we default to the same style as GradientAppBar.
-    final defaultGradient = [
-      theme.colorScheme.primary,
-      theme.colorScheme.primary.withOpacity(0.6),
-    ];
+    final defaultGradient = AppGradients.primaryColors(theme);
 
     return Material(
       // Material is needed so the InkWell can show a proper ripple effect

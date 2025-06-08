@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 import 'package:dropdown_button2/dropdown_button2.dart';
 
 import '../../widgets/country_codes.dart';
 import '../../widgets/gradient_app_bar.dart';
+import "../../utils/firebase_error_translator.dart";
 import '../base_screen.dart';
 import 'plan_selection_screen.dart';
 
@@ -27,6 +29,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   final _vatController        = TextEditingController();
   final _legalInfoController  = TextEditingController();
   final _phoneController      = TextEditingController();
+  final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State --------------------
   String? _selectedCountryCode;
@@ -65,6 +68,14 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     if (!_agreeToTerms) return _msg('You must accept terms.');
     if (!_isEmailValid) return _msg('Invalid email.');
     if (!_pwdOk)        return _msg('Password not strong enough.');
+    if (_nameController.text.trim().isEmpty)      return _msg('Please enter your name.');
+    if (_surnameController.text.trim().isEmpty)   return _msg('Please enter your surname.');
+    if (_selectedCountryCode == null)             return _msg('Please select a country code.');
+    if (_phoneController.text.trim().isEmpty)     return _msg('Please enter your phone number.');
+    if (_vatController.text.trim().isEmpty)       return _msg('Please enter your VAT/P.IVA.');
+    if (_legalInfoController.text.trim().isEmpty) return _msg('Please enter legal info.');
+    if (_selectedDate == null)                    return _msg('Please select your date of birth.');
+    if (_gender == null)                          return _msg('Please select your gender.');
 
     // ── 2. Seleziona piano se non già fatto ───────────
     if (_selectedPlan == null) {
@@ -81,9 +92,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     UserCredential? cred;
     try {
       // ── 3. Crea utente Firebase Auth ─────────────────
-      cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email:    _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      cred = await _authRepo.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
       final uid = cred.user!.uid;
 
@@ -116,7 +127,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         if (data == null) return;
 
         if (data['error'] != null) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           return _msg(data['error']['message'] ?? 'Stripe error');
         }
 
@@ -150,7 +164,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
 
           // ── 8. Successo → salva utente su Firestore ──
           if (_selectedCountryCode == null) {
-            setState(() => _isPayLoading = false);
+            setState(() {
+              _isPayLoading = false;
+              _isLoading = false;
+            });
             return _msg('Please select a country code.');
           }
 
@@ -177,17 +194,32 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
             (_) => false,
           );
         } on StripeException catch (e) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           _msg(e.error.message ?? 'Payment cancelled');
           await cred?.user?.delete();
         } catch (e) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           _msg('Payment error: $e');
           await cred?.user?.delete();
         }
       });
+    } on FirebaseAuthException catch (e) {
+      final msg = FirebaseErrorTranslator.fromException(e);
+      _msg(msg);
+      setState(() {
+        _isLoading    = false;
+        _isPayLoading = false;
+      });
+      if (cred?.user != null) await cred!.user!.delete();
     } catch (e) {
-      _msg('Registration error: $e');
+      final msg = FirebaseErrorTranslator.fromException(e as Exception);
+      _msg(msg);
       setState(() {
         _isLoading    = false;
         _isPayLoading = false;

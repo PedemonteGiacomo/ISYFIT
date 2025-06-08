@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_gradients.dart';
 
 class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -19,14 +20,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.6),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppGradients.primary(theme),
       ),
       child: AppBar(
         title: Text(title, 

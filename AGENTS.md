@@ -8,6 +8,7 @@ This repository contains a Flutter application. When modifying Dart code or othe
 - Include results of these commands in the PR Testing section. If `flutter` or `dart` is not installed, note the failure due to missing dependencies.
 - Follow conventional commit style for commit messages (e.g., `feat:`, `fix:`, `docs:`).
 
+
 ## Environment Setup
 
 The `dart` and `flutter` commands are required for formatting, analysis, and
@@ -19,4 +20,3 @@ installation:
 2. Run `flutter doctor` to verify your environment is configured correctly.
 3. Once the tools are installed, re-run `dart format .`, `flutter analyze`, and
    `flutter test` before committing.
-

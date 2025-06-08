@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../theme/app_gradients.dart';
 
 class PhotoCollectionTab extends StatefulWidget {
   final String clientUid;
@@ -215,8 +216,8 @@ class _PhotoCollectionTabState extends State<PhotoCollectionTab>
     required Widget childBelow,
   }) {
     // We'll create a gradient from the primary color to a slightly transparent version
-    final primary = Theme.of(context).colorScheme.primary;
-    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    final theme = Theme.of(context);
+    final onPrimary = theme.colorScheme.onPrimary;
 
     return Column(
       children: [
@@ -230,14 +231,7 @@ class _PhotoCollectionTabState extends State<PhotoCollectionTab>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primary,
-                  primary.withOpacity(0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppGradients.primary(theme),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(12),
                 topRight: const Radius.circular(12),
