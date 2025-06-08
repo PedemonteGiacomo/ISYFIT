@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "hello": "Hello",
+  "@hello": {
+    "description": "Greeting shown on the home screen"
+  }
+}
