@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/auth_repository.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import '../../widgets/country_codes.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../base_screen.dart';
 
+import "../../utils/firebase_error_translator.dart";
 class RegisterClientScreen extends StatefulWidget {
   const RegisterClientScreen({Key? key}) : super(key: key);
 
@@ -21,6 +23,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   final TextEditingController _surnameController  = TextEditingController();
   final TextEditingController _phoneController    = TextEditingController();
   final TextEditingController _ptEmailController  = TextEditingController();
+  final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State Variables --------------------
   String? _selectedCountryCode;
@@ -83,11 +86,11 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     // 3) Attempt creation
     setState(() => _isLoading = true);
 
+    UserCredential? userCredential;
     try {
-      final userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      userCredential = await _authRepo.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       // 4) Prepare doc for Firestore
@@ -151,14 +154,14 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         context,
         MaterialPageRoute(builder: (_) => const BaseScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      final msg = FirebaseErrorTranslator.fromException(e);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'An error occurred during registration. Please try again.\nError: $e',
-          ),
-        ),
-      );
+      final msg = FirebaseErrorTranslator.fromException(e as Exception);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       setState(() => _isLoading = false);
     }

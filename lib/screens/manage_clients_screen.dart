@@ -9,6 +9,7 @@ import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
 
+import "../utils/firebase_error_translator.dart";
 enum ClientSortOption {
   nameAsc,
   surnameAsc,
@@ -725,15 +726,15 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       }
     } on FirebaseAuthException catch (fae) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Firebase Auth Error: ${fae.message}')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(fae);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error registering client: $e')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(e as Exception);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -753,9 +754,9 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error removing client: $e')),
-        );
+        final msg = FirebaseErrorTranslator.fromException(e as Exception);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
