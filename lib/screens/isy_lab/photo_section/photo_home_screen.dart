@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/user_repository.dart';
 import '../../../theme/app_gradients.dart';
 
 // Our 3 tabs (each is a separate file, see below)
@@ -20,6 +20,7 @@ class PhotoHomeScreen extends StatefulWidget {
 }
 
 class _PhotoHomeScreenState extends State<PhotoHomeScreen> {
+  final UserRepository _userRepo = UserRepository();
   late Future<bool> _isPTFuture;
   late Future<Map<String, dynamic>?> _clientProfileFuture;
 
@@ -38,24 +39,10 @@ class _PhotoHomeScreenState extends State<PhotoHomeScreen> {
     _clientProfileFuture = isPTView ? _fetchClientProfile() : Future.value(null);
   }
 
-  Future<bool> _fetchIsPT() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    final docSnap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    final data = docSnap.data() ?? {};
-    return data['role'] == 'PT';
-  }
+  Future<bool> _fetchIsPT() => _userRepo.isCurrentUserPT();
 
-  Future<Map<String, dynamic>?> _fetchClientProfile() async {
-    final docSnap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.clientUid)
-        .get();
-    return docSnap.data();
-  }
+  Future<Map<String, dynamic>?> _fetchClientProfile() =>
+      _userRepo.fetchUserProfile(widget.clientUid);
 
   @override
   Widget build(BuildContext context) {
