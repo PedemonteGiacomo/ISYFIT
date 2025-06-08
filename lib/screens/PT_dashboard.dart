@@ -8,6 +8,7 @@ import 'package:isyfit/screens/login_screen.dart';
 import 'package:isyfit/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
+import 'package:isyfit/theme/app_gradients.dart';
 import 'manage_clients_screen.dart';
 import 'package:isyfit/screens/medical_history/anamnesis_screen.dart';
 import 'package:isyfit/screens/account/account_screen.dart';
@@ -252,17 +253,7 @@ class PTDashboard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.6),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        gradient: AppGradients.primary(Theme.of(context)),
                       ),
                       padding: const EdgeInsets.all(16.0),
                       child: Row(

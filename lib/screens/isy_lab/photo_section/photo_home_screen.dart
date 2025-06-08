@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../theme/app_gradients.dart';
 
 // Our 3 tabs (each is a separate file, see below)
 import 'photo_insert_screen.dart';
@@ -129,14 +130,7 @@ class _PhotoHomeScreenWithTabsState extends State<PhotoHomeScreenWithTabs>
           Container(
             width: double.infinity, // ensure it's full width
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppGradients.primary(Theme.of(context)),
             ),
             child: TabBar(
               controller: _tabController,

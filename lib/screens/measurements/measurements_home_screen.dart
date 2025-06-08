@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../theme/app_gradients.dart';
 
 import 'measurements_complete_view_screen.dart';
 import 'measurements_insert_screen.dart';
@@ -90,14 +91,7 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                 // Gradient container for the TabBar
                 Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: AppGradients.primary(Theme.of(context)),
                   ),
                   // Build the TabBar depending on how many tabs
                   child: TabBar(

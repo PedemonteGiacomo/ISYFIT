@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_gradients.dart';
 
 class GradientButtonFFSS extends StatelessWidget {
   final String label;
@@ -25,10 +26,7 @@ class GradientButtonFFSS extends StatelessWidget {
     final theme = Theme.of(context);
     // If no custom gradient colors are provided,
     // we default to the same style as GradientAppBar.
-    final defaultGradient = [
-      theme.colorScheme.primary,
-      theme.colorScheme.primary.withOpacity(0.6),
-    ];
+    final defaultGradient = AppGradients.primaryColors(theme);
 
     // If onPressed is null, we’ll “disable” the InkWell 
     // by not providing a tap callback and dimming the gradient or text color if you like
