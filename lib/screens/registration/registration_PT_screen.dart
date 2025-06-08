@@ -65,6 +65,14 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     if (!_agreeToTerms) return _msg('You must accept terms.');
     if (!_isEmailValid) return _msg('Invalid email.');
     if (!_pwdOk)        return _msg('Password not strong enough.');
+    if (_nameController.text.trim().isEmpty)      return _msg('Please enter your name.');
+    if (_surnameController.text.trim().isEmpty)   return _msg('Please enter your surname.');
+    if (_selectedCountryCode == null)             return _msg('Please select a country code.');
+    if (_phoneController.text.trim().isEmpty)     return _msg('Please enter your phone number.');
+    if (_vatController.text.trim().isEmpty)       return _msg('Please enter your VAT/P.IVA.');
+    if (_legalInfoController.text.trim().isEmpty) return _msg('Please enter legal info.');
+    if (_selectedDate == null)                    return _msg('Please select your date of birth.');
+    if (_gender == null)                          return _msg('Please select your gender.');
 
     // ── 2. Seleziona piano se non già fatto ───────────
     if (_selectedPlan == null) {
@@ -116,7 +124,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         if (data == null) return;
 
         if (data['error'] != null) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           return _msg(data['error']['message'] ?? 'Stripe error');
         }
 
@@ -150,7 +161,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
 
           // ── 8. Successo → salva utente su Firestore ──
           if (_selectedCountryCode == null) {
-            setState(() => _isPayLoading = false);
+            setState(() {
+              _isPayLoading = false;
+              _isLoading = false;
+            });
             return _msg('Please select a country code.');
           }
 
@@ -177,11 +191,17 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
             (_) => false,
           );
         } on StripeException catch (e) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           _msg(e.error.message ?? 'Payment cancelled');
           await cred?.user?.delete();
         } catch (e) {
-          setState(() => _isPayLoading = false);
+          setState(() {
+            _isPayLoading = false;
+            _isLoading = false;
+          });
           _msg('Payment error: $e');
           await cred?.user?.delete();
         }
