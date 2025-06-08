@@ -18,8 +18,8 @@ class PhotoComparisonTab extends StatefulWidget {
 
 /// A helper model for the 4 “poses” or categories
 class PoseCategory {
-  final String key;            
-  final String displayName;    
+  final String key;
+  final String displayName;
   final String assetPlaceholder;
 
   PoseCategory({
@@ -400,7 +400,8 @@ class _PhotoComparisonTabState extends State<PhotoComparisonTab>
           final p = photos[i];
           final imageUrl = p['imageUrl'] ?? '';
           final dt = p['uploadDate'] as DateTime?;
-          final dateStr = (dt != null) ? DateFormat('yyyy-MM-dd').format(dt) : '';
+          final dateStr =
+              (dt != null) ? DateFormat('yyyy-MM-dd').format(dt) : '';
           final isOlder = (_olderPhoto == p);
           final isNewer = (_newerPhoto == p);
           return GestureDetector(
@@ -425,10 +426,12 @@ class _PhotoComparisonTabState extends State<PhotoComparisonTab>
                     top: 2,
                     child: Container(
                       color: Colors.black54,
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
                       child: Text(
                         dateStr,
-                        style: const TextStyle(fontSize: 9, color: Colors.white),
+                        style:
+                            const TextStyle(fontSize: 9, color: Colors.white),
                       ),
                     ),
                   ),
@@ -439,7 +442,8 @@ class _PhotoComparisonTabState extends State<PhotoComparisonTab>
                         alignment: Alignment.center,
                         child: Text(
                           isOlder ? 'Older' : 'Newer',
-                          style: const TextStyle(color: Colors.white, fontSize: 11),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 11),
                         ),
                       ),
                     ),
@@ -511,7 +515,8 @@ class _PhotoComparisonTabState extends State<PhotoComparisonTab>
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Center(
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 3,
           child: Container(
             width: 500,
@@ -672,9 +677,7 @@ class _CategoryCardWidget extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
           );
-    final textColor = isSelected
-        ? theme.colorScheme.onPrimary
-        : Colors.black87;
+    final textColor = isSelected ? theme.colorScheme.onPrimary : Colors.black87;
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -688,13 +691,14 @@ class _CategoryCardWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Image.asset(isMale ? data.assetPathMale : data.assetPathFemale, height: 70),
+              Image.asset(isMale ? data.assetPathMale : data.assetPathFemale,
+                  height: 70),
               Text(
                 data.label,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -751,7 +755,8 @@ class _SlidingOverlayState extends State<_SlidingOverlay> {
                       return const Center(child: CircularProgressIndicator());
                     },
                     errorBuilder: (ctx, error, stack) {
-                      return const Center(child: Icon(Icons.error, color: Colors.red));
+                      return const Center(
+                          child: Icon(Icons.error, color: Colors.red));
                     },
                   ),
                 ),
@@ -768,9 +773,13 @@ class _SlidingOverlayState extends State<_SlidingOverlay> {
                   child: _overlayFraction < 0.1
                       ? const Text(
                           'Swipe',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
                         )
-                      : const Icon(Icons.drag_handle, color: Colors.white70, size: 24),
+                      : const Icon(Icons.drag_handle,
+                          color: Colors.white70, size: 24),
                 ),
               ),
             ],

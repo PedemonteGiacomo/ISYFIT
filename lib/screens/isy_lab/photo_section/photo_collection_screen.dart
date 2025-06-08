@@ -139,7 +139,8 @@ class _PhotoCollectionTabState extends State<PhotoCollectionTab>
                   onPressed: _refresh,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Icon(Icons.refresh, color: Theme.of(context).colorScheme.onPrimary),
+                  child: Icon(Icons.refresh,
+                      color: Theme.of(context).colorScheme.onPrimary),
                 ),
                 const SizedBox(height: 10),
                 // 2) Slider settings button

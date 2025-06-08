@@ -76,8 +76,7 @@ class _PlanCard extends StatelessWidget {
       onTap: () => Navigator.of(context).pop(doc),
       child: Card(
         elevation: 6,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -96,8 +95,7 @@ class _PlanCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Prezzi nested
-              FutureBuilder<
-                  List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
+              FutureBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
                 future: _loadPrices(),
                 builder: (ctx, snap2) {
                   if (snap2.connectionState != ConnectionState.done) {
@@ -113,9 +111,7 @@ class _PlanCard extends StatelessWidget {
                       final interval = rec['interval'] ?? 'month';
                       return Text(
                         '€${amount.toStringAsFixed(2)} / $interval',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium,
+                        style: Theme.of(context).textTheme.headlineMedium,
                       );
                     }).toList(),
                   );

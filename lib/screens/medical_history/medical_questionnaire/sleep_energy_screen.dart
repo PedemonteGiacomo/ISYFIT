@@ -90,17 +90,17 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
       appBar: GradientAppBar(
         title: 'IsyCheck - Anamnesis Data Insertion',
         actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
 
       body: SingleChildScrollView(
@@ -229,7 +229,9 @@ class _SleepEnergyScreenState extends State<SleepEnergyScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Text(
-                      time != null ? time.format(context) : 'Tap to select time',
+                      time != null
+                          ? time.format(context)
+                          : 'Tap to select time',
                       style: TextStyle(
                         fontSize: 14,
                         color: time != null ? Colors.black : Colors.grey,

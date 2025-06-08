@@ -22,10 +22,7 @@ class IsyClientOptionsDialog extends StatelessWidget {
   Future<void> _recordInteraction() async {
     final pt = FirebaseAuth.instance.currentUser;
     if (pt == null) return;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(clientUid)
-        .update({
+    await FirebaseFirestore.instance.collection('users').doc(clientUid).update({
       'lastInteractionTime': FieldValue.serverTimestamp(),
       'lastInteractionBy': pt.uid,
     });
@@ -47,7 +44,8 @@ class IsyClientOptionsDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
+            leading:
+                Icon(Icons.fitness_center, color: theme.colorScheme.primary),
             title: const Text('IsyTraining'),
             onTap: () async {
               final nav = Navigator.of(context);
@@ -73,7 +71,6 @@ class IsyClientOptionsDialog extends StatelessWidget {
               ));
             },
           ),
-
           ListTile(
             leading: const Icon(Icons.medical_services, color: Colors.red),
             title: const Text('IsyCheck'),

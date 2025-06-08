@@ -10,6 +10,7 @@ import 'package:isyfit/widgets/gradient_app_bar.dart';
 import 'package:isyfit/widgets/isy_client_options_dialog.dart';
 
 import "../utils/firebase_error_translator.dart";
+
 enum ClientSortOption {
   nameAsc,
   surnameAsc,
@@ -88,7 +89,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,  // Add this line
+        crossAxisAlignment: CrossAxisAlignment.end, // Add this line
         children: [
           // Refresh FAB
           Padding(
@@ -126,7 +127,6 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
           _buildSearchBar(),
           if (_showFilterPanel) _buildFilterPanel(),
           const Divider(),
-
           Expanded(
             child: (currentUser == null)
                 ? const Center(child: Text('Not logged in.'))
@@ -342,8 +342,8 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchClientsData(
       List<dynamic> clientIds) {
-    return _clientRepo.fetchClientsData(
-        clientIds.map((e) => e.toString()).toList());
+    return _clientRepo
+        .fetchClientsData(clientIds.map((e) => e.toString()).toList());
   }
 
   Widget _buildClientTile(Map<String, dynamic> clientData, String clientUid) {

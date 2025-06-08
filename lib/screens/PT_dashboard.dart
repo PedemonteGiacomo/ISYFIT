@@ -50,9 +50,8 @@ class PTDashboard extends StatelessWidget {
       return [];
     }
 
-    final clientIds = (ptData['clients'] as List<dynamic>)
-        .map((e) => e.toString())
-        .toList();
+    final clientIds =
+        (ptData['clients'] as List<dynamic>).map((e) => e.toString()).toList();
     final clients = await _clientRepo.fetchClientsData(clientIds);
 
     // sort by lastInteractionTime descending
@@ -278,63 +277,72 @@ class PTDashboard extends StatelessWidget {
 
                 /// 2) Recent Clients + "View All" Button
                 Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Row(
                       children: [
-                      Icon(Icons.group, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Recent Clients",
-                        style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        Icon(Icons.group,
+                            color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Recent Clients",
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
                       ],
                     ),
                     Material(
                       elevation: 4,
                       borderRadius: BorderRadius.circular(12),
                       child: Ink(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                          builder: (_) => const ManageClientsScreen(),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.7),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        );
-                        },
-                        child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                          Icon(Icons.settings, color: Theme.of(context).colorScheme.onPrimary),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Manage",
-                            style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ManageClientsScreen(),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.settings,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Manage",
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          ],
                         ),
-                        ),
-                      ),
                       ),
                     ),
                   ],

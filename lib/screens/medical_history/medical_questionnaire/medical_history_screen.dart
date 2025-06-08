@@ -42,7 +42,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     _IconChoice('Other', Icons.help_outline),
   ];
   String? _selectedMuscleIssue;
-  final TextEditingController otherMuscleIssueController = TextEditingController();
+  final TextEditingController otherMuscleIssueController =
+      TextEditingController();
 
   // Single-choice icons for injuries
   final List<_IconChoice> _injuryOptions = [
@@ -56,9 +57,15 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   final TextEditingController otherInjuryController = TextEditingController();
 
   // Pathologies => multi-select chips
-  final List<String> _pathologyOptions = ['Diabetes', 'Hypertension', 'Cardiac', 'Other'];
+  final List<String> _pathologyOptions = [
+    'Diabetes',
+    'Hypertension',
+    'Cardiac',
+    'Other'
+  ];
   final List<String> _selectedPathologies = [];
-  final TextEditingController otherPathologyController = TextEditingController();
+  final TextEditingController otherPathologyController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -70,9 +77,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     widget.data['asthmatic'] ??= 'No';
 
     spineJointMuscleIssues = (widget.data['spineJointMuscleIssues'] == 'Yes');
-    injuriesOrSurgery      = (widget.data['injuriesOrSurgery'] == 'Yes');
-    pathologies            = (widget.data['pathologies'] == 'Yes');
-    asthmatic              = (widget.data['asthmatic'] == 'Yes');
+    injuriesOrSurgery = (widget.data['injuriesOrSurgery'] == 'Yes');
+    pathologies = (widget.data['pathologies'] == 'Yes');
+    asthmatic = (widget.data['asthmatic'] == 'Yes');
 
     // If user had typed details for muscle issues or injuries before, parse them if you'd like.
     // We'll do a basic approach: if it matches one of our labels, set it; else "Other".
@@ -113,10 +120,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   // Proceed to Sleep/Energy screen
   void _goToNextScreen() {
     // Convert toggles to Yes/No
-    widget.data['spineJointMuscleIssues'] = spineJointMuscleIssues ? 'Yes' : 'No';
-    widget.data['injuriesOrSurgery']      = injuriesOrSurgery      ? 'Yes' : 'No';
-    widget.data['pathologies']           = pathologies            ? 'Yes' : 'No';
-    widget.data['asthmatic']             = asthmatic              ? 'Yes' : 'No';
+    widget.data['spineJointMuscleIssues'] =
+        spineJointMuscleIssues ? 'Yes' : 'No';
+    widget.data['injuriesOrSurgery'] = injuriesOrSurgery ? 'Yes' : 'No';
+    widget.data['pathologies'] = pathologies ? 'Yes' : 'No';
+    widget.data['asthmatic'] = asthmatic ? 'Yes' : 'No';
 
     // If spineJointMuscleIssues => store chosen or typed
     if (!spineJointMuscleIssues) {
@@ -125,9 +133,11 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       widget.data['spineJointMuscleIssuesDetails'] = '';
     } else {
       if (_selectedMuscleIssue == 'Other') {
-        widget.data['spineJointMuscleIssuesDetails'] = otherMuscleIssueController.text.trim();
+        widget.data['spineJointMuscleIssuesDetails'] =
+            otherMuscleIssueController.text.trim();
       } else {
-        widget.data['spineJointMuscleIssuesDetails'] = _selectedMuscleIssue ?? '';
+        widget.data['spineJointMuscleIssuesDetails'] =
+            _selectedMuscleIssue ?? '';
       }
     }
 
@@ -138,7 +148,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       widget.data['injuriesOrSurgeryDetails'] = '';
     } else {
       if (_selectedInjury == 'Other') {
-        widget.data['injuriesOrSurgeryDetails'] = otherInjuryController.text.trim();
+        widget.data['injuriesOrSurgeryDetails'] =
+            otherInjuryController.text.trim();
       } else {
         widget.data['injuriesOrSurgeryDetails'] = _selectedInjury ?? '';
       }
@@ -179,17 +190,17 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       appBar: GradientAppBar(
         title: 'IsyCheck - Anamnesis Data Insertion',
         actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -199,7 +210,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               padding: const EdgeInsets.all(16),
               child: Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Form(
@@ -234,10 +246,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           label: 'Do you have spine, joint, or muscle issues?',
                           value: spineJointMuscleIssues,
                           icon: Icons.accessibility_new_outlined,
-                          onChanged: (v) => setState(() => spineJointMuscleIssues = v),
+                          onChanged: (v) =>
+                              setState(() => spineJointMuscleIssues = v),
                         ),
                         if (spineJointMuscleIssues) _buildMuscleIssueIcons(),
-                        if (spineJointMuscleIssues && _selectedMuscleIssue == 'Other')
+                        if (spineJointMuscleIssues &&
+                            _selectedMuscleIssue == 'Other')
                           _buildMuscleIssueOtherField(),
                         const SizedBox(height: 16),
 
@@ -246,7 +260,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           label: 'Have you had any injuries or surgery?',
                           value: injuriesOrSurgery,
                           icon: Icons.healing_outlined,
-                          onChanged: (v) => setState(() => injuriesOrSurgery = v),
+                          onChanged: (v) =>
+                              setState(() => injuriesOrSurgery = v),
                         ),
                         if (injuriesOrSurgery) _buildInjuryIcons(),
                         if (injuriesOrSurgery && _selectedInjury == 'Other')
@@ -334,10 +349,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 12.0),
                   child: InkWell(
-                    onTap: () => setState(() => _selectedMuscleIssue = choice.label),
+                    onTap: () =>
+                        setState(() => _selectedMuscleIssue = choice.label),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? theme.colorScheme.primary.withOpacity(0.2)
@@ -365,7 +382,9 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                               color: isSelected
                                   ? theme.colorScheme.primary
                                   : Colors.black,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -414,7 +433,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Select your injury/surgery:', style: theme.textTheme.labelLarge),
+          Text('Select your injury/surgery:',
+              style: theme.textTheme.labelLarge),
           const SizedBox(height: 6),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -427,7 +447,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     onTap: () => setState(() => _selectedInjury = choice.label),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? theme.colorScheme.primary.withOpacity(0.2)
@@ -452,8 +473,12 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                           Text(
                             choice.label,
                             style: TextStyle(
-                              color: isSelected ? theme.colorScheme.primary : Colors.black,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.black,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -524,7 +549,8 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                 controller: otherPathologyController,
                 decoration: InputDecoration(
                   labelText: 'Describe your pathology',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   filled: true,
                   fillColor: theme.colorScheme.surface,
                 ),

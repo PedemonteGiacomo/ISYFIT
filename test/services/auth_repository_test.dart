@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:isyfit/services/auth_repository.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockUserCredential extends Mock implements UserCredential {}
 
 void main() {
@@ -23,20 +24,21 @@ void main() {
     final result = await repository.signIn('e', 'p');
 
     expect(result, credential);
-    verify(() =>
-            mockAuth.signInWithEmailAndPassword(email: 'e', password: 'p'))
+    verify(() => mockAuth.signInWithEmailAndPassword(email: 'e', password: 'p'))
         .called(1);
   });
 
   test('register delegates to FirebaseAuth', () async {
     final credential = MockUserCredential();
-    when(() => mockAuth.createUserWithEmailAndPassword(email: 'e', password: 'p'))
+    when(() =>
+            mockAuth.createUserWithEmailAndPassword(email: 'e', password: 'p'))
         .thenAnswer((_) async => credential);
 
     final result = await repository.register('e', 'p');
 
     expect(result, credential);
-    verify(() => mockAuth.createUserWithEmailAndPassword(email: 'e', password: 'p'))
+    verify(() =>
+            mockAuth.createUserWithEmailAndPassword(email: 'e', password: 'p'))
         .called(1);
   });
 }

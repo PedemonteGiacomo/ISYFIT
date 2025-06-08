@@ -12,7 +12,7 @@ class GradientButtonFFSS extends StatelessWidget {
   const GradientButtonFFSS({
     Key? key,
     required this.label,
-    // Notice we change to `VoidCallback?` 
+    // Notice we change to `VoidCallback?`
     // and remove the "required" from onPressed
     this.onPressed,
     this.icon,
@@ -28,7 +28,7 @@ class GradientButtonFFSS extends StatelessWidget {
     // we default to the same style as GradientAppBar.
     final defaultGradient = AppGradients.primaryColors(theme);
 
-    // If onPressed is null, we’ll “disable” the InkWell 
+    // If onPressed is null, we’ll “disable” the InkWell
     // by not providing a tap callback and dimming the gradient or text color if you like
     final isDisabled = onPressed == null;
 
@@ -62,7 +62,7 @@ class GradientButtonFFSS extends StatelessWidget {
             children: [
               if (icon != null) ...[
                 Icon(
-                  icon, 
+                  icon,
                   color: isDisabled
                       ? theme.colorScheme.onPrimary.withOpacity(0.4)
                       : theme.colorScheme.onPrimary,

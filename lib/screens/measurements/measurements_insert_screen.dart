@@ -9,7 +9,7 @@ import 'package:isyfit/widgets/measurement_type_tab_bar_widget.dart'; // <<-- Im
 /// Tab 0: BIA form fields
 /// Tab 1: USArmy form fields
 /// Tab 2: Plicometro form fields
-/// 
+///
 /// Each tab can have its own "Save" button (or you can unify them).
 class MeasurementsInsertScreen extends StatefulWidget {
   final String? clientUid;
@@ -74,7 +74,8 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
   Future<String> _fetchGender() async {
     final uid = widget.clientUid ?? FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return 'Unknown';
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     final data = doc.data() ?? {};
     return data['gender'] ?? 'Unknown';
   }
@@ -82,9 +83,10 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
   Future<double> _fetchAge() async {
     final uid = widget.clientUid ?? FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return 30;
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     final data = doc.data() ?? {};
-    if (data['dateOfBirth'] == null) return 30; 
+    if (data['dateOfBirth'] == null) return 30;
     final dob = DateTime.tryParse(data['dateOfBirth']);
     if (dob == null) return 30;
     final now = DateTime.now();
@@ -122,18 +124,17 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       return numerator / denominator - 450.0;
     } else {
       final numerator = 495.0;
-      final denominator = (1.0324 -
-          0.19077 * ln(waistCm - neckCm) +
-          0.15456 * ln(heightCm));
+      final denominator =
+          (1.0324 - 0.19077 * ln(waistCm - neckCm) + 0.15456 * ln(heightCm));
       return numerator / denominator - 450.0;
     }
   }
 
   double _calcBodyFatPlic(double sumOfPlic, double age) {
-    final density = 1.109380
-        - 0.0008267 * sumOfPlic
-        + 0.0000016 * sumOfPlic * sumOfPlic
-        - 0.0002574 * age;
+    final density = 1.109380 -
+        0.0008267 * sumOfPlic +
+        0.0000016 * sumOfPlic * sumOfPlic -
+        0.0002574 * age;
     return (495 / density) - 450;
   }
 
@@ -218,18 +219,24 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           const SizedBox(height: 16),
           _buildNumberField(_biaHeightCtrl, "Height (cm) *"),
           _buildNumberField(_biaWeightCtrl, "Weight (kg) *"),
-          _buildNumberField(_biaSkeletalMuscleMassCtrl, "Skeletal Muscle Mass (kg)"),
+          _buildNumberField(
+              _biaSkeletalMuscleMassCtrl, "Skeletal Muscle Mass (kg)"),
           _buildNumberField(_biaBodyFatKgCtrl, "Body Fat (kg)"),
           _buildNumberField(_biaBMICtrl, "BMI (optional; can auto-compute)"),
-          _buildNumberField(_biaBasalMetabolicRateCtrl, "Basal Metabolic Rate (kcal)"),
+          _buildNumberField(
+              _biaBasalMetabolicRateCtrl, "Basal Metabolic Rate (kcal)"),
           _buildNumberField(_biaWaistHipRatioCtrl, "Waist-Hip Ratio"),
           _buildNumberField(_biaVisceralFatLevelCtrl, "Visceral Fat Level"),
           _buildNumberField(_biaTargetWeightCtrl, "Target Weight"),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSaveBIA(gender, age),
-            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
-            label: Text("Save BIA", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
+            icon: Icon(Icons.save,
+                color: Theme.of(context).colorScheme.onPrimary),
+            label: Text(
+              "Save BIA",
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
@@ -252,8 +259,7 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
         'basalMetabolicRate':
             double.tryParse(_biaBasalMetabolicRateCtrl.text) ?? 0,
         'waistHipRatio': double.tryParse(_biaWaistHipRatioCtrl.text) ?? 0,
-        'visceralFatLevel':
-            double.tryParse(_biaVisceralFatLevelCtrl.text) ?? 0,
+        'visceralFatLevel': double.tryParse(_biaVisceralFatLevelCtrl.text) ?? 0,
         'targetWeight': double.tryParse(_biaTargetWeightCtrl.text) ?? 0,
       };
 
@@ -314,13 +320,18 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           _buildNumberField(_armyHeightCtrl, "Height (cm) *"),
           _buildNumberField(_armyNeckCtrl, "Neck (cm) *"),
           _buildNumberField(_armyWaistCtrl, "Waist (cm) *"),
-          if (isFemale) _buildNumberField(_armyHipsCtrl, "Hips (cm) (female) *"),
+          if (isFemale)
+            _buildNumberField(_armyHipsCtrl, "Hips (cm) (female) *"),
           _buildNumberField(_armyWristCtrl, "Wrist (cm) (morphology)"),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSaveUSArmy(gender, age),
-            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
-            label: Text("Save U.S. Army", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
+            icon: Icon(Icons.save,
+                color: Theme.of(context).colorScheme.onPrimary),
+            label: Text(
+              "Save U.S. Army",
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
@@ -432,8 +443,12 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => _onSavePlic(gender, age),
-            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
-            label: Text("Save Plicometer", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
+            icon: Icon(Icons.save,
+                color: Theme.of(context).colorScheme.onPrimary),
+            label: Text(
+              "Save Plicometer",
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
         ],
       ),
@@ -475,7 +490,7 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       }
 
       // Example isyScore
-      double guessedBMI = 25.0; 
+      double guessedBMI = 25.0;
       double isyScore = _computeIsyScore(
         bmi: guessedBMI,
         bodyFatPercent: bf,

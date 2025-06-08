@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';  // for CupertinoPicker
+import 'package:flutter/cupertino.dart'; // for CupertinoPicker
 import 'package:flutter/material.dart';
 import 'package:isyfit/screens/base_screen.dart';
 import 'package:isyfit/widgets/gradient_app_bar.dart';
@@ -16,12 +16,14 @@ class PhysicalMeasurementsScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PhysicalMeasurementsScreenState createState() => _PhysicalMeasurementsScreenState();
+  _PhysicalMeasurementsScreenState createState() =>
+      _PhysicalMeasurementsScreenState();
 }
 
-class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen> {
+class _PhysicalMeasurementsScreenState
+    extends State<PhysicalMeasurementsScreen> {
   // Default to 170 cm, 70 kg if not found in widget.data
-  int _selectedHeight = 170; 
+  int _selectedHeight = 170;
   int _selectedWeight = 70;
 
   @override
@@ -56,15 +58,15 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
           alignment: Alignment.bottomCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(
-              maxWidth: 400,    // <<-- ADJUST THIS as needed
-              maxHeight: 320,  // enough for the header + picker
+              maxWidth: 400, // <<-- ADJUST THIS as needed
+              maxHeight: 320, // enough for the header + picker
             ),
             child: Container(
               // Round top corners
               decoration: const BoxDecoration(
-                color: Colors.white, 
+                color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16), 
+                  topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
               ),
@@ -73,9 +75,13 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
                 children: [
                   // A small header row with a "Done" button
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
@@ -86,9 +92,10 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(ctx).pop(),
@@ -214,7 +221,8 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
                           minValue: 80,
                           maxValue: 250,
                           currentValue: _selectedHeight,
-                          onSelected: (val) => setState(() => _selectedHeight = val),
+                          onSelected: (val) =>
+                              setState(() => _selectedHeight = val),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -229,7 +237,8 @@ class _PhysicalMeasurementsScreenState extends State<PhysicalMeasurementsScreen>
                           minValue: 30,
                           maxValue: 200,
                           currentValue: _selectedWeight,
-                          onSelected: (val) => setState(() => _selectedWeight = val),
+                          onSelected: (val) =>
+                              setState(() => _selectedWeight = val),
                         ),
                       ),
 

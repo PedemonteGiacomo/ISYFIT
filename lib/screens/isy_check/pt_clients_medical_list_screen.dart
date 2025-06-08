@@ -17,10 +17,12 @@ class PTClientsMedicalListScreen extends StatefulWidget {
   const PTClientsMedicalListScreen({Key? key}) : super(key: key);
 
   @override
-  State<PTClientsMedicalListScreen> createState() => _PTClientsMedicalListScreenState();
+  State<PTClientsMedicalListScreen> createState() =>
+      _PTClientsMedicalListScreenState();
 }
 
-class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen> {
+class _PTClientsMedicalListScreenState
+    extends State<PTClientsMedicalListScreen> {
   bool showClientsWithoutData = false;
 
   // We'll store the entire list once loaded, so we can filter
@@ -95,7 +97,8 @@ class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen>
       if (searchLower.isEmpty) return true;
       final nameLower = (c['name'] as String).toLowerCase();
       final emailLower = (c['email'] as String).toLowerCase();
-      return nameLower.contains(searchLower) || emailLower.contains(searchLower);
+      return nameLower.contains(searchLower) ||
+          emailLower.contains(searchLower);
     }).toList();
 
     return finalFiltered;
@@ -190,7 +193,8 @@ class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen>
                     // More "engaging" style: leading circle + trailing badge
                     return Card(
                       margin: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8,
+                        horizontal: 16,
+                        vertical: 8,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -216,7 +220,7 @@ class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen>
                         trailing: hasData
                             ? Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.green.shade100,
                                   borderRadius: BorderRadius.circular(8),
@@ -228,7 +232,7 @@ class _PTClientsMedicalListScreenState extends State<PTClientsMedicalListScreen>
                               )
                             : Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade100,
                                   borderRadius: BorderRadius.circular(8),

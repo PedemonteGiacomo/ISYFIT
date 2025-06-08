@@ -68,7 +68,13 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
 
   // Preferred training days
   final List<String> daysOfWeek = [
-    'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
   final List<String> selectedDays = [];
 
@@ -86,10 +92,11 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     super.initState();
     // Populate from data map if existing
     _selectedSportsExp = widget.data['sportExperience'] as String?;
-    _selectedGymExp    = widget.data['gymExperience'] as String?;
-    hadPTBefore        = (widget.data['otherPTExperience'] != null &&
-                          (widget.data['otherPTExperience'] as String).isNotEmpty);
-    _ptExperienceFeedback = hadPTBefore ? widget.data['otherPTExperience'] as String? : null;
+    _selectedGymExp = widget.data['gymExperience'] as String?;
+    hadPTBefore = (widget.data['otherPTExperience'] != null &&
+        (widget.data['otherPTExperience'] as String).isNotEmpty);
+    _ptExperienceFeedback =
+        hadPTBefore ? widget.data['otherPTExperience'] as String? : null;
 
     timesPerWeek = widget.data['timesPerWeek'] ?? 3;
 
@@ -118,7 +125,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     }
     if (hadPTBefore && _ptExperienceFeedback == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select how your PT experience was.')),
+        const SnackBar(
+            content: Text('Please select how your PT experience was.')),
       );
       return;
     }
@@ -130,14 +138,15 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
     }
     if (_selectedTimePref == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a preferred training time.')),
+        const SnackBar(
+            content: Text('Please select a preferred training time.')),
       );
       return;
     }
 
     // Store data
     widget.data['sportExperience'] = _selectedSportsExp;
-    widget.data['gymExperience']   = _selectedGymExp;
+    widget.data['gymExperience'] = _selectedGymExp;
     if (hadPTBefore) {
       widget.data['otherPTExperience'] = _ptExperienceFeedback ?? '';
     } else {
@@ -169,17 +178,17 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
       appBar: GradientAppBar(
         title: 'IsyCheck - Anamnesis Data Insertion',
         actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -189,7 +198,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -218,7 +228,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         title: 'Sports Experience',
                         choices: _sportsExpOptions,
                         selectedValue: _selectedSportsExp,
-                        onSelected: (val) => setState(() => _selectedSportsExp = val),
+                        onSelected: (val) =>
+                            setState(() => _selectedSportsExp = val),
                       ),
                       const SizedBox(height: 16),
 
@@ -227,7 +238,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         title: 'Gym Experience',
                         choices: _gymExpOptions,
                         selectedValue: _selectedGymExp,
-                        onSelected: (val) => setState(() => _selectedGymExp = val),
+                        onSelected: (val) =>
+                            setState(() => _selectedGymExp = val),
                       ),
                       const SizedBox(height: 16),
 
@@ -278,7 +290,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                         title: 'Preferred Training Time',
                         choices: _timeOptions,
                         selectedValue: _selectedTimePref,
-                        onSelected: (val) => setState(() => _selectedTimePref = val),
+                        onSelected: (val) =>
+                            setState(() => _selectedTimePref = val),
                       ),
                       const SizedBox(height: 32),
 
@@ -311,7 +324,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title,
-            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+            style: theme.textTheme.bodyLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
 
         // Force single horizontal row with horizontal scroll
@@ -326,14 +340,17 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                   onTap: () => onSelected(choice.label),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? theme.colorScheme.primary.withOpacity(0.2)
                           : theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? theme.colorScheme.primary : Colors.grey.shade300,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.grey.shade300,
                       ),
                     ),
                     child: Row(
@@ -341,14 +358,20 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                       children: [
                         Icon(
                           choice.icon,
-                          color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : Colors.grey,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           choice.label,
                           style: TextStyle(
-                            color: isSelected ? theme.colorScheme.primary : Colors.black,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : Colors.black,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -375,7 +398,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title,
-            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+            style: theme.textTheme.bodyLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
 
         // Single row scroll
@@ -392,7 +416,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                   onSelected: (sel) => onSelectChanged(option, sel),
                   selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                   labelStyle: TextStyle(
-                    color: isSelected ? theme.colorScheme.primary : Colors.black,
+                    color:
+                        isSelected ? theme.colorScheme.primary : Colors.black,
                   ),
                 ),
               );
@@ -410,7 +435,8 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
       children: [
         Text(
           'Previous Personal Trainer Experience',
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         SwitchListTile(
@@ -437,21 +463,26 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _ptExpOptions.map((option) {
-                    final bool isSelected = (_ptExperienceFeedback == option.label);
+                    final bool isSelected =
+                        (_ptExperienceFeedback == option.label);
                     return Padding(
                       padding: const EdgeInsets.only(right: 12.0),
                       child: InkWell(
-                        onTap: () => setState(() => _ptExperienceFeedback = option.label),
+                        onTap: () => setState(
+                            () => _ptExperienceFeedback = option.label),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 16),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? theme.colorScheme.primary.withOpacity(0.2)
                                 : theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? theme.colorScheme.primary : Colors.grey.shade300,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.grey.shade300,
                             ),
                           ),
                           child: Row(
@@ -459,14 +490,20 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                             children: [
                               Icon(
                                 option.icon,
-                                color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : Colors.grey,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 option.label,
                                 style: TextStyle(
-                                  color: isSelected ? theme.colorScheme.primary : Colors.black,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : Colors.black,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -505,14 +542,17 @@ class _TrainingGoalsScreenState extends State<TrainingGoalsScreen> {
                 onTap: () => setState(() => timesPerWeek = count),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
                     color: selected
                         ? theme.colorScheme.primary.withOpacity(0.2)
                         : theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: selected ? theme.colorScheme.primary : Colors.grey.shade300,
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : Colors.grey.shade300,
                     ),
                   ),
                   child: Text('$count'),

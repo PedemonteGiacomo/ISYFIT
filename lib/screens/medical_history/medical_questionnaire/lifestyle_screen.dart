@@ -45,7 +45,8 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
   // --------------------------- Breakfast Additions ---------------------------
   bool eatsBreakfast = false;
   String? _selectedBreakfastChoice;
-  final TextEditingController _breakfastOtherController = TextEditingController();
+  final TextEditingController _breakfastOtherController =
+      TextEditingController();
 
   final List<_IconChoice> _breakfastOptions = [
     _IconChoice('Light (coffee + pastry)', Icons.coffee),
@@ -76,12 +77,12 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     widget.data['alcohol_details'] ??= '';
 
     // Convert "Yes"/"No" to booleans
-    drinksAlcohol   = (widget.data['alcohol'] == 'Yes');
-    smokes          = (widget.data['smokes'] == 'Yes');
+    drinksAlcohol = (widget.data['alcohol'] == 'Yes');
+    smokes = (widget.data['smokes'] == 'Yes');
     fixedWorkShifts = (widget.data['fixedWorkShifts'] == 'Yes');
 
     // Breakfast
-    eatsBreakfast   = (widget.data['breakfast'] == 'Yes');
+    eatsBreakfast = (widget.data['breakfast'] == 'Yes');
 
     // If there's a numeric water intake, parse it
     if (widget.data['waterIntake'] != null &&
@@ -126,8 +127,8 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
   // Save and navigate to medical screen
   void _goToNextScreen() {
     // Convert toggles to "Yes"/"No"
-    widget.data['alcohol']       = drinksAlcohol ? 'Yes' : 'No';
-    widget.data['smokes']        = smokes ? 'Yes' : 'No';
+    widget.data['alcohol'] = drinksAlcohol ? 'Yes' : 'No';
+    widget.data['smokes'] = smokes ? 'Yes' : 'No';
     widget.data['fixedWorkShifts'] = fixedWorkShifts ? 'Yes' : 'No';
 
     // Water intake
@@ -155,8 +156,7 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
     widget.data['breakfast'] = eatsBreakfast ? 'Yes' : 'No';
     if (eatsBreakfast && _selectedBreakfastChoice != null) {
       if (_selectedBreakfastChoice == 'Other') {
-        widget.data['breakfastDetails'] =
-            _breakfastOtherController.text.trim();
+        widget.data['breakfastDetails'] = _breakfastOtherController.text.trim();
       } else {
         widget.data['breakfastDetails'] = _selectedBreakfastChoice;
       }
@@ -184,17 +184,17 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
       appBar: GradientAppBar(
         title: 'IsyCheck - Anamnesis Data Insertion',
         actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -276,7 +276,8 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                           onChanged: (v) => setState(() => eatsBreakfast = v),
                         ),
                         if (eatsBreakfast) _buildBreakfastIconRow(),
-                        if (eatsBreakfast && _selectedBreakfastChoice == 'Other')
+                        if (eatsBreakfast &&
+                            _selectedBreakfastChoice == 'Other')
                           _buildBreakfastOtherField(),
                         const SizedBox(height: 32),
 
@@ -333,7 +334,6 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
         children: [
           Text('How often/how much?', style: theme.textTheme.labelLarge),
           const SizedBox(height: 6),
-
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -342,10 +342,12 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 12.0),
                   child: InkWell(
-                    onTap: () => setState(() => _selectedAlcoholFreq = choice.label),
+                    onTap: () =>
+                        setState(() => _selectedAlcoholFreq = choice.label),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? theme.colorScheme.primary.withOpacity(0.2)
@@ -362,7 +364,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                         children: [
                           Icon(
                             choice.icon,
-                            color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : Colors.grey,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -371,7 +375,9 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                               color: isSelected
                                   ? theme.colorScheme.primary
                                   : Colors.black,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -460,19 +466,21 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
         children: [
           Text('What kind of breakfast?', style: theme.textTheme.labelLarge),
           const SizedBox(height: 6),
-
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: _breakfastOptions.map((option) {
-                final bool isSelected = (_selectedBreakfastChoice == option.label);
+                final bool isSelected =
+                    (_selectedBreakfastChoice == option.label);
                 return Padding(
                   padding: const EdgeInsets.only(right: 12.0),
                   child: InkWell(
-                    onTap: () => setState(() => _selectedBreakfastChoice = option.label),
+                    onTap: () =>
+                        setState(() => _selectedBreakfastChoice = option.label),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? theme.colorScheme.primary.withOpacity(0.2)
@@ -489,14 +497,20 @@ class _LifestyleScreenState extends State<LifestyleScreen> {
                         children: [
                           Icon(
                             option.icon,
-                            color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : Colors.grey,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             option.label,
                             style: TextStyle(
-                              color: isSelected ? theme.colorScheme.primary : Colors.black,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : Colors.black,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],

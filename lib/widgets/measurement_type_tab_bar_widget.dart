@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_gradients.dart';
 
 /// A reusable 3‑tab bar for "BIA / USArmy / Plicometro"
-/// 
+///
 /// To use it:
 /// 1) In your State, create: late TabController _tabController;
 ///    inside `initState`, do: _tabController = TabController(length: 3, vsync: this);

@@ -79,7 +79,7 @@ class _IsyLabTwoTabScreen extends StatelessWidget {
     final String actualClientUid =
         clientUid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
     return DefaultTabController(
-      length: 2,  // Changed from 3 to 2
+      length: 2, // Changed from 3 to 2
       initialIndex: 1, // If you want "Measurements" as default
       child: Scaffold(
         bottomNavigationBar: const TabBar(
@@ -96,17 +96,17 @@ class _IsyLabTwoTabScreen extends StatelessWidget {
         appBar: GradientAppBar(
           title: "IsyLab",
           actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
+            IconButton(
+              icon: Icon(Icons.home,
+                  color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BaseScreen()),
+                );
+              },
+            ),
+          ],
         ),
         body: TabBarView(
           children: [

@@ -37,12 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e as Exception);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       setState(() {
         _isLoading = false;
@@ -130,7 +128,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: Text(
                               'Login',
-                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
                             ),
                           ),
                     const SizedBox(height: 16),

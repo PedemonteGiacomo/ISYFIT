@@ -12,7 +12,8 @@ class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({Key? key, this.clientUid}) : super(key: key);
 
   @override
-  _PersonalInformationScreenState createState() => _PersonalInformationScreenState();
+  _PersonalInformationScreenState createState() =>
+      _PersonalInformationScreenState();
 }
 
 class _PersonalInformationScreenState extends State<PersonalInformationScreen> {

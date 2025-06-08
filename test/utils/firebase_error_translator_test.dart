@@ -14,7 +14,8 @@ void main() {
     });
 
     test('translates FirebaseException codes', () {
-      final error = FirebaseException(plugin: 'firestore', code: 'permission-denied');
+      final error =
+          FirebaseException(plugin: 'firestore', code: 'permission-denied');
       expect(
         FirebaseErrorTranslator.fromException(error),
         'You do not have permission to perform this action.',

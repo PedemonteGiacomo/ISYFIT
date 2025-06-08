@@ -23,7 +23,8 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
         gradient: AppGradients.primary(theme),
       ),
       child: AppBar(
-        title: Text(title, 
+        title: Text(
+          title,
           style: TextStyle(color: theme.colorScheme.onPrimary),
         ),
         centerTitle: centerTitle,
@@ -38,5 +39,6 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(bottom?.preferredSize.height ?? kToolbarHeight);
+  Size get preferredSize =>
+      Size.fromHeight(bottom?.preferredSize.height ?? kToolbarHeight);
 }

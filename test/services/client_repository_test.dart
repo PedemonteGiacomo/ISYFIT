@@ -5,13 +5,25 @@ import 'package:mocktail/mocktail.dart';
 import 'package:isyfit/services/client_repository.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
-class MockQueryDocumentSnapshot extends Mock implements QueryDocumentSnapshot<Map<String, dynamic>> {}
+
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {}
+
+class MockQueryDocumentSnapshot extends Mock
+    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   late MockFirebaseFirestore firestore;
@@ -35,7 +47,9 @@ void main() {
 
       when(() => collection.doc('1')).thenReturn(docRef);
       when(() => collection.doc('2')).thenReturn(docRef);
-      when(() => docRef.get()).thenAnswer((_) async => docSnap1).thenAnswer((_) async => docSnap2);
+      when(() => docRef.get())
+          .thenAnswer((_) async => docSnap1)
+          .thenAnswer((_) async => docSnap2);
       when(() => docSnap1.exists).thenReturn(true);
       when(() => docSnap1.data()).thenReturn({'name': 'Alice'});
       when(() => docSnap2.exists).thenReturn(false);
@@ -56,7 +70,8 @@ void main() {
       final snapshot = MockQuerySnapshot();
       final doc = MockQueryDocumentSnapshot();
 
-      when(() => collection.where('email', isEqualTo: 'a@test.com')).thenReturn(query1);
+      when(() => collection.where('email', isEqualTo: 'a@test.com'))
+          .thenReturn(query1);
       when(() => query1.where('role', isEqualTo: 'Client')).thenReturn(query2);
       when(() => query2.limit(1)).thenReturn(query3);
       when(() => query3.get()).thenAnswer((_) async => snapshot);
@@ -74,7 +89,8 @@ void main() {
       final query3 = MockQuery();
       final snapshot = MockQuerySnapshot();
 
-      when(() => collection.where('email', isEqualTo: 'a@test.com')).thenReturn(query1);
+      when(() => collection.where('email', isEqualTo: 'a@test.com'))
+          .thenReturn(query1);
       when(() => query1.where('role', isEqualTo: 'Client')).thenReturn(query2);
       when(() => query2.limit(1)).thenReturn(query3);
       when(() => query3.get()).thenAnswer((_) async => snapshot);
@@ -97,8 +113,11 @@ void main() {
 
     await repository.linkClientToPT('pt', 'client');
 
-    verify(() => ptDoc.update({'clients': FieldValue.arrayUnion(['client'])})).called(1);
-    verify(() => clientDoc.update({'isSolo': false, 'supervisorPT': 'pt'})).called(1);
+    verify(() => ptDoc.update({
+          'clients': FieldValue.arrayUnion(['client'])
+        })).called(1);
+    verify(() => clientDoc.update({'isSolo': false, 'supervisorPT': 'pt'}))
+        .called(1);
   });
 
   test('unlinkClientFromPT updates documents', () async {
@@ -112,7 +131,11 @@ void main() {
 
     await repository.unlinkClientFromPT('pt', 'client');
 
-    verify(() => ptDoc.update({'clients': FieldValue.arrayRemove(['client'])})).called(1);
-    verify(() => clientDoc.update({'isSolo': true, 'supervisorPT': FieldValue.delete()})).called(1);
+    verify(() => ptDoc.update({
+          'clients': FieldValue.arrayRemove(['client'])
+        })).called(1);
+    verify(() => clientDoc
+            .update({'isSolo': true, 'supervisorPT': FieldValue.delete()}))
+        .called(1);
   });
 }

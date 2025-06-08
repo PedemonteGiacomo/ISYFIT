@@ -8,6 +8,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import '../base_screen.dart';
 
 import "../../utils/firebase_error_translator.dart";
+
 class RegisterClientScreen extends StatefulWidget {
   const RegisterClientScreen({Key? key}) : super(key: key);
 
@@ -17,33 +18,30 @@ class RegisterClientScreen extends StatefulWidget {
 
 class _RegisterClientScreenState extends State<RegisterClientScreen> {
   // -------------------- Controllers --------------------
-  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _nameController     = TextEditingController();
-  final TextEditingController _surnameController  = TextEditingController();
-  final TextEditingController _phoneController    = TextEditingController();
-  final TextEditingController _ptEmailController  = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surnameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _ptEmailController = TextEditingController();
   final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State Variables --------------------
   String? _selectedCountryCode;
   DateTime? _selectedDate;
-  bool _isLoading          = false;
-  bool _agreeToTerms       = false;
-  bool _showPasswordInfo   = false;
-  bool _emailFieldTouched  = false;
-  bool isSolo              = true; // If false => user wants to assign PT
+  bool _isLoading = false;
+  bool _agreeToTerms = false;
+  bool _showPasswordInfo = false;
+  bool _emailFieldTouched = false;
+  bool isSolo = true; // If false => user wants to assign PT
 
   // -------------------- Gender Field --------------------
   String? _gender; // "Male" or "Female"
 
   // -------------------- Password Requirements --------------------
-  bool get _hasUppercase =>
-      _passwordController.text.contains(RegExp(r'[A-Z]'));
-  bool get _hasLowercase =>
-      _passwordController.text.contains(RegExp(r'[a-z]'));
-  bool get _hasNumber =>
-      _passwordController.text.contains(RegExp(r'[0-9]'));
+  bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
+  bool get _hasLowercase => _passwordController.text.contains(RegExp(r'[a-z]'));
+  bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
   bool get _hasSpecialChar =>
       _passwordController.text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
   bool get _hasMinLength => _passwordController.text.length >= 8;
@@ -69,7 +67,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must agree to the terms and conditions to register.'),
+          content:
+              Text('You must agree to the terms and conditions to register.'),
         ),
       );
       return;
@@ -131,14 +130,11 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         }
 
         final ptDoc = ptQuery.docs.first;
-        final ptId  = ptDoc.id;
+        final ptId = ptDoc.id;
         clientData['supervisorPT'] = ptId; // link to that PT
 
         // Also add this client to PT’s "clients" array
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(ptId)
-            .update({
+        await FirebaseFirestore.instance.collection('users').doc(ptId).update({
           'clients': FieldValue.arrayUnion([userCredential.user!.uid]),
         });
       }
@@ -156,12 +152,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       );
     } on FirebaseAuthException catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e as Exception);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -218,11 +212,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildPasswordRequirement('At least 8 characters', _hasMinLength),
-                  _buildPasswordRequirement('At least one uppercase letter', _hasUppercase),
-                  _buildPasswordRequirement('At least one lowercase letter', _hasLowercase),
+                  _buildPasswordRequirement(
+                      'At least 8 characters', _hasMinLength),
+                  _buildPasswordRequirement(
+                      'At least one uppercase letter', _hasUppercase),
+                  _buildPasswordRequirement(
+                      'At least one lowercase letter', _hasLowercase),
                   _buildPasswordRequirement('At least one number', _hasNumber),
-                  _buildPasswordRequirement('At least one special character', _hasSpecialChar),
+                  _buildPasswordRequirement(
+                      'At least one special character', _hasSpecialChar),
                 ],
               ),
             )
@@ -235,62 +233,84 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     final theme = Theme.of(context);
     return Center(
       child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        //const Text("Gender: "),
-        const SizedBox(width: 12),
-        GestureDetector(
-        onTap: () {
-          setState(() {
-          _gender = "Male";
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          decoration: BoxDecoration(
-          color: _gender == "Male" ? theme.colorScheme.primary.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: _gender == "Male" ? theme.colorScheme.primary : Colors.grey,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          //const Text("Gender: "),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _gender = "Male";
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: _gender == "Male"
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _gender == "Male"
+                      ? theme.colorScheme.primary
+                      : Colors.grey,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.male,
+                      color: _gender == "Male"
+                          ? theme.colorScheme.primary
+                          : Colors.grey),
+                  const SizedBox(width: 8),
+                  Text("Male",
+                      style: TextStyle(
+                          color: _gender == "Male"
+                              ? theme.colorScheme.primary
+                              : Colors.grey)),
+                ],
+              ),
+            ),
           ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _gender = "Female";
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: _gender == "Female"
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _gender == "Female"
+                      ? theme.colorScheme.primary
+                      : Colors.grey,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.female,
+                      color: _gender == "Female"
+                          ? theme.colorScheme.primary
+                          : Colors.grey),
+                  const SizedBox(width: 8),
+                  Text("Female",
+                      style: TextStyle(
+                          color: _gender == "Female"
+                              ? theme.colorScheme.primary
+                              : Colors.grey)),
+                ],
+              ),
+            ),
           ),
-          child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.male, color: _gender == "Male" ? theme.colorScheme.primary : Colors.grey),
-            const SizedBox(width: 8),
-            Text("Male", style: TextStyle(color: _gender == "Male" ? theme.colorScheme.primary : Colors.grey)),
-          ],
-          ),
-        ),
-        ),
-        const SizedBox(width: 16),
-        GestureDetector(
-        onTap: () {
-          setState(() {
-          _gender = "Female";
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          decoration: BoxDecoration(
-          color: _gender == "Female" ? theme.colorScheme.primary.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: _gender == "Female" ? theme.colorScheme.primary : Colors.grey,
-          ),
-          ),
-          child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.female, color: _gender == "Female" ? theme.colorScheme.primary : Colors.grey),
-            const SizedBox(width: 8),
-            Text("Female", style: TextStyle(color: _gender == "Female" ? theme.colorScheme.primary : Colors.grey)),
-          ],
-          ),
-        ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -393,11 +413,16 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                prefixIcon: Icon(Icons.email, color: theme.colorScheme.primary),
+                                prefixIcon: Icon(Icons.email,
+                                    color: theme.colorScheme.primary),
                                 suffixIcon: _emailFieldTouched
                                     ? Icon(
-                                        _isEmailValid ? Icons.check_circle : Icons.cancel,
-                                        color: _isEmailValid ? Colors.green : Colors.red,
+                                        _isEmailValid
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: _isEmailValid
+                                            ? Colors.green
+                                            : Colors.red,
                                       )
                                     : null,
                               ),
@@ -436,7 +461,9 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   }),
                                   child: Icon(
                                     Icons.info_outline,
-                                    color: _allRequirementsMet ? Colors.green : Colors.red,
+                                    color: _allRequirementsMet
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
                                 ),
                               ),
@@ -464,7 +491,9 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                       value: code,
                                       child: Row(
                                         children: [
-                                          Text(flag, style: const TextStyle(fontSize: 18)),
+                                          Text(flag,
+                                              style: const TextStyle(
+                                                  fontSize: 18)),
                                           const SizedBox(width: 8),
                                           Text('$name ($code)'),
                                         ],
@@ -475,7 +504,9 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                       countryCodes.map((country) {
                                     return Row(
                                       children: [
-                                        Text(country['flag']!, style: const TextStyle(fontSize: 18)),
+                                        Text(country['flag']!,
+                                            style:
+                                                const TextStyle(fontSize: 18)),
                                         const SizedBox(width: 4),
                                         Text(country['code']!),
                                       ],
@@ -495,7 +526,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   ),
                                   buttonStyleData: const ButtonStyleData(
                                     height: 48,
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 8),
                                   ),
                                 ),
                               ),
@@ -527,14 +559,17 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                prefixIcon: Icon(Icons.calendar_today, color: theme.colorScheme.primary),
+                                prefixIcon: Icon(Icons.calendar_today,
+                                    color: theme.colorScheme.primary),
                               ),
                               child: Text(
                                 _selectedDate == null
                                     ? 'Select Date'
                                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                                 style: TextStyle(
-                                  color: _selectedDate == null ? Colors.grey : textTheme.bodyMedium?.color,
+                                  color: _selectedDate == null
+                                      ? Colors.grey
+                                      : textTheme.bodyMedium?.color,
                                 ),
                               ),
                             ),
@@ -560,10 +595,12 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
-                                        title: const Text('Terms and Conditions'),
+                                        title:
+                                            const Text('Terms and Conditions'),
                                         content: SingleChildScrollView(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
                                             children: const [
                                               Text(
@@ -579,7 +616,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                         ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                             child: const Text('Close'),
                                           ),
                                         ],
@@ -645,7 +683,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  prefixIcon: Icon(Icons.email_outlined, color: theme.colorScheme.primary),
+                                  prefixIcon: Icon(Icons.email_outlined,
+                                      color: theme.colorScheme.primary),
                                 ),
                               ),
                             ),
@@ -664,7 +703,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 14),
                               ),
                               onPressed: _registerClient,
                               child: const Text(

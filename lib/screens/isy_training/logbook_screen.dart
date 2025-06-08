@@ -5,7 +5,7 @@ class LogbookScreen extends StatelessWidget {
   const LogbookScreen({Key? key, this.clientUid}) : super(key: key);
 
   //TODO: implement the clientUid logic here to separate the PT view of the client's logbook
-  
+
   @override
   Widget build(BuildContext context) {
     // Replace with your actual logbook implementation.

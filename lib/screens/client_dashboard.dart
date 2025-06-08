@@ -22,7 +22,8 @@ class ClientDashboard extends StatelessWidget {
         title: 'Client Dashboard',
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+        future:
+            FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -54,7 +55,10 @@ class ClientDashboard extends StatelessWidget {
           } else {
             final ptId = userData['supervisorPT'];
             return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance.collection('users').doc(ptId).get(),
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(ptId)
+                  .get(),
               builder: (context, ptSnapshot) {
                 if (ptSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -96,14 +100,16 @@ class ClientDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Card(
           elevation: 3,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
             width: 300,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.person_outline, size: 60, color: theme.colorScheme.primary),
+                Icon(Icons.person_outline,
+                    size: 60, color: theme.colorScheme.primary),
                 const SizedBox(height: 16),
                 Text(
                   'SOLO Mode',
@@ -136,7 +142,8 @@ class ClientDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Card(
           elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
             width: 340,
             padding: const EdgeInsets.all(24),

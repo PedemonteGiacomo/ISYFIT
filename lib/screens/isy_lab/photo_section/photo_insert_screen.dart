@@ -7,8 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A helper model for the 4 “poses” or categories
 class PoseCategory {
-  final String key;            
-  final String displayName;    
+  final String key;
+  final String displayName;
   final String assetPlaceholder;
 
   PoseCategory({
@@ -172,14 +172,16 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
     final theme = Theme.of(context);
 
     // We expand the card's height in portrait so it fills the screen more.
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
     final cardHeight = isPortrait
-        ? MediaQuery.of(context).size.height * 0.75 // bigger fraction for more vertical fill
+        ? MediaQuery.of(context).size.height *
+            0.75 // bigger fraction for more vertical fill
         : 450.0; // fixed in landscape
 
     // Make the image region a bigger fraction so there's less empty space
     final imageRegionHeight = isPortrait
-        ? cardHeight * 0.60  // 60% of the card
+        ? cardHeight * 0.60 // 60% of the card
         : cardHeight * 0.40;
 
     return Card(
@@ -196,7 +198,8 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
               // Pose label
               Text(
                 pose.displayName,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -246,13 +249,17 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
                                 backgroundColor: theme.colorScheme.primary,
                                 foregroundColor: theme.colorScheme.onPrimary,
                               ),
-                              icon: Icon(Icons.cloud_upload, color: theme.colorScheme.onPrimary),
-                              label: Text('Upload', style: TextStyle(color: theme.colorScheme.onPrimary)),
+                              icon: Icon(Icons.cloud_upload,
+                                  color: theme.colorScheme.onPrimary),
+                              label: Text('Upload',
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onPrimary)),
                               onPressed: () => _uploadPhoto(pose.key),
                             )
                       : Text(
                           'Take a picture or select it from the gallery',
-                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                           textAlign: TextAlign.center,
                         ),
                 ),
@@ -316,7 +323,8 @@ class _PhotoInsertTabState extends State<PhotoInsertTab>
           final gender = userData?['gender'] ?? 'Male';
           _poses = _buildPosesForGender(gender);
 
-          final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+          final isPortrait =
+              MediaQuery.of(context).orientation == Orientation.portrait;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -416,9 +424,7 @@ class _CategoryCardWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           );
 
-    final textColor = isSelected
-        ? theme.colorScheme.onPrimary
-        : Colors.black87;
+    final textColor = isSelected ? theme.colorScheme.onPrimary : Colors.black87;
 
     return GestureDetector(
       onTap: onTap,
@@ -437,9 +443,9 @@ class _CategoryCardWidget extends StatelessWidget {
               Text(
                 data.displayName,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -113,7 +113,8 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
     return filteredByData.where((c) {
       final nameLower = (c['name'] as String).toLowerCase();
       final emailLower = (c['email'] as String).toLowerCase();
-      return nameLower.contains(searchLower) || emailLower.contains(searchLower);
+      return nameLower.contains(searchLower) ||
+          emailLower.contains(searchLower);
     }).toList();
   }
 

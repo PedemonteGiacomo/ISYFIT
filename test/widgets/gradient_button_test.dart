@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isyfit/widgets/gradient_button.dart';
 
 void main() {
-  testWidgets('GradientButton renders label and triggers callback', (tester) async {
+  testWidgets('GradientButton renders label and triggers callback',
+      (tester) async {
     bool tapped = false;
     await tester.pumpWidget(
       MaterialApp(

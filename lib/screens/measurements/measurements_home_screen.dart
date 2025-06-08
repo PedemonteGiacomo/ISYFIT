@@ -33,7 +33,8 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
     super.initState();
 
     // We'll fetch the profile of the client if a PT is viewing them
-    _clientProfileFuture = isPTView ? _fetchClientProfile() : Future.value(null);
+    _clientProfileFuture =
+        isPTView ? _fetchClientProfile() : Future.value(null);
 
     // Also, we check whether the *current user* is PT
     _isPTFuture = _fetchIsPT();
@@ -115,9 +116,12 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Text(
                             'Unknown Client',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         );
                       }
@@ -128,9 +132,10 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
                           '$name $surname ($email)',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       );
                     },

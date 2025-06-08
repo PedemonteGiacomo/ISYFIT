@@ -84,9 +84,8 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
           .doc(widget.clientUid)
           .collection('records');
 
-      final querySnap = await collectionRef
-          .orderBy('timestamp', descending: true)
-          .get();
+      final querySnap =
+          await collectionRef.orderBy('timestamp', descending: true).get();
 
       _allRecords = querySnap.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
@@ -106,7 +105,8 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
 
   /// Filter to get the last 2 records for a given measure type
   List<Map<String, dynamic>> _getLastTwoRecords(String measureType) {
-    final filtered = _allRecords.where((m) => m['type'] == measureType).toList();
+    final filtered =
+        _allRecords.where((m) => m['type'] == measureType).toList();
     if (filtered.isEmpty) return [];
     // Already sorted descending in _fetchData, so the first 2 are the newest
     return filtered.take(2).toList();
@@ -160,14 +160,14 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
                   right: 16,
                   bottom: 16,
                   child: FloatingActionButton(
-              heroTag: 'refreshFab',
-              onPressed: _fetchData,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Icon(
-                Icons.refresh,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-            ),
+                    heroTag: 'refreshFab',
+                    onPressed: _fetchData,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    child: Icon(
+                      Icons.refresh,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -216,11 +216,13 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
 
           // The table listing each submetric
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 4,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: _buildSimplifiedTable(measureType, newestData, secondNewestData),
+              child: _buildSimplifiedTable(
+                  measureType, newestData, secondNewestData),
             ),
           ),
         ],
@@ -252,7 +254,8 @@ class _MeasurementsViewScreenState extends State<MeasurementsViewScreen>
         if (newVal != null && oldVal != null) {
           final diff = newVal - oldVal;
           if (diff.abs() < 0.001) {
-            trendIcon = const Text('↔', style: TextStyle(color: Colors.grey, fontSize: 18));
+            trendIcon = const Text('↔',
+                style: TextStyle(color: Colors.grey, fontSize: 18));
           } else if (diff > 0) {
             trendIcon = Row(
               mainAxisSize: MainAxisSize.min,

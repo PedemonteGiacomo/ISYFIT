@@ -36,7 +36,8 @@ class _PhotoHomeScreenState extends State<PhotoHomeScreen> {
     super.initState();
     _isPTFuture = _fetchIsPT();
     // We'll fetch client profile if a PT is viewing them
-    _clientProfileFuture = isPTView ? _fetchClientProfile() : Future.value(null);
+    _clientProfileFuture =
+        isPTView ? _fetchClientProfile() : Future.value(null);
   }
 
   Future<bool> _fetchIsPT() => _userRepo.isCurrentUserPT();
@@ -112,7 +113,6 @@ class _PhotoHomeScreenWithTabsState extends State<PhotoHomeScreenWithTabs>
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          
           // A Container for the gradient tab bar (full width, no margin)
           Container(
             width: double.infinity, // ensure it's full width
