@@ -71,7 +71,7 @@ ThemeData buildAppTheme({bool isDark = false}) {
     ),
 
     // Let's style cards with M3 shapes
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       // M3-like surface tint is optional if you're going for a tinted surface

@@ -5,7 +5,10 @@ import 'package:isyfit/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final FirebaseAuth auth;
+  const LoginScreen({Key? key, FirebaseAuth? auth})
+      : auth = auth ?? FirebaseAuth.instance,
+        super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,7 +17,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _isLoading = false;
 
@@ -24,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _auth.signInWithEmailAndPassword(
+      await widget.auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
