@@ -228,12 +228,12 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     );
   }
 
-  /// Helper method to create a TextField with consistent styling
+  /// Helper method to create a text field with standard styling
   Widget _textField(
     TextEditingController controller,
     String label,
     IconData icon, {
-    TextInputType keyboard = TextInputType.text,
+    TextInputType? keyboard,
   }) {
     return TextField(
       controller: controller,
@@ -495,9 +495,6 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           _buildPasswordInfo(),
                           const SizedBox(height: 16),
 
-                          // ---------------------------------------------------
-                          // Phone Prefix + Number
-                          // ---------------------------------------------------
                           // Phone
                           Row(children: [
                             Expanded(

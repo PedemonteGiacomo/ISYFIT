@@ -77,52 +77,58 @@ class RegistrationScreen extends StatelessWidget {
         title: 'Registration',
       ),
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
-          child: SingleChildScrollView(
-            child: Container(
-              height: MediaQuery.of(context).size.height -
-                  AppBar().preferredSize.height -
-                  MediaQuery.of(context).padding.top,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildOptionCard(
-                        context: context,
-                        icon: Icons.person,
-                        title: 'Register as Client',
-                        description:
-                            'Create an account to be guided by a Personal Trainer or use limited features.',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterClientScreen(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isPortrait =
+                MediaQuery.of(context).orientation == Orientation.portrait;
+            final widthFactor = isPortrait ? 0.9 : 0.6;
+            final cardWidth =
+                (constraints.maxWidth * widthFactor).clamp(320.0, 700.0);
+
+            return Center(
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: cardWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildOptionCard(
+                          context: context,
+                          icon: Icons.person,
+                          title: 'Register as Client',
+                          description:
+                              'Create an account to be guided by a Personal Trainer or use limited features.',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const RegisterClientScreen(),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildOptionCard(
-                        context: context,
-                        icon: Icons.fitness_center,
-                        title: 'Register as PT',
-                        description:
-                            'Sign up as a Personal Trainer to manage your clients and grow your business.',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPTScreen(),
+                        const SizedBox(height: 20),
+                        _buildOptionCard(
+                          context: context,
+                          icon: Icons.fitness_center,
+                          title: 'Register as PT',
+                          description:
+                              'Sign up as a Personal Trainer to manage your clients and grow your business.',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterPTScreen(),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

@@ -122,40 +122,58 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         ],
       ),
 
-      body: Column(
-        children: [
-          _buildSearchBar(),
-          if (_showFilterPanel) _buildFilterPanel(),
-          const Divider(),
-          Expanded(
-            child: (currentUser == null)
-                ? const Center(child: Text('Not logged in.'))
-                : FutureBuilder<DocumentSnapshot>(
-                    future: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(currentUser.uid)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data == null) {
-                        return const Center(child: Text('No data found.'));
-                      }
-                      final ptData =
-                          snapshot.data!.data() as Map<String, dynamic>;
-                      final clientIds =
-                          ptData['clients'] as List<dynamic>? ?? [];
-                      if (clientIds.isEmpty) {
-                        return const Center(
-                          child: Text('No clients to manage.'),
-                        );
-                      }
-                      return _buildClientList(clientIds);
-                    },
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isPortrait =
+              MediaQuery.of(context).orientation == Orientation.portrait;
+          final widthFactor = isPortrait ? 0.95 : 0.65;
+          final contentWidth =
+              (constraints.maxWidth * widthFactor).clamp(320.0, 700.0);
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: contentWidth),
+              child: Column(
+                children: [
+                  _buildSearchBar(),
+                  if (_showFilterPanel) _buildFilterPanel(),
+                  const Divider(),
+                  Expanded(
+                    child: (currentUser == null)
+                        ? const Center(child: Text('Not logged in.'))
+                        : FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(currentUser.uid)
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              if (!snapshot.hasData || snapshot.data == null) {
+                                return const Center(
+                                    child: Text('No data found.'));
+                              }
+                              final ptData =
+                                  snapshot.data!.data() as Map<String, dynamic>;
+                              final clientIds =
+                                  ptData['clients'] as List<dynamic>? ?? [];
+                              if (clientIds.isEmpty) {
+                                return const Center(
+                                  child: Text('No clients to manage.'),
+                                );
+                              }
+                              return _buildClientList(clientIds);
+                            },
+                          ),
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -366,14 +384,25 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             ),
           ),
         ),
-        title: Text(
-          '$clientName $clientSurname',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+        title: FittedBox(
+          alignment: Alignment.centerLeft,
+          fit: BoxFit.scaleDown,
+          child: Text(
+            '$clientName $clientSurname',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
           ),
-          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(clientData['email'] ?? 'No Email'),
+        subtitle: FittedBox(
+          alignment: Alignment.centerLeft,
+          fit: BoxFit.scaleDown,
+          child: Text(
+            clientData['email'] ?? 'No Email',
+            maxLines: 1,
+          ),
+        ),
         onTap: () => _showClientOptions(
           context,
           clientUid: clientUid,
