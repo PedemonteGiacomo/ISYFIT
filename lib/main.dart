@@ -8,11 +8,14 @@ import 'package:flutter_stripe/flutter_stripe.dart'; // 👈 nuovo import
 import 'package:app_links/app_links.dart';
 
 import 'firebase_options.dart';
-import 'screens/login_screen.dart';
-import 'screens/base_screen.dart';
-import 'screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
-import 'screens/medical_history/anamnesis_screen.dart';
-import 'theme/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/base_screen.dart';
+import 'presentation/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
+import 'presentation/screens/medical_history/anamnesis_screen.dart';
+import 'presentation/theme/app_theme.dart';
+import 'domain/providers/auth_provider.dart';
 
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 
@@ -20,6 +23,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ───────────── Stripe ─────────────
+  Stripe.publishableKey =
+      'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
   Stripe.publishableKey =
       'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
   await Stripe.instance.applySettings();
@@ -31,7 +36,7 @@ Future<void> main() async {
     androidProvider: AndroidProvider.debug,
   );
 
-  runApp(const IsyFitApp());
+  runApp(const ProviderScope(child: IsyFitApp()));
 }
 
 /// APP ROOT ­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­­
@@ -159,21 +164,16 @@ class _SplashScreenState extends State<SplashScreen> {
 }
 
 /// AUTH GATE --------------------------------------------------------------
-class AuthGate extends StatelessWidget {
+class AuthGate extends ConsumerWidget {
   const AuthGate({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snap.hasData) {
-          return const BaseScreen();
-        } else {
-          return LoginScreen();
-        }
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    return authState.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => LoginScreen(),
+      data: (user) => user != null ? const BaseScreen() : LoginScreen(),
     );
   }
 }
