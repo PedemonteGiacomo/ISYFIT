@@ -212,7 +212,7 @@ class PTDashboard extends StatelessWidget {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return const LoginScreen();
+      return LoginScreen();
     }
 
     return Scaffold(

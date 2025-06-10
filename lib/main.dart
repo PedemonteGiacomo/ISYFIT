@@ -25,6 +25,8 @@ Future<void> main() async {
   // ───────────── Stripe ─────────────
   Stripe.publishableKey =
       'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
+  Stripe.publishableKey =
+      'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
   await Stripe.instance.applySettings();
 
   // ───────────── Firebase ───────────
@@ -103,7 +105,7 @@ class _IsyFitAppState extends State<IsyFitApp> {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/base': (context) => const BaseScreen(),
         '/questionnaire': (context) => const QuestionnaireScreen(),
         '/medical_history_dashboard': (context) => const MedicalHistoryScreen(),
@@ -170,8 +172,8 @@ class AuthGate extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     return authState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const LoginScreen(),
-      data: (user) => user != null ? const BaseScreen() : const LoginScreen(),
+      error: (_, __) => LoginScreen(),
+      data: (user) => user != null ? const BaseScreen() : LoginScreen(),
     );
   }
 }
