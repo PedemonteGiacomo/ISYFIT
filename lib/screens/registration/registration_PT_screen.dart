@@ -22,13 +22,13 @@ class RegisterPTScreen extends StatefulWidget {
 
 class _RegisterPTScreenState extends State<RegisterPTScreen> {
   // -------------------- Controllers --------------------
-  final _emailController      = TextEditingController();
-  final _passwordController   = TextEditingController();
-  final _nameController       = TextEditingController();
-  final _surnameController    = TextEditingController();
-  final _vatController        = TextEditingController();
-  final _legalInfoController  = TextEditingController();
-  final _phoneController      = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _surnameController = TextEditingController();
+  final _vatController = TextEditingController();
+  final _legalInfoController = TextEditingController();
+  final _phoneController = TextEditingController();
   final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State --------------------
@@ -36,9 +36,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   DateTime? _selectedDate;
   String? _gender; // "Male" | "Female"
   bool _agreeToTerms = false;
-  bool _showPwdInfo  = false;
+  bool _showPwdInfo = false;
   bool _emailTouched = false;
-  bool _isLoading    = false;
+  bool _isLoading = false;
   bool _isPayLoading = false;
 
   QueryDocumentSnapshot<Map<String, dynamic>>? _selectedPlan;
@@ -50,12 +50,14 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     final regex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
     return regex.hasMatch(email);
   }
+
   bool get _pwdUpper => _passwordController.text.contains(RegExp(r'[A-Z]'));
   bool get _pwdLower => _passwordController.text.contains(RegExp(r'[a-z]'));
-  bool get _pwdNum   => _passwordController.text.contains(RegExp(r'[0-9]'));
-  bool get _pwdSpec  => _passwordController.text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
-  bool get _pwdLen   => _passwordController.text.length >= 8;
-  bool get _pwdOk    => _pwdUpper && _pwdLower && _pwdNum && _pwdSpec && _pwdLen;
+  bool get _pwdNum => _passwordController.text.contains(RegExp(r'[0-9]'));
+  bool get _pwdSpec =>
+      _passwordController.text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
+  bool get _pwdLen => _passwordController.text.length >= 8;
+  bool get _pwdOk => _pwdUpper && _pwdLower && _pwdNum && _pwdSpec && _pwdLen;
 
   @override
   void dispose() {
@@ -67,20 +69,26 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     // ── 1. Validazione ─────────────────────────────────
     if (!_agreeToTerms) return _msg('You must accept terms.');
     if (!_isEmailValid) return _msg('Invalid email.');
-    if (!_pwdOk)        return _msg('Password not strong enough.');
-    if (_nameController.text.trim().isEmpty)      return _msg('Please enter your name.');
-    if (_surnameController.text.trim().isEmpty)   return _msg('Please enter your surname.');
-    if (_selectedCountryCode == null)             return _msg('Please select a country code.');
-    if (_phoneController.text.trim().isEmpty)     return _msg('Please enter your phone number.');
-    if (_vatController.text.trim().isEmpty)       return _msg('Please enter your VAT/P.IVA.');
-    if (_legalInfoController.text.trim().isEmpty) return _msg('Please enter legal info.');
-    if (_selectedDate == null)                    return _msg('Please select your date of birth.');
-    if (_gender == null)                          return _msg('Please select your gender.');
+    if (!_pwdOk) return _msg('Password not strong enough.');
+    if (_nameController.text.trim().isEmpty)
+      return _msg('Please enter your name.');
+    if (_surnameController.text.trim().isEmpty)
+      return _msg('Please enter your surname.');
+    if (_selectedCountryCode == null)
+      return _msg('Please select a country code.');
+    if (_phoneController.text.trim().isEmpty)
+      return _msg('Please enter your phone number.');
+    if (_vatController.text.trim().isEmpty)
+      return _msg('Please enter your VAT/P.IVA.');
+    if (_legalInfoController.text.trim().isEmpty)
+      return _msg('Please enter legal info.');
+    if (_selectedDate == null) return _msg('Please select your date of birth.');
+    if (_gender == null) return _msg('Please select your gender.');
 
     // ── 2. Seleziona piano se non già fatto ───────────
     if (_selectedPlan == null) {
-      final plan = await Navigator.of(context).push<
-          QueryDocumentSnapshot<Map<String, dynamic>>>(
+      final plan = await Navigator.of(context)
+          .push<QueryDocumentSnapshot<Map<String, dynamic>>>(
         MaterialPageRoute(builder: (_) => const PlanSelectionScreen()),
       );
       if (plan == null) return;
@@ -116,7 +124,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
           .collection('checkout_sessions')
           .add({
         'price': priceId,
-        'mode' : 'setup',      // oppure 'subscription' su ramo next
+        'mode': 'setup', // oppure 'subscription' su ramo next
         'client': 'mobile',
       });
 
@@ -135,9 +143,9 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         }
 
         final clientSecret = data['setupIntentClientSecret'] ??
-                             data['paymentIntentClientSecret'];
-        final eKey         = data['ephemeralKeySecret'];
-        final customer     = data['customer'];
+            data['paymentIntentClientSecret'];
+        final eKey = data['ephemeralKeySecret'];
+        final customer = data['customer'];
         if (clientSecret == null || eKey == null || customer == null) return;
 
         await _sessionSub?.cancel();
@@ -155,8 +163,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
               billingDetails: BillingDetails(
                 email: _emailController.text.trim(),
                 phone: _phoneController.text.trim(),
-                name:  '${_nameController.text.trim()} '
-                       '${_surnameController.text.trim()}',
+                name: '${_nameController.text.trim()} '
+                    '${_surnameController.text.trim()}',
               ),
             ),
           );
@@ -171,20 +179,17 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
             return _msg('Please select a country code.');
           }
 
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .set({
-            'role'      : 'PT',
-            'email'     : _emailController.text.trim(),
-            'name'      : _nameController.text.trim(),
-            'surname'   : _surnameController.text.trim(),
-            'vat'       : _vatController.text.trim(),
-            'legalInfo' : _legalInfoController.text.trim(),
-            'phone'     : '$_selectedCountryCode ${_phoneController.text.trim()}',
+          await FirebaseFirestore.instance.collection('users').doc(uid).set({
+            'role': 'PT',
+            'email': _emailController.text.trim(),
+            'name': _nameController.text.trim(),
+            'surname': _surnameController.text.trim(),
+            'vat': _vatController.text.trim(),
+            'legalInfo': _legalInfoController.text.trim(),
+            'phone': '$_selectedCountryCode ${_phoneController.text.trim()}',
             'dateOfBirth': _selectedDate?.toIso8601String(),
-            'gender'    : _gender,
-            'planId'    : _selectedPlan!.id,
+            'gender': _gender,
+            'planId': _selectedPlan!.id,
           });
 
           // ── 9. Vai in app ────────────────────────────
@@ -213,7 +218,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       final msg = FirebaseErrorTranslator.fromException(e);
       _msg(msg);
       setState(() {
-        _isLoading    = false;
+        _isLoading = false;
         _isPayLoading = false;
       });
       if (cred?.user != null) await cred!.user!.delete();
@@ -221,7 +226,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       final msg = FirebaseErrorTranslator.fromException(e as Exception);
       _msg(msg);
       setState(() {
-        _isLoading    = false;
+        _isLoading = false;
         _isPayLoading = false;
       });
       if (cred?.user != null) await cred!.user!.delete();
@@ -281,7 +286,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
           padding: const EdgeInsets.all(16),
           child: Card(
             elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             shadowColor: t.colorScheme.primary.withOpacity(.5),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
@@ -292,9 +298,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                   children: [
                     // Name & Surname
                     Row(children: [
-                      Expanded(child: _textField(_nameController, 'Name', Icons.person)),
+                      Expanded(
+                          child: _textField(
+                              _nameController, 'Name', Icons.person)),
                       const SizedBox(width: 16),
-                      Expanded(child: _textField(_surnameController, 'Surname', Icons.person_outline)),
+                      Expanded(
+                          child: _textField(_surnameController, 'Surname',
+                              Icons.person_outline)),
                     ]),
                     const SizedBox(height: 16),
 
@@ -315,10 +325,15 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         decoration: InputDecoration(
                           labelText: 'Email',
                           border: outline,
-                          prefixIcon: Icon(Icons.email, color: t.colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.email, color: t.colorScheme.primary),
                           suffixIcon: _emailTouched
-                              ? Icon(_isEmailValid ? Icons.check_circle : Icons.cancel,
-                                     color: _isEmailValid ? Colors.green : Colors.red)
+                              ? Icon(
+                                  _isEmailValid
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color:
+                                      _isEmailValid ? Colors.green : Colors.red)
                               : null,
                         ),
                       ),
@@ -334,14 +349,18 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         decoration: InputDecoration(
                           labelText: 'Password',
                           border: outline,
-                          prefixIcon: Icon(Icons.lock, color: t.colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.lock, color: t.colorScheme.primary),
                         ),
                       ),
                       Positioned(
-                        right: 10, top: 10,
+                        right: 10,
+                        top: 10,
                         child: GestureDetector(
-                          onTap: () => setState(() => _showPwdInfo = !_showPwdInfo),
-                          child: Icon(Icons.info_outline, color: _pwdOk ? Colors.green : Colors.red),
+                          onTap: () =>
+                              setState(() => _showPwdInfo = !_showPwdInfo),
+                          child: Icon(Icons.info_outline,
+                              color: _pwdOk ? Colors.green : Colors.red),
                         ),
                       ),
                     ]),
@@ -374,7 +393,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     // Phone
                     Row(children: [
                       SizedBox(
-                        width: 100,
+                        width: 130,
                         child: DropdownButton2<String>(
                           value: _selectedCountryCode,
                           hint: const Text('Prefix'),
@@ -384,27 +403,32 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                               DropdownMenuItem(
                                 value: c['code'],
                                 child: Row(children: [
-                                  Text(c['flag']!, style: const TextStyle(fontSize: 18)),
+                                  Text(c['flag']!,
+                                      style: const TextStyle(fontSize: 18)),
                                   const SizedBox(width: 8),
                                   Text('${c['name']} (${c['code']})'),
                                 ]),
                               ),
                           ],
-                          onChanged: (v) => setState(() => _selectedCountryCode = v),
+                          onChanged: (v) =>
+                              setState(() => _selectedCountryCode = v),
                           buttonStyleData: const ButtonStyleData(height: 48),
                           dropdownStyleData: DropdownStyleData(width: 250),
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Expanded(child: _textField(_phoneController, 'Phone', Icons.phone,
-                                                  keyboard: TextInputType.phone)),
+                      Expanded(
+                          child: _textField(
+                              _phoneController, 'Phone', Icons.phone,
+                              keyboard: TextInputType.phone)),
                     ]),
                     const SizedBox(height: 16),
 
                     // VAT & Legal
                     _textField(_vatController, 'VAT/P.IVA', Icons.business),
                     const SizedBox(height: 16),
-                    _textField(_legalInfoController, 'Legal info', Icons.gavel, maxLines: 3),
+                    _textField(_legalInfoController, 'Legal info', Icons.gavel,
+                        maxLines: 3),
                     const SizedBox(height: 16),
 
                     // Date picker
@@ -414,7 +438,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         decoration: InputDecoration(
                           labelText: 'Date of birth',
                           border: outline,
-                          prefixIcon: Icon(Icons.calendar_today, color: t.colorScheme.primary),
+                          prefixIcon: Icon(Icons.calendar_today,
+                              color: t.colorScheme.primary),
                         ),
                         child: Text(
                           _selectedDate == null
@@ -432,9 +457,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     // Subscription plan selector
                     GestureDetector(
                       onTap: () async {
-                        final plan = await Navigator.of(context).push<
-                            QueryDocumentSnapshot<Map<String, dynamic>>>(
-                          MaterialPageRoute(builder: (_) => const PlanSelectionScreen()),
+                        final plan = await Navigator.of(context)
+                            .push<QueryDocumentSnapshot<Map<String, dynamic>>>(
+                          MaterialPageRoute(
+                              builder: (_) => const PlanSelectionScreen()),
                         );
                         if (plan != null) setState(() => _selectedPlan = plan);
                       },
@@ -443,7 +469,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                           labelText: 'Subscription plan',
                           border: outline,
                           prefixIcon: Icon(Icons.workspace_premium,
-                                             color: t.colorScheme.primary),
+                              color: t.colorScheme.primary),
                         ),
                         child: Text(
                           _selectedPlan?.data()['name'] ?? 'Select a plan',
@@ -461,7 +487,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     Row(children: [
                       Checkbox(
                         value: _agreeToTerms,
-                        onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                        onChanged: (v) =>
+                            setState(() => _agreeToTerms = v ?? false),
                       ),
                       Expanded(
                         child: InkWell(
@@ -469,7 +496,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             context: context,
                             builder: (_) => AlertDialog(
                               title: const Text('Terms and conditions'),
-                              content: const Text('By using this app you accept our privacy policy…'),
+                              content: const Text(
+                                  'By using this app you accept our privacy policy…'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
