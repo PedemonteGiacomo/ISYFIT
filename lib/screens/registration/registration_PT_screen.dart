@@ -374,7 +374,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     // Phone
                     Row(children: [
                       SizedBox(
-                        width: 100,
+                        width: 130,
                         child: DropdownButton2<String>(
                           value: _selectedCountryCode,
                           hint: const Text('Prefix'),
@@ -396,8 +396,10 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Expanded(child: _textField(_phoneController, 'Phone', Icons.phone,
-                                                  keyboard: TextInputType.phone)),
+                      SizedBox(
+                          width: 200,
+                          child: _textField(_phoneController, 'Phone', Icons.phone,
+                              keyboard: TextInputType.phone)),
                     ]),
                     const SizedBox(height: 16),
 

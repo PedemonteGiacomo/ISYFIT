@@ -451,7 +451,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           Row(
                             children: [
                               SizedBox(
-                                width: 100,
+                                width: 130,
                                 child: DropdownButton2<String>(
                                   isExpanded: true,
                                   value: _selectedCountryCode,
@@ -500,7 +500,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              Expanded(
+                              SizedBox(
+                                width: 200,
                                 child: TextField(
                                   controller: _phoneController,
                                   keyboardType: TextInputType.phone,
