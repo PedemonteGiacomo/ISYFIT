@@ -625,81 +625,91 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
 
   /// If no medical history for a PT’s client, show a message.
   Widget _buildNoMedicalHistoryForPT(Map<String, dynamic>? profileData) {
-  final theme = Theme.of(context);
-  return Scaffold(
-    backgroundColor: Colors.white, // keep screen white if desired
-    body: Column(
-      children: [
-        Expanded(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Card(
-                    elevation: 4,
-                    // Now white:
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.warning,
-                              size: 48,
-                              color: theme.colorScheme.error),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No Medical Data Found',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.error,
-                              fontWeight: FontWeight.bold,
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: Colors.white, // keep screen white if desired
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Card(
+                      elevation: 4,
+                      // Now white:
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.warning,
+                                size: 48, color: theme.colorScheme.error),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Medical Data Found',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.error,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This user has not yet provided any medical history.\n'
-                            'You can fill out the questionnaire for them or ask the user to do it.',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 24),
-                          // Fill Questionnaire -> route that keeps an AppBar
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.assignment_outlined, 
-                              color: Theme.of(context).colorScheme.onPrimary),
-                            label: Text('Fill Questionnaire', 
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                            const SizedBox(height: 8),
+                            Text(
+                              'This user has not yet provided any medical history.\n'
+                              'You can fill out the questionnaire for them or ask the user to do it.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium,
                             ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => QuestionnaireScreen(
-                                    clientUid: widget.clientUid,
+                            const SizedBox(height: 24),
+                            // Fill Questionnaire -> route that keeps an AppBar
+                            ElevatedButton.icon(
+                              icon: Icon(Icons.assignment_outlined,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
+                              label: Text('Fill Questionnaire',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => QuestionnaireScreen(
+                                      clientUid: widget.clientUid,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            icon: Icon(Icons.arrow_back, 
-                              color: Theme.of(context).colorScheme.onPrimary),
-                            label: Text('Return to Clients', 
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                                );
+                              },
                             ),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              icon: Icon(Icons.arrow_back,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary),
+                              label: Text('Return to Clients',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -707,12 +717,10 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   /// ---------------- Helper UI Builders ----------------
 
@@ -777,7 +785,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return const LoginScreen();
+    if (user == null) return LoginScreen();
 
     return FutureBuilder<Map<String, dynamic>?>(
       future: medicalHistory,

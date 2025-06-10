@@ -4,7 +4,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';          // 👈 nuovo import
+import 'package:flutter_stripe/flutter_stripe.dart'; // 👈 nuovo import
 import 'package:app_links/app_links.dart';
 
 import 'firebase_options.dart';
@@ -20,7 +20,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ───────────── Stripe ─────────────
-  Stripe.publishableKey = 'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
+  Stripe.publishableKey =
+      'pk_live_51RSHw2KbTQJ1x1Amjm7cYUtVeEyxJTRWqtY173xJa6fGpsPgLcJQ1BFCvPt90S1sU0mtIft2M3Igj9kSSUpx5kal00OZmMNkJf'; // 👉  sostituisci con la tua key
   await Stripe.instance.applySettings();
 
   // ───────────── Firebase ───────────
@@ -99,7 +100,7 @@ class _IsyFitAppState extends State<IsyFitApp> {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/base': (context) => const BaseScreen(),
         '/questionnaire': (context) => const QuestionnaireScreen(),
         '/medical_history_dashboard': (context) => const MedicalHistoryScreen(),
@@ -170,7 +171,7 @@ class AuthGate extends StatelessWidget {
         } else if (snap.hasData) {
           return const BaseScreen();
         } else {
-          return const LoginScreen();
+          return LoginScreen();
         }
       },
     );
