@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:isyfit/services/auth_repository.dart';
-import 'package:isyfit/screens/login_screen.dart';
+import 'package:isyfit/data/repositories/auth_repository.dart';
+import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
