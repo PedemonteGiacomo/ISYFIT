@@ -392,8 +392,8 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
 
                     // Phone
                     Row(children: [
-                      SizedBox(
-                        width: 130,
+                      Expanded(
+                        flex: 2, // Takes 2/5 of the available space
                         child: DropdownButton2<String>(
                           value: _selectedCountryCode,
                           hint: const Text('Prefix'),
@@ -410,6 +410,16 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                                 ]),
                               ),
                           ],
+                          selectedItemBuilder: (ctx) => countryCodes.map((c) {
+                            return Row(
+                              children: [
+                                Text(c['flag']!,
+                                    style: const TextStyle(fontSize: 18)),
+                                const SizedBox(width: 6),
+                                Text(c['code']!),
+                              ],
+                            );
+                          }).toList(),
                           onChanged: (v) =>
                               setState(() => _selectedCountryCode = v),
                           buttonStyleData: const ButtonStyleData(height: 48),
@@ -417,11 +427,12 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      SizedBox(
-                          width: 200,
-                          child: _textField(
-                              _phoneController, 'Phone', Icons.phone,
-                              keyboard: TextInputType.phone)),
+                      Expanded(
+                        flex: 3, // Takes 3/5 of the available space
+                        child: _textField(
+                            _phoneController, 'Phone', Icons.phone,
+                            keyboard: TextInputType.phone),
+                      ),
                     ]),
                     const SizedBox(height: 16),
 
@@ -498,7 +509,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             builder: (_) => AlertDialog(
                               title: const Text('Terms and conditions'),
                               content: const Text(
-                                  'By using this app you accept our privacy policy…'),
+                                'By using this app, you agree to:\n\n'
+                                '1. Share your personal information for account creation\n'
+                                '2. Allow us to process your data according to GDPR\n'
+                                '3. Receive notifications about your training\n'
+                                '4. Follow safety guidelines during workouts\n\n'
+                                'For full terms and privacy policy, visit our website.',
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),

@@ -228,6 +228,29 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     );
   }
 
+  /// Helper method to create a TextField with consistent styling
+  Widget _textField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   /// Gender selection with icon buttons for Male and Female.
   Widget _buildGenderSelection() {
     final theme = Theme.of(context);
@@ -479,159 +502,126 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                   ),
                                 ],
                               ),
-                              _buildPasswordInfo(),
-                              const SizedBox(height: 16),
+                            ],
+                          ),
+                          _buildPasswordInfo(),
+                          const SizedBox(height: 16),
 
-                              // ---------------------------------------------------
-                              // Phone Prefix + Number
-                              // ---------------------------------------------------
-                              Row(
-                                children: [
-                                  SizedBox(
-                                    width: 130,
-                                    child: DropdownButton2<String>(
-                                      isExpanded: true,
-                                      value: _selectedCountryCode,
-                                      hint: const Text('Prefix'),
-                                      items: countryCodes.map((country) {
-                                        final code = country['code']!;
-                                        final flag = country['flag']!;
-                                        final name = country['name']!;
-                                        return DropdownMenuItem<String>(
-                                          value: code,
-                                          child: Row(
-                                            children: [
-                                              Text(flag,
-                                                  style: const TextStyle(
-                                                      fontSize: 18)),
-                                              const SizedBox(width: 8),
-                                              Text('$name ($code)'),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                      selectedItemBuilder: (context) =>
-                                          countryCodes.map((country) {
-                                        return Row(
-                                          children: [
-                                            Text(country['flag']!,
-                                                style: const TextStyle(
-                                                    fontSize: 18)),
-                                            const SizedBox(width: 4),
-                                            Text(country['code']!),
-                                          ],
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _selectedCountryCode = value;
-                                        });
-                                      },
-                                      dropdownStyleData: DropdownStyleData(
-                                        width: 250,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          color: theme.colorScheme.surface,
-                                        ),
-                                      ),
-                                      buttonStyleData: const ButtonStyleData(
-                                        height: 48,
-                                        padding:
-                                            EdgeInsets.symmetric(horizontal: 8),
-                                      ),
+                          // ---------------------------------------------------
+                          // Phone Prefix + Number
+                          // ---------------------------------------------------
+                          // Phone
+                          Row(children: [
+                            Expanded(
+                              flex: 2, // Takes 2/5 of the available space
+                              child: DropdownButton2<String>(
+                                value: _selectedCountryCode,
+                                hint: const Text('Prefix'),
+                                isExpanded: true,
+                                items: [
+                                  for (final c in countryCodes)
+                                    DropdownMenuItem(
+                                      value: c['code'],
+                                      child: Row(children: [
+                                        Text(c['flag']!,
+                                            style:
+                                                const TextStyle(fontSize: 18)),
+                                        const SizedBox(width: 8),
+                                        Text('${c['name']} (${c['code']})'),
+                                      ]),
                                     ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  SizedBox(
-                                    width: 200,
-                                    child: TextField(
-                                      controller: _phoneController,
-                                      keyboardType: TextInputType.phone,
-                                      decoration: InputDecoration(
-                                        labelText: 'Phone Number',
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                                 ],
+                                selectedItemBuilder: (ctx) =>
+                                    countryCodes.map((c) {
+                                  return Row(
+                                    children: [
+                                      Text(c['flag']!,
+                                          style: const TextStyle(fontSize: 18)),
+                                      const SizedBox(width: 6),
+                                      Text(c['code']!),
+                                    ],
+                                  );
+                                }).toList(),
+                                onChanged: (v) =>
+                                    setState(() => _selectedCountryCode = v),
+                                buttonStyleData:
+                                    const ButtonStyleData(height: 48),
+                                dropdownStyleData:
+                                    DropdownStyleData(width: 250),
                               ),
-                              const SizedBox(height: 16),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              flex: 3, // Takes 3/5 of the available space
+                              child: _textField(
+                                  _phoneController, 'Phone', Icons.phone,
+                                  keyboard: TextInputType.phone),
+                            ),
+                          ]),
+                          const SizedBox(height: 16),
 
-                              // ---------------------------------------------------
-                              // Date Picker
-                              // ---------------------------------------------------
-                              GestureDetector(
-                                onTap: _pickDate,
-                                child: InputDecorator(
-                                  decoration: InputDecoration(
-                                    labelText: 'Date of Birth',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(Icons.calendar_today,
-                                        color: theme.colorScheme.primary),
-                                  ),
-                                  child: Text(
-                                    _selectedDate == null
-                                        ? 'Select Date'
-                                        : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                                    style: TextStyle(
-                                      color: _selectedDate == null
-                                          ? Colors.grey
-                                          : textTheme.bodyMedium?.color,
-                                    ),
-                                  ),
+                          // ---------------------------------------------------
+                          // Date Picker
+                          // ---------------------------------------------------
+                          GestureDetector(
+                            onTap: _pickDate,
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'Date of Birth',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                prefixIcon: Icon(Icons.calendar_today,
+                                    color: theme.colorScheme.primary),
+                              ),
+                              child: Text(
+                                _selectedDate == null
+                                    ? 'Select Date'
+                                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                                style: TextStyle(
+                                  color: _selectedDate == null
+                                      ? Colors.grey
+                                      : textTheme.bodyMedium?.color,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
-                              // ---------------------------------------------------
-                              // Terms & Conditions
-                              // ---------------------------------------------------
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: _agreeToTerms,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _agreeToTerms = value ?? false;
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text(
-                                                'Terms and Conditions'),
-                                            content: SingleChildScrollView(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: const [
-                                                  Text(
-                                                    'By using this app, you agree to:\n\n'
-                                                    '1. Share your personal information for account creation\n'
-                                                    '2. Allow us to process your data according to GDPR\n'
-                                                    '3. Receive notifications about your training\n'
-                                                    '4. Follow safety guidelines during workouts\n\n'
-                                                    'For full terms and privacy policy, visit our website.',
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(context),
-                                                child: const Text('Close'),
+                          // ---------------------------------------------------
+                          // Terms & Conditions
+                          // ---------------------------------------------------
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _agreeToTerms,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _agreeToTerms = value ?? false;
+                                  });
+                                },
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title:
+                                            const Text('Terms and Conditions'),
+                                        content: SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              Text(
+                                                'By using this app, you agree to:\n\n'
+                                                '1. Share your personal information for account creation\n'
+                                                '2. Allow us to process your data according to GDPR\n'
+                                                '3. Receive notifications about your training\n'
+                                                '4. Follow safety guidelines during workouts\n\n'
+                                                'For full terms and privacy policy, visit our website.',
                                               ),
                                             ],
                                           ),
