@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/widgets/gradient_button.dart';
 
 void main() {
   testWidgets('GradientButton triggers callback', (tester) async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/theme/app_gradients.dart';
+import 'package:isyfit/presentation/theme/app_gradients.dart';
 
 void main() {
   test('primaryColors uses theme colors', () {
