@@ -161,12 +161,16 @@ class PTDashboard extends StatelessWidget {
             const SizedBox(width: 16),
             // Client name
             Expanded(
-              child: Text(
-                "$clientName $clientSurname",
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+              child: FittedBox(
+                alignment: Alignment.centerLeft,
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "$clientName $clientSurname",
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             // Payment status
