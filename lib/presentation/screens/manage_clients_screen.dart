@@ -384,14 +384,25 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
             ),
           ),
         ),
-        title: Text(
-          '$clientName $clientSurname',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+        title: FittedBox(
+          alignment: Alignment.centerLeft,
+          fit: BoxFit.scaleDown,
+          child: Text(
+            '$clientName $clientSurname',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
           ),
-          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(clientData['email'] ?? 'No Email'),
+        subtitle: FittedBox(
+          alignment: Alignment.centerLeft,
+          fit: BoxFit.scaleDown,
+          child: Text(
+            clientData['email'] ?? 'No Email',
+            maxLines: 1,
+          ),
+        ),
         onTap: () => _showClientOptions(
           context,
           clientUid: clientUid,
