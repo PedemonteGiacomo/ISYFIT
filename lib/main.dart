@@ -103,7 +103,7 @@ class _IsyFitAppState extends State<IsyFitApp> {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/base': (context) => const BaseScreen(),
         '/questionnaire': (context) => const QuestionnaireScreen(),
         '/medical_history_dashboard': (context) => const MedicalHistoryScreen(),
@@ -170,8 +170,8 @@ class AuthGate extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     return authState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const LoginScreen(),
-      data: (user) => user != null ? const BaseScreen() : const LoginScreen(),
+      error: (_, __) => LoginScreen(),
+      data: (user) => user != null ? const BaseScreen() : LoginScreen(),
     );
   }
 }

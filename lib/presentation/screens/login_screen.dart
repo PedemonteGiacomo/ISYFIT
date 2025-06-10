@@ -8,7 +8,7 @@ import '../../domain/utils/firebase_error_translator.dart';
 class LoginScreen extends StatefulWidget {
   final AuthRepository authRepository;
 
-  const LoginScreen({Key? key, AuthRepository? authRepository})
+  LoginScreen({Key? key, AuthRepository? authRepository})
       : authRepository = authRepository ?? AuthRepository(),
         super(key: key);
 
