@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
 
     // If user is not logged in, return to LoginScreen
     if (user == null) {
-      return const LoginScreen();
+      return LoginScreen();
     }
 
     return FutureBuilder<DocumentSnapshot>(
