@@ -6,7 +6,9 @@ import 'package:isyfit/presentation/theme/app_gradients.dart';
 class PlanSelectionScreen extends StatelessWidget {
   const PlanSelectionScreen({Key? key}) : super(key: key);
 
-  /// Carica tutti i prodotti attivi
+  // ────────────────────────────────────────────────────────────────────
+  // Carica tutti i prodotti attivi
+  // ────────────────────────────────────────────────────────────────────
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _loadProducts() {
     return FirebaseFirestore.instance
         .collection('products')
@@ -30,10 +32,21 @@ class PlanSelectionScreen extends StatelessWidget {
             return const Center(child: Text('No plans available'));
           }
 
-          // Adatta colonne in base all’orientamento
+          // ── ORDINA: start → growth → pro ────────────────────────────
+          const order = ['start', 'growth', 'pro'];
+          products.sort((a, b) {
+            final ap = (a.data()['metadata']?['plan'] ?? '').toString().toLowerCase();
+            final bp = (b.data()['metadata']?['plan'] ?? '').toString().toLowerCase();
+            return order.indexOf(ap).compareTo(order.indexOf(bp));
+          });
+
+          // ── Layout responsivo ───────────────────────────────────────
           return OrientationBuilder(
             builder: (ctx, orientation) {
-              final crossCount = orientation == Orientation.portrait ? 1 : 3;
+              final isPortrait = orientation == Orientation.portrait;
+              final crossCount = isPortrait ? 1 : 3;
+              final aspect     = isPortrait ? 3 / 2 : 4 / 3; // un po’ più alto in landscape
+
               return GridView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: products.length,
@@ -41,11 +54,9 @@ class PlanSelectionScreen extends StatelessWidget {
                   crossAxisCount: crossCount,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 3 / 2,
+                  childAspectRatio: aspect,
                 ),
-                itemBuilder: (ctx, i) {
-                  return _PlanCard(doc: products[i]);
-                },
+                itemBuilder: (ctx, i) => _PlanCard(doc: products[i]),
               );
             },
           );
@@ -55,13 +66,13 @@ class PlanSelectionScreen extends StatelessWidget {
   }
 }
 
-/// Card che visualizza nome, descrizione e prezzi (nested) di un prodotto.
-/// Al tap restituisce il documento selezionato.
+// ──────────────────────────────────────────────────────────────────────
+// Card che visualizza nome, descrizione e prezzi di un prodotto
+// ──────────────────────────────────────────────────────────────────────
 class _PlanCard extends StatelessWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> doc;
   const _PlanCard({required this.doc});
 
-  /// Carica tutti i prezzi attivi per questo prodotto
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _loadPrices() {
     return doc.reference
         .collection('prices')
@@ -73,7 +84,8 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final data = doc.data();
+    final data  = doc.data();
+
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(12),
@@ -98,17 +110,19 @@ class _PlanCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // Descrizione
+              // Descrizione (max 2 righe per evitare overflow)
               Expanded(
                 child: Text(
                   data['description'] ?? '',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: theme.colorScheme.onPrimary),
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Prezzi nested
+              // Prezzi
               FutureBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
                 future: _loadPrices(),
                 builder: (ctx, snap2) {
@@ -119,15 +133,13 @@ class _PlanCard extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: prices.map((p) {
-                      final pd = p.data();
-                      final amount = (pd['unit_amount'] as num) / 100;
-                      final rec = pd['recurring'] as Map<String, dynamic>;
-                      final interval = rec['interval'] ?? 'month';
+                      final pd       = p.data();
+                      final amount   = (pd['unit_amount'] as num) / 100;
+                      final interval = (pd['recurring']?['interval'] ?? 'month').toString();
                       return Text(
                         '€${amount.toStringAsFixed(2)} / $interval',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          color: theme.colorScheme.onPrimary,
-                        ),
+                        style: theme.textTheme.headlineMedium
+                            ?.copyWith(color: theme.colorScheme.onPrimary),
                       );
                     }).toList(),
                   );
