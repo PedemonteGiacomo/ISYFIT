@@ -21,72 +21,77 @@ class ClientDashboard extends StatelessWidget {
       appBar: GradientAppBar(
         title: 'Client Dashboard',
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        child: FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (!snapshot.hasData || snapshot.data == null) {
-            return Center(
-              child: Text(
-                'No data found.',
-                style: theme.textTheme.bodyLarge,
-              ),
-            );
-          }
+            if (!snapshot.hasData || snapshot.data == null) {
+              return Center(
+                child: Text(
+                  'No data found.',
+                  style: theme.textTheme.bodyLarge,
+                ),
+              );
+            }
 
-          final userData = snapshot.data!.data() as Map<String, dynamic>?;
+            final userData = snapshot.data!.data() as Map<String, dynamic>?;
 
-          if (userData == null) {
-            return Center(
-              child: Text(
-                'No data found.',
-                style: theme.textTheme.bodyLarge,
-              ),
-            );
-          }
+            if (userData == null) {
+              return Center(
+                child: Text(
+                  'No data found.',
+                  style: theme.textTheme.bodyLarge,
+                ),
+              );
+            }
 
-          final bool isSolo = userData['isSolo'] == true;
-          if (isSolo) {
-            return _buildSoloCard(context);
-          } else {
-            final ptId = userData['supervisorPT'];
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(ptId)
-                  .get(),
-              builder: (context, ptSnapshot) {
-                if (ptSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            final bool isSolo = userData['isSolo'] == true;
+            if (isSolo) {
+              return _buildSoloCard(context);
+            } else {
+              final ptId = userData['supervisorPT'];
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(ptId)
+                    .get(),
+                builder: (context, ptSnapshot) {
+                  if (ptSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                if (!ptSnapshot.hasData || ptSnapshot.data == null) {
-                  return Center(
-                    child: Text(
-                      'PT information not available.',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  );
-                }
+                  if (!ptSnapshot.hasData || ptSnapshot.data == null) {
+                    return Center(
+                      child: Text(
+                        'PT information not available.',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    );
+                  }
 
-                final ptData = ptSnapshot.data!.data() as Map<String, dynamic>?;
-                if (ptData == null) {
-                  return Center(
-                    child: Text(
-                      'PT information not available.',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  );
-                }
-                return _buildPtCard(context, ptData);
-              },
-            );
-          }
-        },
+                  final ptData =
+                      ptSnapshot.data!.data() as Map<String, dynamic>?;
+                  if (ptData == null) {
+                    return Center(
+                      child: Text(
+                        'PT information not available.',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    );
+                  }
+                  return _buildPtCard(context, ptData);
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -94,6 +99,11 @@ class ClientDashboard extends StatelessWidget {
   /// Shows a Card indicating the user is in SOLO mode
   Widget _buildSoloCard(BuildContext context) {
     final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+    final cardWidth =
+        (isPortrait ? size.width * 0.8 : size.width * 0.5).clamp(280.0, 420.0);
 
     return Center(
       child: Padding(
@@ -103,7 +113,7 @@ class ClientDashboard extends StatelessWidget {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
-            width: 300,
+            width: cardWidth,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -136,6 +146,11 @@ class ClientDashboard extends StatelessWidget {
   Widget _buildPtCard(BuildContext context, Map<String, dynamic> ptData) {
     final theme = Theme.of(context);
     final String? ptImageUrl = ptData['profileImageUrl'];
+    final size = MediaQuery.of(context).size;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+    final cardWidth = (isPortrait ? size.width * 0.85 : size.width * 0.55)
+        .clamp(300.0, 450.0);
 
     return Center(
       child: SingleChildScrollView(
@@ -145,7 +160,7 @@ class ClientDashboard extends StatelessWidget {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Container(
-            width: 340,
+            width: cardWidth,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,

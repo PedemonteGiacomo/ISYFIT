@@ -327,401 +327,417 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       appBar: GradientAppBar(
         title: 'Registration',
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              /// The main Card container
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Card(
-                  elevation: 6,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  shadowColor: theme.colorScheme.primary.withOpacity(0.4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // ---------------------------------------------------
-                          // Name + Surname
-                          // ---------------------------------------------------
-                          Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isPortrait =
+              MediaQuery.of(context).orientation == Orientation.portrait;
+          final widthFactor = isPortrait ? 0.9 : 0.6;
+          final cardWidth =
+              (constraints.maxWidth * widthFactor).clamp(320.0, 500.0);
+
+          return Center(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  /// The main Card container
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      shadowColor: theme.colorScheme.primary.withOpacity(0.4),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: cardWidth),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Expanded(
+                              // ---------------------------------------------------
+                              // Name + Surname
+                              // ---------------------------------------------------
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _nameController,
+                                      decoration: InputDecoration(
+                                        labelText: 'Name',
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.person,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _surnameController,
+                                      decoration: InputDecoration(
+                                        labelText: 'Surname',
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.person_outline,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // ---------------------------------------------------
+                              // Gender Selection using Icons
+                              // ---------------------------------------------------
+                              _buildGenderSelection(),
+                              const SizedBox(height: 16),
+
+                              // ---------------------------------------------------
+                              // Email Field
+                              // ---------------------------------------------------
+                              Focus(
+                                onFocusChange: (hasFocus) {
+                                  if (!hasFocus) {
+                                    setState(() => _emailFieldTouched = true);
+                                  }
+                                },
                                 child: TextField(
-                                  controller: _nameController,
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  onChanged: (value) {
+                                    setState(() {});
+                                  },
                                   decoration: InputDecoration(
-                                    labelText: 'Name',
+                                    labelText: 'Email',
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    prefixIcon: Icon(
-                                      Icons.person,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                                    prefixIcon: Icon(Icons.email,
+                                        color: theme.colorScheme.primary),
+                                    suffixIcon: _emailFieldTouched
+                                        ? Icon(
+                                            _isEmailValid
+                                                ? Icons.check_circle
+                                                : Icons.cancel,
+                                            color: _isEmailValid
+                                                ? Colors.green
+                                                : Colors.red,
+                                          )
+                                        : null,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextField(
-                                  controller: _surnameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Surname',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person_outline,
-                                      color: theme.colorScheme.primary,
+                              const SizedBox(height: 16),
+
+                              // ---------------------------------------------------
+                              // Password Field with Info Icon
+                              // ---------------------------------------------------
+                              Stack(
+                                children: [
+                                  TextField(
+                                    controller: _passwordController,
+                                    obscureText: true,
+                                    onChanged: (value) {
+                                      setState(() {});
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: 'Password',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.lock,
+                                        color: theme.colorScheme.primary,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // ---------------------------------------------------
-                          // Gender Selection using Icons
-                          // ---------------------------------------------------
-                          _buildGenderSelection(),
-                          const SizedBox(height: 16),
-
-                          // ---------------------------------------------------
-                          // Email Field
-                          // ---------------------------------------------------
-                          Focus(
-                            onFocusChange: (hasFocus) {
-                              if (!hasFocus) {
-                                setState(() => _emailFieldTouched = true);
-                              }
-                            },
-                            child: TextField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              onChanged: (value) {
-                                setState(() {});
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(Icons.email,
-                                    color: theme.colorScheme.primary),
-                                suffixIcon: _emailFieldTouched
-                                    ? Icon(
-                                        _isEmailValid
-                                            ? Icons.check_circle
-                                            : Icons.cancel,
-                                        color: _isEmailValid
+                                  Positioned(
+                                    right: 10,
+                                    top: 10,
+                                    child: GestureDetector(
+                                      onTap: () => setState(() {
+                                        _showPasswordInfo = !_showPasswordInfo;
+                                      }),
+                                      child: Icon(
+                                        Icons.info_outline,
+                                        color: _allRequirementsMet
                                             ? Colors.green
                                             : Colors.red,
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // ---------------------------------------------------
-                          // Password Field with Info Icon
-                          // ---------------------------------------------------
-                          Stack(
-                            children: [
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: true,
-                                onChanged: (value) {
-                                  setState(() {});
-                                },
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _showPasswordInfo = !_showPasswordInfo;
-                                  }),
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    color: _allRequirementsMet
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          _buildPasswordInfo(),
-                          const SizedBox(height: 16),
-
-                          // ---------------------------------------------------
-                          // Phone Prefix + Number
-                          // ---------------------------------------------------
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 130,
-                                child: DropdownButton2<String>(
-                                  isExpanded: true,
-                                  value: _selectedCountryCode,
-                                  hint: const Text('Prefix'),
-                                  items: countryCodes.map((country) {
-                                    final code = country['code']!;
-                                    final flag = country['flag']!;
-                                    final name = country['name']!;
-                                    return DropdownMenuItem<String>(
-                                      value: code,
-                                      child: Row(
-                                        children: [
-                                          Text(flag,
-                                              style: const TextStyle(
-                                                  fontSize: 18)),
-                                          const SizedBox(width: 8),
-                                          Text('$name ($code)'),
-                                        ],
                                       ),
-                                    );
-                                  }).toList(),
-                                  selectedItemBuilder: (context) =>
-                                      countryCodes.map((country) {
-                                    return Row(
-                                      children: [
-                                        Text(country['flag']!,
-                                            style:
-                                                const TextStyle(fontSize: 18)),
-                                        const SizedBox(width: 4),
-                                        Text(country['code']!),
-                                      ],
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedCountryCode = value;
-                                    });
-                                  },
-                                  dropdownStyleData: DropdownStyleData(
-                                    width: 250,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      color: theme.colorScheme.surface,
                                     ),
                                   ),
-                                  buttonStyleData: const ButtonStyleData(
-                                    height: 48,
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 8),
-                                  ),
-                                ),
+                                ],
                               ),
-                              const SizedBox(width: 16),
-                              SizedBox(
-                                width: 200,
-                                child: TextField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
+                              _buildPasswordInfo(),
+                              const SizedBox(height: 16),
+
+                              // ---------------------------------------------------
+                              // Phone Prefix + Number
+                              // ---------------------------------------------------
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 130,
+                                    child: DropdownButton2<String>(
+                                      isExpanded: true,
+                                      value: _selectedCountryCode,
+                                      hint: const Text('Prefix'),
+                                      items: countryCodes.map((country) {
+                                        final code = country['code']!;
+                                        final flag = country['flag']!;
+                                        final name = country['name']!;
+                                        return DropdownMenuItem<String>(
+                                          value: code,
+                                          child: Row(
+                                            children: [
+                                              Text(flag,
+                                                  style: const TextStyle(
+                                                      fontSize: 18)),
+                                              const SizedBox(width: 8),
+                                              Text('$name ($code)'),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      selectedItemBuilder: (context) =>
+                                          countryCodes.map((country) {
+                                        return Row(
+                                          children: [
+                                            Text(country['flag']!,
+                                                style: const TextStyle(
+                                                    fontSize: 18)),
+                                            const SizedBox(width: 4),
+                                            Text(country['code']!),
+                                          ],
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedCountryCode = value;
+                                        });
+                                      },
+                                      dropdownStyleData: DropdownStyleData(
+                                        width: 250,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          color: theme.colorScheme.surface,
+                                        ),
+                                      ),
+                                      buttonStyleData: const ButtonStyleData(
+                                        height: 48,
+                                        padding:
+                                            EdgeInsets.symmetric(horizontal: 8),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  SizedBox(
+                                    width: 200,
+                                    child: TextField(
+                                      controller: _phoneController,
+                                      keyboardType: TextInputType.phone,
+                                      decoration: InputDecoration(
+                                        labelText: 'Phone Number',
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // ---------------------------------------------------
+                              // Date Picker
+                              // ---------------------------------------------------
+                              GestureDetector(
+                                onTap: _pickDate,
+                                child: InputDecorator(
                                   decoration: InputDecoration(
-                                    labelText: 'Phone Number',
+                                    labelText: 'Date of Birth',
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
+                                    prefixIcon: Icon(Icons.calendar_today,
+                                        color: theme.colorScheme.primary),
+                                  ),
+                                  child: Text(
+                                    _selectedDate == null
+                                        ? 'Select Date'
+                                        : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                                    style: TextStyle(
+                                      color: _selectedDate == null
+                                          ? Colors.grey
+                                          : textTheme.bodyMedium?.color,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
+                              const SizedBox(height: 16),
 
-                          // ---------------------------------------------------
-                          // Date Picker
-                          // ---------------------------------------------------
-                          GestureDetector(
-                            onTap: _pickDate,
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: 'Date of Birth',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(Icons.calendar_today,
-                                    color: theme.colorScheme.primary),
-                              ),
-                              child: Text(
-                                _selectedDate == null
-                                    ? 'Select Date'
-                                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                                style: TextStyle(
-                                  color: _selectedDate == null
-                                      ? Colors.grey
-                                      : textTheme.bodyMedium?.color,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // ---------------------------------------------------
-                          // Terms & Conditions
-                          // ---------------------------------------------------
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _agreeToTerms,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _agreeToTerms = value ?? false;
-                                  });
-                                },
-                              ),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title:
-                                            const Text('Terms and Conditions'),
-                                        content: SingleChildScrollView(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: const [
-                                              Text(
-                                                'By using this app, you agree to:\n\n'
-                                                '1. Share your personal information for account creation\n'
-                                                '2. Allow us to process your data according to GDPR\n'
-                                                '3. Receive notifications about your training\n'
-                                                '4. Follow safety guidelines during workouts\n\n'
-                                                'For full terms and privacy policy, visit our website.',
+                              // ---------------------------------------------------
+                              // Terms & Conditions
+                              // ---------------------------------------------------
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _agreeToTerms,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _agreeToTerms = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text(
+                                                'Terms and Conditions'),
+                                            content: SingleChildScrollView(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const [
+                                                  Text(
+                                                    'By using this app, you agree to:\n\n'
+                                                    '1. Share your personal information for account creation\n'
+                                                    '2. Allow us to process your data according to GDPR\n'
+                                                    '3. Receive notifications about your training\n'
+                                                    '4. Follow safety guidelines during workouts\n\n'
+                                                    'For full terms and privacy policy, visit our website.',
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text('Close'),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('Close'),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 1),
+                                        child: Text(
+                                          'I accept all the conditions and privacy policy.',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.primary,
+                                            decoration:
+                                                TextDecoration.underline,
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 1),
-                                    child: Text(
-                                      'I accept all the conditions and privacy policy.',
-                                      style: TextStyle(
-                                        color: theme.colorScheme.primary,
-                                        decoration: TextDecoration.underline,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
+                              const SizedBox(height: 16),
 
-                          // ---------------------------------------------------
-                          // Solo or Assign PT
-                          // ---------------------------------------------------
-                          Row(
-                            children: [
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Go SOLO"),
-                                  value: true,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? true;
-                                    });
-                                  },
-                                ),
-                              ),
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Assign PT"),
-                                  value: false,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? false;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // If user chooses "Assign PT," show the PT email field
-                          if (!isSolo)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: TextField(
-                                controller: _ptEmailController,
-                                decoration: InputDecoration(
-                                  labelText: 'PT Email',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              // ---------------------------------------------------
+                              // Solo or Assign PT
+                              // ---------------------------------------------------
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: const Text("Go SOLO"),
+                                      value: true,
+                                      groupValue: isSolo,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          isSolo = value ?? true;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                  prefixIcon: Icon(Icons.email_outlined,
-                                      color: theme.colorScheme.primary),
-                                ),
+                                  Expanded(
+                                    child: RadioListTile<bool>(
+                                      title: const Text("Assign PT"),
+                                      value: false,
+                                      groupValue: isSolo,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          isSolo = value ?? false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          const SizedBox(height: 20),
 
-                          // ---------------------------------------------------
-                          // Register Button
-                          // ---------------------------------------------------
-                          if (_isLoading)
-                            const CircularProgressIndicator()
-                          else
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: theme.colorScheme.onPrimary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              // If user chooses "Assign PT," show the PT email field
+                              if (!isSolo)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: TextField(
+                                    controller: _ptEmailController,
+                                    decoration: InputDecoration(
+                                      labelText: 'PT Email',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      prefixIcon: Icon(Icons.email_outlined,
+                                          color: theme.colorScheme.primary),
+                                    ),
+                                  ),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 32, vertical: 14),
-                              ),
-                              onPressed: _registerClient,
-                              child: const Text(
-                                'Register',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                        ],
+                              const SizedBox(height: 20),
+
+                              // ---------------------------------------------------
+                              // Register Button
+                              // ---------------------------------------------------
+                              if (_isLoading)
+                                const CircularProgressIndicator()
+                              else
+                                FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 32, vertical: 14),
+                                  ),
+                                  onPressed: _registerClient,
+                                  child: const Text(
+                                    'Register',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
