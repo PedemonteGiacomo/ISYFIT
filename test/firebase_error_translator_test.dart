@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/utils/firebase_error_translator.dart';
+import 'package:isyfit/domain/utils/firebase_error_translator.dart';
 
 void main() {
   group('FirebaseErrorTranslator.fromException', () {

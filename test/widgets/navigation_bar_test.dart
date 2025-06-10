@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/widgets/navigation_bar.dart' as nav;
+import 'package:isyfit/presentation/widgets/navigation_bar.dart' as nav;
 
 void main() {
   testWidgets('NavigationBar notifies index changes', (tester) async {
