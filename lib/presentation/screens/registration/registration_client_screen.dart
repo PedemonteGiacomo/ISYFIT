@@ -228,6 +228,29 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     );
   }
 
+  /// Helper method to create a TextField with consistent styling
+  Widget _textField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   /// Gender selection with icon buttons for Male and Female.
   Widget _buildGenderSelection() {
     final theme = Theme.of(context);
@@ -475,78 +498,54 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           // Phone Prefix + Number
                           // ---------------------------------------------------
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 130,
-                                child: DropdownButton2<String>(
-                                  isExpanded: true,
-                                  value: _selectedCountryCode,
-                                  hint: const Text('Prefix'),
-                                  items: countryCodes.map((country) {
-                                    final code = country['code']!;
-                                    final flag = country['flag']!;
-                                    final name = country['name']!;
-                                    return DropdownMenuItem<String>(
-                                      value: code,
-                                      child: Row(
-                                        children: [
-                                          Text(flag,
-                                              style: const TextStyle(
-                                                  fontSize: 18)),
-                                          const SizedBox(width: 8),
-                                          Text('$name ($code)'),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                  selectedItemBuilder: (context) =>
-                                      countryCodes.map((country) {
-                                    return Row(
-                                      children: [
-                                        Text(country['flag']!,
+                          // Phone
+                          Row(children: [
+                            Expanded(
+                              flex: 2, // Takes 2/5 of the available space
+                              child: DropdownButton2<String>(
+                                value: _selectedCountryCode,
+                                hint: const Text('Prefix'),
+                                isExpanded: true,
+                                items: [
+                                  for (final c in countryCodes)
+                                    DropdownMenuItem(
+                                      value: c['code'],
+                                      child: Row(children: [
+                                        Text(c['flag']!,
                                             style:
                                                 const TextStyle(fontSize: 18)),
-                                        const SizedBox(width: 4),
-                                        Text(country['code']!),
-                                      ],
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedCountryCode = value;
-                                    });
-                                  },
-                                  dropdownStyleData: DropdownStyleData(
-                                    width: 250,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      color: theme.colorScheme.surface,
+                                        const SizedBox(width: 8),
+                                        Text('${c['name']} (${c['code']})'),
+                                      ]),
                                     ),
-                                  ),
-                                  buttonStyleData: const ButtonStyleData(
-                                    height: 48,
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 8),
-                                  ),
-                                ),
+                                ],
+                                selectedItemBuilder: (ctx) =>
+                                    countryCodes.map((c) {
+                                  return Row(
+                                    children: [
+                                      Text(c['flag']!,
+                                          style: const TextStyle(fontSize: 18)),
+                                      const SizedBox(width: 6),
+                                      Text(c['code']!),
+                                    ],
+                                  );
+                                }).toList(),
+                                onChanged: (v) =>
+                                    setState(() => _selectedCountryCode = v),
+                                buttonStyleData:
+                                    const ButtonStyleData(height: 48),
+                                dropdownStyleData:
+                                    DropdownStyleData(width: 250),
                               ),
-                              const SizedBox(width: 16),
-                              SizedBox(
-                                width: 200,
-                                child: TextField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    labelText: 'Phone Number',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              flex: 3, // Takes 3/5 of the available space
+                              child: _textField(
+                                  _phoneController, 'Phone', Icons.phone,
+                                  keyboard: TextInputType.phone),
+                            ),
+                          ]),
                           const SizedBox(height: 16),
 
                           // ---------------------------------------------------
