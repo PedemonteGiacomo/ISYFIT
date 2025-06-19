@@ -69,23 +69,32 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Card(
-                  elevation: 8,
+                  elevation: 12, // card più "alta" visivamente
                   shadowColor: theme.shadowColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(30.0),
                   ),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: cardWidth),
+                    constraints: BoxConstraints(
+                      maxWidth: cardWidth,
+                      minHeight: isPortrait
+                          ? constraints.maxHeight * 0.4
+                          : constraints.maxHeight * 0.70, // card più alta
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center, // elementi centrati verticalmente
+                        crossAxisAlignment: CrossAxisAlignment.center, // elementi centrati orizzontalmente
                         children: [
-                          // Title
-                          Text(
-                            'IsyFit',
-                            style: theme.textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+                          // Logo (rimane a sinistra per mantenere il branding)
+                          Align(
+                            alignment: Alignment.center,
+                            child: Image.asset(
+                              'assets/images/ISYFIT_LOGO.jpg',
+                              height: 100,
+                              fit: BoxFit.contain,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -124,47 +133,50 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Login Button
+                          // Login Button al centro
                           _isLoading
                               ? const CircularProgressIndicator()
-                              : ElevatedButton(
-                                  onPressed: _login,
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
+                              : Center(
+                                  child: ElevatedButton(
+                                    onPressed: _login,
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0,
+                                        horizontal: 24.0,
+                                      ),
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12.0,
-                                      horizontal: 24.0,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Login',
-                                    style: TextStyle(
+                                    child: Text(
+                                      'Login',
+                                      style: TextStyle(
                                         fontSize: 16,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary),
+                                        color: theme.colorScheme.onPrimary,
+                                      ),
+                                    ),
                                   ),
                                 ),
                           const SizedBox(height: 16),
 
-                          // Register Redirect
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const RegistrationScreen(),
+                          // Redirect alla registrazione al centro
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const RegistrationScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Non sei registrato? Clicca qui',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              );
-                            },
-                            child: Text(
-                              'Not registered yet? Click here',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),

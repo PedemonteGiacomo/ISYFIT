@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 const Color kElectricBlue = Color(0xFF0062FF);
 const Color kBlack = Colors.black;
 const Color kWhite = Colors.white;
+const Color kGrey = Color(0xfff3f5f7);
 
 const MaterialColor kElectricBlueSwatch = MaterialColor(
   0xFF0062FF,
@@ -29,7 +30,7 @@ ThemeData buildAppTheme({bool isDark = false}) {
     useMaterial3: true, // Activates many M3 styles (shapes, transitions, etc.)
 
     primaryColor: kElectricBlue,
-    scaffoldBackgroundColor: isDark ? kBlack : kWhite,
+    scaffoldBackgroundColor: isDark ? kBlack : kGrey,
 
     // Text
     textTheme: base.textTheme.apply(
@@ -61,7 +62,7 @@ ThemeData buildAppTheme({bool isDark = false}) {
     colorScheme: base.colorScheme.copyWith(
       primary: kElectricBlue,
       secondary: kElectricBlue,
-      background: isDark ? kBlack : kWhite,
+      surfaceContainer: isDark ? kBlack : kWhite, // Replaced deprecated background
       surface: isDark ? const Color(0xFF1E1E1E) : kWhite,
       onPrimary: kWhite,
       onSecondary: kWhite,

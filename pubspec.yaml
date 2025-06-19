@@ -66,6 +66,7 @@ flutter:
     - assets/images/man_silhouette_front.jpg
     - assets/images/man_silhouette_lateral_left.jpg
     - assets/images/man_silhouette_lateral_right.jpg
+    - assets/images/swipe_up-removebg.png
 
   fonts:
     - family: Roboto

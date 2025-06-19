@@ -115,50 +115,201 @@ class _IsyFitAppState extends State<IsyFitApp> {
 }
 
 /// SPLASH -----------------------------------------------------------------
+///
+/// * Dopo 4 s abilita lo swipe.
+/// * Il contenuto del Splash segue il dito in tempo reale.
+/// * Finché l'opacità bianca è > 0 mostra solo uno sfondo neutro, poi rivela
+///   gradualmente la schermata reale sottostante (AuthGate).
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  // ---------- Animazione del suggerimento "UP SWIPE" ----------
+  late final AnimationController _hintCtrl;  // bounce
+  late final Animation<Offset> _hintAnim;
+
+  // ---------- Slide dell'intero Splash ----------
+  late final AnimationController _slideCtrl; // 0 → fermo, 1 → fuori dallo schermo
+  late final Animation<Offset> _slideAnim;
+
+  bool _canSwipe = false;   // attivo dopo 4 s
+  double _dragStartY = 0;   // memorizza partenza gesto
+  static const _distanceThreshold = 0.30; // 30 % altezza schermo
+
   @override
   void initState() {
     super.initState();
+
+    // ---------- Controller bounce del logo suggerimento ----------
+    _hintCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _hintAnim = Tween<Offset>(begin: const Offset(0, .15), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _hintCtrl, curve: Curves.easeInOut));
+
+    // ---------- Controller slide Splash ----------
+    _slideCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _slideAnim = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -1))
+        .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut));
+
+    // Dopo 4 s abilita swipe e avvia anim bounce logo
     Future.delayed(const Duration(seconds: 4), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const AuthGate()),
-      );
+      if (!mounted) return;
+      setState(() => _canSwipe = true);
+      _hintCtrl.repeat(reverse: true);
     });
   }
 
   @override
+  void dispose() {
+    _hintCtrl.dispose();
+    _slideCtrl.dispose();
+    super.dispose();
+  }
+
+  // ------------------------------------------------------------
+  // BUILD
+  // ------------------------------------------------------------
+  @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width * .7;
-    final h = MediaQuery.of(context).size.height * .3;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Image.asset('assets/images/ISYFIT_LOGO.jpg', width: w, height: h),
-          const SizedBox(height: 40),
-          AnimatedTextKit(
-            isRepeatingAnimation: false,
-            animatedTexts: [
-              TypewriterAnimatedText(
-                'Fitness, in your pocket.',
-                textStyle: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue),
-                speed: const Duration(milliseconds: 100),
+      body: Stack(
+        children: [
+          // Schermata reale sottostante (non interagibile finché splash ≠ 1)
+          const AuthGate(),
+
+          // Overlay bianco che svanisce gradualmente — evita "sbirciatine" sgradevoli
+          AnimatedBuilder(
+            animation: _slideCtrl,
+            builder: (_, __) {
+              final opacity = (1 - _slideCtrl.value).clamp(0.0, 1.0);
+              return IgnorePointer(
+                ignoring: true,
+                child: Opacity(
+                  opacity: opacity,
+                  child: Container(color: Colors.white),
+                ),
+              );
+            },
+          ),
+
+          // Splash che scorre via
+          SlideTransition(
+            position: _slideAnim,
+            child: GestureDetector(
+              // START
+              onVerticalDragStart: (details) => _dragStartY = details.globalPosition.dy,
+
+              // UPDATE — segue il dito
+              onVerticalDragUpdate: (details) {
+                if (!_canSwipe) return;
+                final delta = (_dragStartY - details.globalPosition.dy).clamp(0.0, screenHeight);
+                _slideCtrl.value = delta / screenHeight;
+              },
+
+              // END — decide se chiudere o tornare indietro
+              onVerticalDragEnd: (details) {
+                if (!_canSwipe) return;
+
+                final shouldClose =
+                    _slideCtrl.value > _distanceThreshold ||
+                    (details.primaryVelocity != null && details.primaryVelocity! < -700);
+
+                if (shouldClose) {
+                  _finishSplash();
+                } else {
+                  _slideCtrl.reverse(); // torna giù
+                }
+              },
+              child: _buildSplashUI(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Completa lo splash (animazione fino a 1 e poi navigazione)
+  // ------------------------------------------------------------
+  void _finishSplash() {
+    _hintCtrl.stop();
+    _slideCtrl.animateTo(1, duration: const Duration(milliseconds: 200)).then((_) {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthGate()),
+        );
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+  // UI vera e propria separata per pulizia
+  // ------------------------------------------------------------
+  Widget _buildSplashUI(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Stack(
+      children: [
+        // ------------- LOGO + PAYOFF -------------
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: size.width * .5, // logo largo la metà dello schermo
+                child: Image.asset(
+                  'assets/images/ISYFIT_LOGO.jpg',
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 40),
+              AnimatedTextKit(
+                isRepeatingAnimation: false,
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    'Fitness, in your pocket.',
+                    textStyle: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                    speed: const Duration(milliseconds: 100),
+                  ),
+                ],
               ),
             ],
           ),
-        ]),
-      ),
+        ),
+
+        // ------------- LOGO "UP SWIPE" RIMBALZANTE -------------
+        if (_canSwipe && _slideCtrl.value < 0.05)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 32),
+              child: SlideTransition(
+                position: _hintAnim,
+                child: Image.asset(
+                  'assets/images/swipe_up-removebg.png',
+                  width: size.width * .35,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
