@@ -35,6 +35,7 @@ dependencies:
   app_links: ^6.4.0
   flutter_stripe: ^11.5.0
   flutter_riverpod: ^2.6.1
+  flutter_local_notifications: ^19.3.0
 
   # --- NUOVO: runtime per il builder usato ---
   json_annotation: ^4.9.0         # ← NEW

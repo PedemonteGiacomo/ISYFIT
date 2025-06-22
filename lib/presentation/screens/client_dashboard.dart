@@ -4,9 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 
-class ClientDashboard extends StatelessWidget {
+class ClientDashboard extends StatefulWidget {
   const ClientDashboard({Key? key}) : super(key: key);
 
+  @override
+  State<ClientDashboard> createState() => _ClientDashboardState();
+}
+
+class _ClientDashboardState extends State<ClientDashboard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -22,11 +27,11 @@ class ClientDashboard extends StatelessWidget {
         title: 'Client Dashboard',
       ),
       body: SafeArea(
-        child: FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
-              .get(),
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -53,8 +58,28 @@ class ClientDashboard extends StatelessWidget {
             }
 
             final bool isSolo = userData['isSolo'] == true;
+            final String? reqStatus = userData['requestStatus'] as String?;
             if (isSolo) {
-              return _buildSoloCard(context);
+              return Column(
+                children: [
+                  if (reqStatus != null)
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            reqStatus == 'pending'
+                                ? 'Request pending approval.'
+                                : 'Request $reqStatus',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ),
+                    ),
+                  _buildSoloCard(context),
+                ],
+              );
             } else {
               final ptId = userData['supervisorPT'];
               return FutureBuilder<DocumentSnapshot>(

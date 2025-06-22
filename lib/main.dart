@@ -16,6 +16,7 @@ import 'presentation/screens/medical_history/medical_questionnaire/questionnaire
 import 'presentation/screens/medical_history/anamnesis_screen.dart';
 import 'presentation/theme/app_theme.dart';
 import 'domain/providers/auth_provider.dart';
+import 'data/services/notification_service.dart';
 
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
@@ -34,6 +35,7 @@ Future<void> main() async {
     appleProvider: AppleProvider.debug,
     androidProvider: AndroidProvider.debug,
   );
+  await NotificationService.instance.init();
 
   runApp(const ProviderScope(child: IsyFitApp()));
 }
@@ -131,15 +133,16 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   // ---------- Animazione del suggerimento "UP SWIPE" ----------
-  late final AnimationController _hintCtrl;  // bounce
+  late final AnimationController _hintCtrl; // bounce
   late final Animation<Offset> _hintAnim;
 
   // ---------- Slide dell'intero Splash ----------
-  late final AnimationController _slideCtrl; // 0 → fermo, 1 → fuori dallo schermo
+  late final AnimationController
+      _slideCtrl; // 0 → fermo, 1 → fuori dallo schermo
   late final Animation<Offset> _slideAnim;
 
-  bool _canSwipe = false;   // attivo dopo 4 s
-  double _dragStartY = 0;   // memorizza partenza gesto
+  bool _canSwipe = false; // attivo dopo 4 s
+  double _dragStartY = 0; // memorizza partenza gesto
   static const _distanceThreshold = 0.30; // 30 % altezza schermo
 
   @override
@@ -211,12 +214,14 @@ class _SplashScreenState extends State<SplashScreen>
             position: _slideAnim,
             child: GestureDetector(
               // START
-              onVerticalDragStart: (details) => _dragStartY = details.globalPosition.dy,
+              onVerticalDragStart: (details) =>
+                  _dragStartY = details.globalPosition.dy,
 
               // UPDATE — segue il dito
               onVerticalDragUpdate: (details) {
                 if (!_canSwipe) return;
-                final delta = (_dragStartY - details.globalPosition.dy).clamp(0.0, screenHeight);
+                final delta = (_dragStartY - details.globalPosition.dy)
+                    .clamp(0.0, screenHeight);
                 _slideCtrl.value = delta / screenHeight;
               },
 
@@ -224,9 +229,9 @@ class _SplashScreenState extends State<SplashScreen>
               onVerticalDragEnd: (details) {
                 if (!_canSwipe) return;
 
-                final shouldClose =
-                    _slideCtrl.value > _distanceThreshold ||
-                    (details.primaryVelocity != null && details.primaryVelocity! < -700);
+                final shouldClose = _slideCtrl.value > _distanceThreshold ||
+                    (details.primaryVelocity != null &&
+                        details.primaryVelocity! < -700);
 
                 if (shouldClose) {
                   _finishSplash();
@@ -247,7 +252,9 @@ class _SplashScreenState extends State<SplashScreen>
   // ------------------------------------------------------------
   void _finishSplash() {
     _hintCtrl.stop();
-    _slideCtrl.animateTo(1, duration: const Duration(milliseconds: 200)).then((_) {
+    _slideCtrl
+        .animateTo(1, duration: const Duration(milliseconds: 200))
+        .then((_) {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AuthGate()),

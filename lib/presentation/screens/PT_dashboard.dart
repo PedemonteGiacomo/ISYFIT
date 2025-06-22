@@ -15,10 +15,50 @@ import 'package:isyfit/presentation/screens/account/account_screen.dart';
 import 'package:isyfit/presentation/screens/isy_training/isy_training_main_screen.dart';
 import 'package:isyfit/presentation/screens/isy_check/isy_check_main_screen.dart';
 import '../../data/repositories/client_repository.dart';
+import '../notifications/pt_notifications_screen.dart';
+import '../../data/services/notification_service.dart';
 
-class PTDashboard extends StatelessWidget {
+class PTDashboard extends StatefulWidget {
   PTDashboard({Key? key}) : super(key: key);
+
+  @override
+  State<PTDashboard> createState() => _PTDashboardState();
+}
+
+class _PTDashboardState extends State<PTDashboard> {
   final ClientRepository _clientRepo = ClientRepository();
+  StreamSubscription<DocumentSnapshot>? _sub;
+  int _unread = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _sub = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots()
+          .listen((doc) {
+        final data = doc.data() as Map<String, dynamic>? ?? {};
+        final notifs =
+            List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+        final count = notifs.where((n) => n['read'] == false).length;
+        if (count > _unread) {
+          NotificationService.instance.showNotification(
+              title: 'Nuova richiesta',
+              body: 'Hai nuove richieste dai clienti');
+        }
+        setState(() => _unread = count);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   /// Fetch logged-in user's name
   Future<String> _fetchUserName() async {
@@ -222,6 +262,36 @@ class PTDashboard extends StatelessWidget {
     return Scaffold(
       appBar: GradientAppBar(
         title: 'PT Dashboard',
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PTNotificationsScreen(ptId: user.uid),
+                ),
+              );
+            },
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications),
+                if (_unread > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          )
+        ],
       ),
       body: FutureBuilder<String>(
         future: _fetchUserName(),

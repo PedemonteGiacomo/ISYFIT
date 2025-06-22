@@ -98,7 +98,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       );
       return;
     }
-    
+
     // 5) Check if the password is empty or does not meet requirements
     if (_passwordController.text.trim().isEmpty || !_allRequirementsMet) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,12 +140,12 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         'surname': _surnameController.text.trim(),
         'phone': '$_selectedCountryCode ${_phoneController.text.trim()}',
         'dateOfBirth': _selectedDate.toIso8601String(),
-        'isSolo': isSolo,
+        'isSolo': true,
         'gender': _gender, // store the chosen gender
       };
 
-
-      // 9) If user chooses "Assign PT", try linking by PT email
+      // 9) If user chooses "Assign PT", just notify the PT
+      String? ptId;
       if (!isSolo) {
         final ptQuery = await FirebaseFirestore.instance
             .collection('users')
@@ -154,41 +154,48 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
             .get();
 
         if (ptQuery.docs.isEmpty) {
-            // If no PT found => revert changes
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No PT found with this email.')),
-            );
-            setState(() => _isLoading = false);
-            return;
-          }
-
-          final ptDoc = ptQuery.docs.first;
-          final ptId = ptDoc.id;
-          clientData['supervisorPT'] = ptId; // link to that PT
-
-          // Register the client using the AuthRepository
-          userCredential = await _authRepo.register(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No PT found with this email.')),
           );
+          setState(() => _isLoading = false);
+          return;
+        }
 
-          // Also add this client to PT’s "clients" array
-          await FirebaseFirestore.instance.collection('users').doc(ptId).update({
-            'clients': FieldValue.arrayUnion([userCredential.user!.uid]),
-          });
-      }else{
-        // Register the client using the AuthRepository
-        userCredential = await _authRepo.register(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
+        final ptDoc = ptQuery.docs.first;
+        ptId = ptDoc.id;
+        clientData['requestedPT'] = ptId;
+        clientData['requestStatus'] = 'pending';
       }
 
-      // 10) Save doc in Firestore
+      // Register the client using the AuthRepository
+      userCredential = await _authRepo.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      // Save doc in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set(clientData);
+
+      // If a PT was chosen, add a notification to that PT
+      if (ptId != null) {
+        final notifId = FirebaseFirestore.instance.collection('tmp').doc().id;
+        final notif = {
+          'id': notifId,
+          'clientId': userCredential.user!.uid,
+          'clientName': _nameController.text.trim(),
+          'clientSurname': _surnameController.text.trim(),
+          'clientEmail': _emailController.text.trim(),
+          'status': 'pending',
+          'read': false,
+          'timestamp': Timestamp.now(),
+        };
+        await FirebaseFirestore.instance.collection('users').doc(ptId).update({
+          'notifications': FieldValue.arrayUnion([notif])
+        });
+      }
 
       // 11) Navigate to main flow and clear navigation stack
       Navigator.pushAndRemoveUntil(
