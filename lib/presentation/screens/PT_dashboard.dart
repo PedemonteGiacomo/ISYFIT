@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// Your other local screens
-import 'package:isyfit/presentation/screens/isy_lab/isy_lab_main_screen.dart';
+import 'dart:async';
 import 'package:isyfit/presentation/screens/login_screen.dart';
-import 'package:isyfit/presentation/screens/measurements/measurements_home_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/isy_client_options_dialog.dart';
 import 'package:isyfit/presentation/theme/app_gradients.dart';
 import 'manage_clients_screen.dart';
-import 'package:isyfit/presentation/screens/medical_history/anamnesis_screen.dart';
-import 'package:isyfit/presentation/screens/account/account_screen.dart';
-import 'package:isyfit/presentation/screens/isy_training/isy_training_main_screen.dart';
-import 'package:isyfit/presentation/screens/isy_check/isy_check_main_screen.dart';
-import '../../data/repositories/client_repository.dart';
-import '../notifications/pt_notifications_screen.dart';
-import '../../data/services/notification_service.dart';
+import 'package:isyfit/data/repositories/client_repository.dart';
+import 'package:isyfit/presentation/screens/notifications/pt_notifications_screen.dart';
+import 'package:isyfit/data/services/notification_service.dart';
 
 class PTDashboard extends StatefulWidget {
   PTDashboard({Key? key}) : super(key: key);
