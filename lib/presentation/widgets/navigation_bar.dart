@@ -40,6 +40,11 @@ class NavigationBar extends StatelessWidget {
           icon: Icon(Icons.person),
           label: "Account",
         ),
+        // TODO: Add nutrion if needed
+        // BottomNavigationBarItem(
+        //   icon: Icon(Icons.restaurant_menu),
+        //   label: "Nutrition",
+        // ),
       ],
     );
   }

@@ -27,6 +27,8 @@ class _BaseScreenState extends State<BaseScreen> {
       IsyLabMainScreen(),
       IsyCheckMainScreen(),
       AccountScreen(),
+      //TODO: Add NutritionScreen if needed
+      // NutritionScreen(),
     ];
   }
 

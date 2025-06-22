@@ -18,7 +18,6 @@ import 'presentation/theme/app_theme.dart';
 import 'domain/providers/auth_provider.dart';
 
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -96,6 +95,8 @@ class _IsyFitAppState extends State<IsyFitApp> {
     super.dispose();
   }
 
+  // TODO: Verificare la necessità di fare redirect in questo modo, nel codice ci sono widget che direttamente ne restituiscono altri, senza passare per le route.
+  // Per esempio, in BaseScreen viene restituito direttamente il widget HomeScreen.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

@@ -28,7 +28,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
 
   // -------------------- State Variables --------------------
   String? _selectedCountryCode;
-  DateTime? _selectedDate;
+  DateTime _selectedDate = DateTime(2000, 1, 1); // Default date
   bool _isLoading = false;
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
@@ -74,7 +74,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       return;
     }
 
-    // 2) Check email format
+    // 2) Check if the user have provided the gender
+    if (_gender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your gender.')),
+      );
+      return;
+    }
+
+    // 3) Check email format
     if (!_isEmailValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid email address.')),
@@ -82,17 +90,40 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       return;
     }
 
-    // 3) Attempt creation
+    // 4) Check if the name and surname are provided
+    if (_nameController.text.trim().isEmpty ||
+        _surnameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name and surname are required.')),
+      );
+      return;
+    }
+    
+    // 5) Check if the password is empty or does not meet requirements
+    if (_passwordController.text.trim().isEmpty || !_allRequirementsMet) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Password must be at least 8 characters long and meet all requirements.'),
+        ),
+      );
+      return;
+    }
+
+    // 6) Check phone number is provided
+    if (_phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number is required.')),
+      );
+      return;
+    }
+
+    // 7) Attempt creation
     setState(() => _isLoading = true);
 
     UserCredential? userCredential;
     try {
-      userCredential = await _authRepo.register(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-
-      // 4) Prepare doc for Firestore
+      // 8) Prepare doc for Firestore
       if (_selectedCountryCode == null) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,18 +132,20 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         return;
       }
 
+      // Prepare the client data to save in Firestore
       final clientData = <String, dynamic>{
         'role': 'Client',
         'email': _emailController.text.trim(),
         'name': _nameController.text.trim(),
         'surname': _surnameController.text.trim(),
         'phone': '$_selectedCountryCode ${_phoneController.text.trim()}',
-        'dateOfBirth': _selectedDate?.toIso8601String(),
+        'dateOfBirth': _selectedDate.toIso8601String(),
         'isSolo': isSolo,
         'gender': _gender, // store the chosen gender
       };
 
-      // 5) If user chooses "Assign PT", try linking by PT email
+
+      // 9) If user chooses "Assign PT", try linking by PT email
       if (!isSolo) {
         final ptQuery = await FirebaseFirestore.instance
             .collection('users')
@@ -121,34 +154,47 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
             .get();
 
         if (ptQuery.docs.isEmpty) {
-          // If no PT found => revert changes
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No PT found with this email.')),
+            // If no PT found => revert changes
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No PT found with this email.')),
+            );
+            setState(() => _isLoading = false);
+            return;
+          }
+
+          final ptDoc = ptQuery.docs.first;
+          final ptId = ptDoc.id;
+          clientData['supervisorPT'] = ptId; // link to that PT
+
+          // Register the client using the AuthRepository
+          userCredential = await _authRepo.register(
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
           );
-          setState(() => _isLoading = false);
-          return;
-        }
 
-        final ptDoc = ptQuery.docs.first;
-        final ptId = ptDoc.id;
-        clientData['supervisorPT'] = ptId; // link to that PT
-
-        // Also add this client to PT’s "clients" array
-        await FirebaseFirestore.instance.collection('users').doc(ptId).update({
-          'clients': FieldValue.arrayUnion([userCredential.user!.uid]),
-        });
+          // Also add this client to PT’s "clients" array
+          await FirebaseFirestore.instance.collection('users').doc(ptId).update({
+            'clients': FieldValue.arrayUnion([userCredential.user!.uid]),
+          });
+      }else{
+        // Register the client using the AuthRepository
+        userCredential = await _authRepo.register(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
       }
 
-      // 6) Save doc in Firestore
+      // 10) Save doc in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set(clientData);
 
-      // 7) Navigate to main flow
-      Navigator.pushReplacement(
+      // 11) Navigate to main flow and clear navigation stack
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const BaseScreen()),
+        (route) => false, // This removes all previous routes
       );
     } on FirebaseAuthException catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e);
@@ -167,7 +213,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   Future<void> _pickDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime(2000, 1, 1),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );

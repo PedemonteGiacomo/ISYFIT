@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
 
     // If user is not logged in, return to LoginScreen
     if (user == null) {
-      return LoginScreen();
+      return LoginScreen(); //TODO: understand if we should apply routing redirection here
     }
 
     return FutureBuilder<DocumentSnapshot>(
@@ -36,9 +36,9 @@ class HomeScreen extends StatelessWidget {
         } else {
           final role = snapshot.data!.get('role');
           if (role == 'PT') {
-            return PTDashboard(); // to PT Dashboard
+            return PTDashboard(); // to PT Dashboard TODO: understand if we should apply routing redirection here
           } else if (role == 'Client') {
-            return const ClientDashboard(); // to Client Dashboard
+            return const ClientDashboard(); // to Client Dashboard TODO: understand if we should apply routing redirection here
           } else {
             return Center(
               child: Text(
