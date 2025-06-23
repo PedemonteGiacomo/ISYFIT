@@ -7,25 +7,41 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
+  final AndroidNotificationChannel _channel = const AndroidNotificationChannel(
+    'pt_requests',
+    'PT Requests',
+    description: 'Notifications for PT client requests',
+    importance: Importance.high,
+  );
+
+  int _counter = 0;
+
   Future<void> init() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
     await _plugin.initialize(settings);
+
+    final androidImpl =
+        _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final iosImpl =
+        _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+
+    await androidImpl?.createNotificationChannel(_channel);
+    await androidImpl?.requestPermission();
+    await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  Future<void> showNotification(
-      {required String title, required String body}) async {
-    const androidDetails = AndroidNotificationDetails(
-      'pt_requests',
-      'PT Requests',
-      channelDescription: 'Notifications for PT client requests',
+  Future<void> showNotification({required String title, required String body}) async {
+    final androidDetails = AndroidNotificationDetails(
+      _channel.id,
+      _channel.name,
+      channelDescription: _channel.description,
       importance: Importance.high,
       priority: Priority.high,
     );
     const iosDetails = DarwinNotificationDetails();
-    const detail =
-        NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.show(0, title, body, detail);
+    final detail = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    await _plugin.show(_counter++, title, body, detail);
   }
 }
