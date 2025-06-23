@@ -14,12 +14,13 @@ class PTNotificationsScreen extends StatefulWidget {
 class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
   /// Marks *every* notification as read the first time the screen is shown.
   Future<void> _markAllAsRead() async {
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(widget.ptId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.ptId)
+        .get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
-    final notifs =
-        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
 
     bool changed = false;
     for (final n in notifs) {
@@ -50,12 +51,12 @@ class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
         FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs =
-        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     final idx = notifs.indexWhere((n) => n['id'] == notif['id']);
     if (idx >= 0) {
       notifs[idx]['status'] = 'accepted';
-      notifs[idx]['read'] = true; // Mark as read when accepted is no more needed since is readed when the notification is shown
+      notifs[idx]['read'] =
+          true; // Mark as read when accepted is no more needed since is readed when the notification is shown
     }
     await notifsRef.update({
       'notifications': notifs,
@@ -65,6 +66,15 @@ class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
       'isSolo': false,
       'supervisorPT': widget.ptId,
       'requestStatus': 'accepted',
+      'notifications': FieldValue.arrayUnion([
+        {
+          'id': FirebaseFirestore.instance.collection('tmp').doc().id,
+          'title': 'Richiesta accettata',
+          'body': 'Il tuo PT ha accettato la tua richiesta',
+          'read': false,
+          'timestamp': Timestamp.now(),
+        }
+      ]),
     });
   }
 
@@ -74,8 +84,7 @@ class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
         FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs =
-        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     final idx = notifs.indexWhere((n) => n['id'] == notif['id']);
     if (idx >= 0) {
       notifs[idx]['status'] = 'rejected';
@@ -92,8 +101,7 @@ class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
         FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs =
-        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     notifs.removeWhere((n) => n['id'] == notif['id']);
     await notifsRef.update({'notifications': notifs});
   }

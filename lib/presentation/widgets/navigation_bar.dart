@@ -25,6 +25,10 @@ class NavigationBar extends StatelessWidget {
           label: "Home",
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.notifications),
+          label: "Notifiche",
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.fitness_center),
           label: "IsyTraining",
         ),
