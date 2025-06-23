@@ -117,7 +117,7 @@ class _PhotoHomeScreenWithTabsState extends State<PhotoHomeScreenWithTabs>
           Container(
             width: double.infinity, // ensure it's full width
             decoration: BoxDecoration(
-              gradient: AppGradients.primary(Theme.of(context)),
+              gradient: AppGradients.primaryToWhite(Theme.of(context)),
             ),
             child: TabBar(
               controller: _tabController,
