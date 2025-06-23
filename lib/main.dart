@@ -145,6 +145,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _canSwipe = false; // attivo dopo 4 s
   double _dragStartY = 0; // memorizza partenza gesto
   static const _distanceThreshold = 0.30; // 30 % altezza schermo
+  bool _splashFinished = false; // rimuove overlay senza ricaricare
 
   @override
   void initState() {
@@ -187,6 +188,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    if (_splashFinished) {
+      return const AuthGate();
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -257,9 +261,7 @@ class _SplashScreenState extends State<SplashScreen>
         .animateTo(1, duration: const Duration(milliseconds: 200))
         .then((_) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AuthGate()),
-        );
+        setState(() => _splashFinished = true);
       }
     });
   }
