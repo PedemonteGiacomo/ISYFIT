@@ -46,34 +46,34 @@ class _ClientDashboardState extends State<ClientDashboard> {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _loadLastNotified(user.uid);
-      _sub = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .snapshots()
-          .listen((doc) async {
-        final data = doc.data() as Map<String, dynamic>? ?? {};
-        final notifs =
-            List<Map<String, dynamic>>.from(data['notifications'] ?? []);
-        final count = notifs.where((n) => n['read'] == false).length;
-        final latest = _latestTimestamp(notifs);
-        if (_lastNotifiedMs != null &&
-            latest != null &&
-            latest > _lastNotifiedMs!) {
-          NotificationService.instance.showNotification(
-            title: 'Nuova notifica',
-            body: 'Il tuo PT ha aggiornato le notifiche',
-            target: NotificationTarget.client,
-          );
-          _lastNotifiedMs = latest;
-          _saveLastNotified(user.uid, latest);
-        } else if (_lastNotifiedMs == null && latest != null) {
-          _lastNotifiedMs = latest;
-          _saveLastNotified(user.uid, latest);
-        }
-        setState(() => _unread = count);
-      });
+      _setupNotifications(user.uid);
     }
+  }
+
+  Future<void> _setupNotifications(String uid) async {
+    await _loadLastNotified(uid);
+    _sub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      final notifs =
+          List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+      final count = notifs.where((n) => n['read'] == false).length;
+      final latest = _latestTimestamp(notifs);
+      if (latest != null &&
+          (_lastNotifiedMs == null || latest > _lastNotifiedMs!)) {
+        NotificationService.instance.showNotification(
+          title: 'Nuova notifica',
+          body: 'Il tuo PT ha aggiornato le notifiche',
+          target: NotificationTarget.client,
+        );
+        _lastNotifiedMs = latest;
+        _saveLastNotified(uid, latest);
+      }
+      setState(() => _unread = count);
+    });
   }
 
   @override
