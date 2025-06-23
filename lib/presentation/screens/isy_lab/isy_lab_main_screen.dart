@@ -76,22 +76,37 @@ class _IsyLabTwoTabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final String actualClientUid =
         clientUid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
     return DefaultTabController(
       length: 2, // Changed from 3 to 2
       initialIndex: 1, // If you want "Measurements" as default
       child: Scaffold(
-        bottomNavigationBar: const TabBar(
-          tabs: [
-            Tab(icon: Icon(Icons.photo_camera), text: "Photo"),
-            Tab(
-                icon: Icon(Icons.monitor_weight_outlined),
-                text: "Measurements"),
-            // Removed bodyfat tab
-          ],
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary.withOpacity(0.6),
+                Colors.white,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: TabBar(
+            tabs: const [
+              Tab(icon: Icon(Icons.photo_camera), text: "Photo"),
+              Tab(
+                  icon: Icon(Icons.monitor_weight_outlined),
+                  text: "Measurements"),
+              // Removed bodyfat tab
+            ],
+            labelColor: theme.colorScheme.onPrimary,
+            unselectedLabelColor: theme.colorScheme.onPrimary.withOpacity(0.7),
+            indicatorColor: Colors.white,
+            indicatorWeight: 3,
+          ),
         ),
         appBar: GradientAppBar(
           title: "IsyLab",
