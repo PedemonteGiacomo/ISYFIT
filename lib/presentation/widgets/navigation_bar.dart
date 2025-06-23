@@ -13,47 +13,52 @@ class NavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: onIndexChanged,      
-      backgroundColor: theme.colorScheme.surface,
-      elevation: 0,
-      type: BottomNavigationBarType.fixed,
-      selectedLabelStyle: TextStyle(color: theme.colorScheme.primary),
-      unselectedLabelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-      selectedItemColor: theme.colorScheme.primary,
-      unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.7),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: "Home",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: "Notifiche",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.fitness_center),
-          label: "IsyTraining",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.science_outlined),
-          label: "IsyLab",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.check_circle_outline),
-          label: "IsyCheck",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: "Account",
-        ),
-        // TODO: Add nutrion if needed
-        // BottomNavigationBarItem(
-        //   icon: Icon(Icons.restaurant_menu),
-        //   label: "Nutrition",
-        // ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            offset: const Offset(0, -1),
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: onIndexChanged,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: theme.colorScheme.primary,
+        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.7),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: "Notifiche",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: "IsyTraining",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.science_outlined),
+            label: "IsyLab",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle_outline),
+            label: "IsyCheck",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Account",
+          ),
+        ],
+      ),
     );
   }
 }
