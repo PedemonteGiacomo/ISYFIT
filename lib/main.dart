@@ -280,7 +280,7 @@ class _SplashScreenState extends State<SplashScreen>
               SizedBox(
                 width: size.width * .5, // logo largo la metà dello schermo
                 child: Image.asset(
-                  'assets/images/ISYFIT_LOGO.jpg',
+                  'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
                   fit: BoxFit.contain,
                 ),
               ),

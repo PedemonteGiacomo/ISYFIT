@@ -92,8 +92,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.center,
                             child: Image.asset(
-                              'assets/images/ISYFIT_LOGO.jpg',
+                              'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
                               height: 100,
+                              width: 222,
                               fit: BoxFit.contain,
                             ),
                           ),

@@ -57,7 +57,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/ISYFIT_LOGO.jpg
+    - assets/images/ISYFIT_LOGO_new-removebg-resized.png
     - assets/images/silhoutte.png
     - assets/images/woman_silhouette_back.jpg
     - assets/images/woman_silhouette_front.jpg
