@@ -8,7 +8,7 @@ class AppGradients {
 
   static LinearGradient primary(ThemeData theme) => LinearGradient(
         colors: primaryColors(theme),
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
       );
 }
