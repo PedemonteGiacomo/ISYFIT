@@ -10,6 +10,7 @@ import 'manage_clients_screen.dart';
 import 'package:isyfit/data/repositories/client_repository.dart';
 import 'package:isyfit/presentation/screens/notifications/pt_notifications_screen.dart';
 import 'package:isyfit/data/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PTDashboard extends StatefulWidget {
   PTDashboard({Key? key}) : super(key: key);
@@ -22,25 +23,57 @@ class _PTDashboardState extends State<PTDashboard> {
   final ClientRepository _clientRepo = ClientRepository();
   StreamSubscription<DocumentSnapshot>? _sub;
   int _unread = 0;
+  int? _lastNotifiedMs;
+
+  Future<void> _loadLastNotified(String uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    _lastNotifiedMs = prefs.getInt('last_notif_$uid');
+  }
+
+  Future<void> _saveLastNotified(String uid, int tsMs) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_notif_$uid', tsMs);
+  }
+
+  int? _latestTimestamp(List<Map<String, dynamic>> notifs) {
+    int? latest;
+    for (final n in notifs) {
+      final ts = (n['timestamp'] as Timestamp?)?.millisecondsSinceEpoch;
+      if (ts != null && (latest == null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    return latest;
+  }
 
   @override
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      _loadLastNotified(user.uid);
       _sub = FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .snapshots()
-          .listen((doc) {
+          .listen((doc) async {
         final data = doc.data() as Map<String, dynamic>? ?? {};
         final notifs =
             List<Map<String, dynamic>>.from(data['notifications'] ?? []);
         final count = notifs.where((n) => n['read'] == false).length;
-        if (count > _unread) {
+        final latest = _latestTimestamp(notifs);
+        if (_lastNotifiedMs != null &&
+            latest != null &&
+            latest > _lastNotifiedMs!) {
           NotificationService.instance.showNotification(
-              title: 'Nuova richiesta',
-              body: 'Hai nuove richieste dai clienti');
+            title: 'Nuova richiesta',
+            body: 'Hai nuove richieste dai clienti',
+          );
+          _lastNotifiedMs = latest;
+          _saveLastNotified(user.uid, latest);
+        } else if (_lastNotifiedMs == null && latest != null) {
+          _lastNotifiedMs = latest;
+          _saveLastNotified(user.uid, latest);
         }
         setState(() => _unread = count);
       });

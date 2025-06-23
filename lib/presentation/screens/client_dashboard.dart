@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
+import 'package:isyfit/data/services/notification_service.dart';
+import 'notifications/client_notifications_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClientDashboard extends StatefulWidget {
   const ClientDashboard({Key? key}) : super(key: key);
@@ -12,6 +16,72 @@ class ClientDashboard extends StatefulWidget {
 }
 
 class _ClientDashboardState extends State<ClientDashboard> {
+  StreamSubscription<DocumentSnapshot>? _sub;
+  int _unread = 0;
+  int? _lastNotifiedMs;
+
+  Future<void> _loadLastNotified(String uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    _lastNotifiedMs = prefs.getInt('last_notif_$uid');
+  }
+
+  Future<void> _saveLastNotified(String uid, int tsMs) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_notif_$uid', tsMs);
+  }
+
+  int? _latestTimestamp(List<Map<String, dynamic>> notifs) {
+    int? latest;
+    for (final n in notifs) {
+      final ts = (n['timestamp'] as Timestamp?)?.millisecondsSinceEpoch;
+      if (ts != null && (latest == null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    return latest;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _setupNotifications(user.uid);
+    }
+  }
+
+  Future<void> _setupNotifications(String uid) async {
+    await _loadLastNotified(uid);
+    _sub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      final notifs =
+          List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+      final count = notifs.where((n) => n['read'] == false).length;
+      final latest = _latestTimestamp(notifs);
+      if (latest != null &&
+          (_lastNotifiedMs == null || latest > _lastNotifiedMs!)) {
+        NotificationService.instance.showNotification(
+          title: 'Nuova notifica',
+          body: 'Il tuo PT ha aggiornato le notifiche',
+          target: NotificationTarget.client,
+        );
+        _lastNotifiedMs = latest;
+        _saveLastNotified(uid, latest);
+      }
+      setState(() => _unread = count);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -25,6 +95,36 @@ class _ClientDashboardState extends State<ClientDashboard> {
     return Scaffold(
       appBar: GradientAppBar(
         title: 'Client Dashboard',
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientNotificationsScreen(clientId: user.uid),
+                ),
+              );
+            },
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications),
+                if (_unread > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          )
+        ],
       ),
       body: SafeArea(
         child: StreamBuilder<DocumentSnapshot>(

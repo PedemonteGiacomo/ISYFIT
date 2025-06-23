@@ -5,6 +5,7 @@ import 'isy_training/isy_training_main_screen.dart';
 import 'isy_lab/isy_lab_main_screen.dart';
 import 'isy_check/isy_check_main_screen.dart';
 import 'account/account_screen.dart';
+import 'notifications/client_notifications_screen.dart';
 import '../widgets/navigation_bar.dart' as NavigationBar;
 
 class BaseScreen extends StatefulWidget {
@@ -21,12 +22,13 @@ class _BaseScreenState extends State<BaseScreen> {
   @override
   void initState() {
     super.initState();
-    _screens = const [
-      HomeScreen(),
-      IsyTrainingMainScreen(),
-      IsyLabMainScreen(),
-      IsyCheckMainScreen(),
-      AccountScreen(),
+    _screens = [
+      const HomeScreen(),
+      ClientNotificationsScreen(clientId: clientid),
+      const IsyTrainingMainScreen(),
+      const IsyLabMainScreen(),
+      const IsyCheckMainScreen(),
+      const AccountScreen(),
       //TODO: Add NutritionScreen if needed
       // NutritionScreen(),
     ];
