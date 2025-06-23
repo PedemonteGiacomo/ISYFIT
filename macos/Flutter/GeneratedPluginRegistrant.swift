@@ -14,8 +14,6 @@ import firebase_auth
 import firebase_core
 import firebase_storage
 import flutter_local_notifications
-  FlutterLocalNotificationsPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalNotificationsPlugin"))
-import flutter_local_notifications
 import path_provider_foundation
 import printing
 import shared_preferences_foundation
