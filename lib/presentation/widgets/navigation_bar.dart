@@ -15,8 +15,12 @@ class NavigationBar extends StatelessWidget {
     final theme = Theme.of(context);
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: onIndexChanged,
+      onTap: onIndexChanged,      
       backgroundColor: theme.colorScheme.surface,
+      elevation: 0,
+      type: BottomNavigationBarType.fixed,
+      selectedLabelStyle: TextStyle(color: theme.colorScheme.primary),
+      unselectedLabelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
       selectedItemColor: theme.colorScheme.primary,
       unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.7),
       items: const [

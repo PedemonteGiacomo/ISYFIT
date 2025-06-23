@@ -92,7 +92,7 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                 // Gradient container for the TabBar
                 Container(
                   decoration: BoxDecoration(
-                    gradient: AppGradients.primary(Theme.of(context)),
+                    gradient: AppGradients.primaryToWhite(Theme.of(context)),
                   ),
                   // Build the TabBar depending on how many tabs
                   child: TabBar(
