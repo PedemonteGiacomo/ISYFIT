@@ -145,6 +145,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _canSwipe = false; // attivo dopo 4 s
   double _dragStartY = 0; // memorizza partenza gesto
   static const _distanceThreshold = 0.30; // 30 % altezza schermo
+  bool _splashFinished = false; // quando true l'overlay viene nascosto
 
   @override
   void initState() {
@@ -187,7 +188,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -195,54 +195,56 @@ class _SplashScreenState extends State<SplashScreen>
           // Schermata reale sottostante (non interagibile finché splash ≠ 1)
           const AuthGate(),
 
-          // Overlay bianco che svanisce gradualmente — evita "sbirciatine" sgradevoli
-          AnimatedBuilder(
-            animation: _slideCtrl,
-            builder: (_, __) {
-              final opacity = (1 - _slideCtrl.value).clamp(0.0, 1.0);
-              return IgnorePointer(
-                ignoring: true,
-                child: Opacity(
-                  opacity: opacity,
-                  child: Container(color: Colors.white),
-                ),
-              );
-            },
-          ),
-
-          // Splash che scorre via
-          SlideTransition(
-            position: _slideAnim,
-            child: GestureDetector(
-              // START
-              onVerticalDragStart: (details) =>
-                  _dragStartY = details.globalPosition.dy,
-
-              // UPDATE — segue il dito
-              onVerticalDragUpdate: (details) {
-                if (!_canSwipe) return;
-                final delta = (_dragStartY - details.globalPosition.dy)
-                    .clamp(0.0, screenHeight);
-                _slideCtrl.value = delta / screenHeight;
+          if (!_splashFinished) ...[
+            // Overlay bianco che svanisce gradualmente — evita "sbirciatine" sgradevoli
+            AnimatedBuilder(
+              animation: _slideCtrl,
+              builder: (_, __) {
+                final opacity = (1 - _slideCtrl.value).clamp(0.0, 1.0);
+                return IgnorePointer(
+                  ignoring: true,
+                  child: Opacity(
+                    opacity: opacity,
+                    child: Container(color: Colors.white),
+                  ),
+                );
               },
-
-              // END — decide se chiudere o tornare indietro
-              onVerticalDragEnd: (details) {
-                if (!_canSwipe) return;
-
-                final shouldClose = _slideCtrl.value > _distanceThreshold ||
-                    (details.primaryVelocity != null &&
-                        details.primaryVelocity! < -700);
-
-                if (shouldClose) {
-                  _finishSplash();
-                } else {
-                  _slideCtrl.reverse(); // torna giù
-                }
-              },
-              child: _buildSplashUI(context),
             ),
-          ),
+
+            // Splash che scorre via
+            SlideTransition(
+              position: _slideAnim,
+              child: GestureDetector(
+                // START
+                onVerticalDragStart: (details) =>
+                    _dragStartY = details.globalPosition.dy,
+
+                // UPDATE — segue il dito
+                onVerticalDragUpdate: (details) {
+                  if (!_canSwipe) return;
+                  final delta = (_dragStartY - details.globalPosition.dy)
+                      .clamp(0.0, screenHeight);
+                  _slideCtrl.value = delta / screenHeight;
+                },
+
+                // END — decide se chiudere o tornare indietro
+                onVerticalDragEnd: (details) {
+                  if (!_canSwipe) return;
+
+                  final shouldClose = _slideCtrl.value > _distanceThreshold ||
+                      (details.primaryVelocity != null &&
+                          details.primaryVelocity! < -700);
+
+                  if (shouldClose) {
+                    _finishSplash();
+                  } else {
+                    _slideCtrl.reverse(); // torna giù
+                  }
+                },
+                child: _buildSplashUI(context),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -257,9 +259,7 @@ class _SplashScreenState extends State<SplashScreen>
         .animateTo(1, duration: const Duration(milliseconds: 200))
         .then((_) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AuthGate()),
-        );
+        setState(() => _splashFinished = true);
       }
     });
   }
