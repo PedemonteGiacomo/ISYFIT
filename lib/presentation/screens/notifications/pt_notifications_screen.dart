@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../..//widgets/gradient_app_bar.dart';
+import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 
 class PTNotificationsScreen extends StatelessWidget {
   final String ptId;
