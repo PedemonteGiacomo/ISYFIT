@@ -3,20 +3,59 @@ import 'package:flutter/material.dart';
 
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 
-class PTNotificationsScreen extends StatelessWidget {
+class PTNotificationsScreen extends StatefulWidget {
   final String ptId;
   const PTNotificationsScreen({Key? key, required this.ptId}) : super(key: key);
 
+  @override
+  State<PTNotificationsScreen> createState() => _PTNotificationsScreenState();
+}
+
+class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
+  /// Marks *every* notification as read the first time the screen is shown.
+  Future<void> _markAllAsRead() async {
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(widget.ptId).get();
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+
+    final notifs =
+        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+
+    bool changed = false;
+    for (final n in notifs) {
+      if (!(n['read'] as bool? ?? false)) {
+        n['read'] = true;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.ptId)
+          .update({'notifications': notifs});
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Fire-and-forget; errors bubble into Flutter error handler.
+    _markAllAsRead();
+  }
+
   Future<void> _accept(Map<String, dynamic> notif) async {
     final clientId = notif['clientId'] as String;
-    final notifsRef = FirebaseFirestore.instance.collection('users').doc(ptId);
+    final notifsRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs =
+        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     final idx = notifs.indexWhere((n) => n['id'] == notif['id']);
     if (idx >= 0) {
       notifs[idx]['status'] = 'accepted';
-      notifs[idx]['read'] = true;
+      notifs[idx]['read'] = true; // Mark as read when accepted is no more needed since is readed when the notification is shown
     }
     await notifsRef.update({
       'notifications': notifs,
@@ -24,17 +63,19 @@ class PTNotificationsScreen extends StatelessWidget {
     });
     await FirebaseFirestore.instance.collection('users').doc(clientId).update({
       'isSolo': false,
-      'supervisorPT': ptId,
+      'supervisorPT': widget.ptId,
       'requestStatus': 'accepted',
     });
   }
 
   Future<void> _reject(Map<String, dynamic> notif) async {
     final clientId = notif['clientId'] as String;
-    final notifsRef = FirebaseFirestore.instance.collection('users').doc(ptId);
+    final notifsRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs =
+        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     final idx = notifs.indexWhere((n) => n['id'] == notif['id']);
     if (idx >= 0) {
       notifs[idx]['status'] = 'rejected';
@@ -47,10 +88,12 @@ class PTNotificationsScreen extends StatelessWidget {
   }
 
   Future<void> _delete(Map<String, dynamic> notif) async {
-    final notifsRef = FirebaseFirestore.instance.collection('users').doc(ptId);
+    final notifsRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.ptId);
     final doc = await notifsRef.get();
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final notifs = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+    final notifs =
+        List<Map<String, dynamic>>.from(data['notifications'] ?? []);
     notifs.removeWhere((n) => n['id'] == notif['id']);
     await notifsRef.update({'notifications': notifs});
   }
@@ -90,7 +133,7 @@ class PTNotificationsScreen extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(ptId)
+            .doc(widget.ptId)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

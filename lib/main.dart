@@ -18,7 +18,8 @@ import 'presentation/theme/app_theme.dart';
 import 'domain/providers/auth_provider.dart';
 import 'data/services/notification_service.dart';
 
-final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+// Using the globalNavigatorKey from notification_service.dart
+final GlobalKey<NavigatorState> _navKey = globalNavigatorKey;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
