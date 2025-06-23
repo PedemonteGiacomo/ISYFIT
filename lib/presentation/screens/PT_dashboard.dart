@@ -23,24 +23,23 @@ class _PTDashboardState extends State<PTDashboard> {
   final ClientRepository _clientRepo = ClientRepository();
   StreamSubscription<DocumentSnapshot>? _sub;
   int _unread = 0;
-  DateTime? _lastNotified;
+  int? _lastNotifiedMs;
 
   Future<void> _loadLastNotified(String uid) async {
     final prefs = await SharedPreferences.getInstance();
-    final ms = prefs.getInt('last_notif_$uid');
-    if (ms != null) _lastNotified = DateTime.fromMillisecondsSinceEpoch(ms);
+    _lastNotifiedMs = prefs.getInt('last_notif_$uid');
   }
 
-  Future<void> _saveLastNotified(String uid, DateTime ts) async {
+  Future<void> _saveLastNotified(String uid, int tsMs) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_notif_$uid', ts.millisecondsSinceEpoch);
+    await prefs.setInt('last_notif_$uid', tsMs);
   }
 
-  DateTime? _latestTimestamp(List<Map<String, dynamic>> notifs) {
-    DateTime? latest;
+  int? _latestTimestamp(List<Map<String, dynamic>> notifs) {
+    int? latest;
     for (final n in notifs) {
-      final ts = (n['timestamp'] as Timestamp?)?.toDate();
-      if (ts != null && (latest == null || ts.isAfter(latest))) {
+      final ts = (n['timestamp'] as Timestamp?)?.millisecondsSinceEpoch;
+      if (ts != null && (latest == null || ts > latest)) {
         latest = ts;
       }
     }
@@ -63,17 +62,17 @@ class _PTDashboardState extends State<PTDashboard> {
             List<Map<String, dynamic>>.from(data['notifications'] ?? []);
         final count = notifs.where((n) => n['read'] == false).length;
         final latest = _latestTimestamp(notifs);
-        if (_lastNotified != null &&
+        if (_lastNotifiedMs != null &&
             latest != null &&
-            latest.isAfter(_lastNotified!)) {
+            latest > _lastNotifiedMs!) {
           NotificationService.instance.showNotification(
             title: 'Nuova richiesta',
             body: 'Hai nuove richieste dai clienti',
           );
-          _lastNotified = latest;
+          _lastNotifiedMs = latest;
           _saveLastNotified(user.uid, latest);
-        } else if (_lastNotified == null && latest != null) {
-          _lastNotified = latest;
+        } else if (_lastNotifiedMs == null && latest != null) {
+          _lastNotifiedMs = latest;
           _saveLastNotified(user.uid, latest);
         }
         setState(() => _unread = count);
