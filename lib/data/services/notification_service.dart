@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:isyfit/presentation/screens/notifications/pt_notifications_screen.dart';
+import 'package:isyfit/presentation/screens/notifications/client_notifications_screen.dart';
+
+enum NotificationTarget { pt, client }
 
 /// A tiny global key that lets us navigate from anywhere.
-final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> globalNavigatorKey =
+    GlobalKey<NavigatorState>();
 
 class NotificationService {
   NotificationService._();
@@ -51,6 +55,7 @@ class NotificationService {
   Future<void> showNotification({
     required String title,
     required String body,
+    NotificationTarget target = NotificationTarget.pt,
   }) async {
     final androidDetails = AndroidNotificationDetails(
       _channel.id,
@@ -71,7 +76,7 @@ class NotificationService {
       title,
       body,
       detail,
-      payload: user?.uid, // 👈 route we’ll push on tap
+      payload: '${target.name}:${user?.uid}',
     );
   }
 
@@ -80,14 +85,22 @@ class NotificationService {
   /// Runs on the UI isolate for *all* taps except cold-start ones.
   void _handleTap(NotificationResponse response) {
     final payload = response.payload;
-    print('Notification tapped with payload: $payload');
-    if (payload == null) return;    
-    
+    if (payload == null) return;
+    final parts = payload.split(':');
+    if (parts.length != 2) return;
+    final target = parts[0];
+    final uid = parts[1];
+
+    Widget screen;
+    if (target == NotificationTarget.client.name) {
+      screen = ClientNotificationsScreen(clientId: uid);
+    } else {
+      screen = PTNotificationsScreen(ptId: uid);
+    }
+
     Navigator.push(
       globalNavigatorKey.currentContext!,
-      MaterialPageRoute(
-        builder: (context) => PTNotificationsScreen(ptId: payload),
-      ),
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
 

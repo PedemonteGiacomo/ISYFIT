@@ -93,6 +93,15 @@ class _PTNotificationsScreenState extends State<PTNotificationsScreen> {
     await notifsRef.update({'notifications': notifs});
     await FirebaseFirestore.instance.collection('users').doc(clientId).update({
       'requestStatus': 'rejected',
+      'notifications': FieldValue.arrayUnion([
+        {
+          'id': FirebaseFirestore.instance.collection('tmp').doc().id,
+          'title': 'Richiesta rifiutata',
+          'body': 'Il tuo PT ha rifiutato la tua richiesta',
+          'read': false,
+          'timestamp': Timestamp.now(),
+        }
+      ]),
     });
   }
 
