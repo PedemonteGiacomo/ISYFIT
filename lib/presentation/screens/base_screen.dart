@@ -41,11 +41,15 @@ class _BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     const hubSize = 56.0;
+    const menuRadius = 80.0;
+    const menuContainer = menuRadius * 2 + 40;
 
     return Scaffold(
       body: _screens[_currentIndex],
       extendBody: true,
       bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -54,7 +58,7 @@ class _BaseScreenState extends State<BaseScreen> {
               selected: _currentIndex == 0,
               onTap: () => _onTabChanged(0),
             ),
-            const SizedBox(width: hubSize / 2),
+            const SizedBox(width: menuContainer / 2),
             _buildMiniTab(
               icon: Icons.person,
               selected: _currentIndex == 5,
@@ -65,13 +69,13 @@ class _BaseScreenState extends State<BaseScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
-        width: hubSize + 80,
-        height: hubSize + 80,
+        width: menuContainer,
+        height: menuContainer,
         child: Stack(
           alignment: Alignment.center,
           children: [
             RadialMenu(
-              radius: (hubSize / 2) + 40,
+              radius: menuRadius,
               startAngle: math.pi,
               sweepAngle: math.pi,
               spin: false,
