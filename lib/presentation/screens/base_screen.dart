@@ -43,23 +43,21 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   // Size of the central IsyFit logo in the bottom bar.
   static const double _fabSize = 72.0;
-  // Distance between the logo's center and the arc of icons. Modify this
-  // value to move the arc closer or farther from the logo.
-        onTap: (i) => setState(() {
-          _currentIndex = i;
-          _menuOpen = false;
-        }),
-            SizedBox(
-              width: _fabSize,
-              height: _fabSize,
-              child: FloatingActionButton(
-                heroTag: 'isyfit',
-                backgroundColor: Colors.white,
-                elevation: 6,
-                onPressed: () => setState(() => _menuOpen = !_menuOpen),
-                    'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
-                  ),
+  // Distance between the logo's center and the arc of icons.
+  static const double _arcGap = 20.0;
+  
+  int _currentIndex = 0;
+  bool _menuOpen = false;
 
+  // List of screens to show based on bottom nav index
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const IsyTrainingMainScreen(),
+    const IsyLabMainScreen(),
+    const IsyCheckMainScreen(),
+    const AccountScreen(),
+    const IsyDiaryMainScreen(),
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,7 +66,7 @@ class _BaseScreenState extends State<BaseScreen> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: const _CenterDockedNoMargin(),
       floatingActionButton: SizedBox(
         width: 252,
         height: 252,
@@ -76,7 +74,7 @@ class _BaseScreenState extends State<BaseScreen> {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            Transform.translate(
+            if (_menuOpen) Transform.translate(
               offset: const Offset(0, -_arcGap),
               child: RadialMenu(
                 open: _menuOpen,
@@ -105,7 +103,9 @@ class _BaseScreenState extends State<BaseScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(8),
                   child: Image.asset(
-                      'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+                    'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
