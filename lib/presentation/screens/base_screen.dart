@@ -19,7 +19,7 @@ class _BaseScreenState extends State<BaseScreen> {
   static const double _fabSize = 72.0;
   // Distance between the logo's center and the arc of icons. Modify this
   // value to move the arc closer or farther from the logo.
-  static const double _arcGap = 16.0;
+  static const double _arcGap = -50.0;
 
   int _currentIndex = 0;
   late List<Widget> _screens;
