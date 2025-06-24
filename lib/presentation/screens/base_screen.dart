@@ -45,24 +45,20 @@ class _BaseScreenState extends State<BaseScreen> {
   static const double _fabSize = 72.0;
   // Distance between the logo's center and the arc of icons. Modify this
   // value to move the arc closer or farther from the logo.
-      floatingActionButtonLocation: const _CenterDockedNoMargin(),
-
-  int _currentIndex = 0;
-  late List<Widget> _screens;
-  bool _menuOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = const [
-      HomeScreen(),
-      IsyTrainingMainScreen(),
-      IsyLabMainScreen(),
-      IsyCheckMainScreen(),
-      IsyDiaryMainScreen(),
-      AccountScreen(),
-    ];
-  }
+        onTap: (i) => setState(() {
+          _currentIndex = i;
+          _menuOpen = false;
+        }),
+            SizedBox(
+              width: _fabSize,
+              height: _fabSize,
+              child: FloatingActionButton(
+                heroTag: 'isyfit',
+                backgroundColor: Colors.white,
+                elevation: 6,
+                onPressed: () => setState(() => _menuOpen = !_menuOpen),
+                    'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
+                  ),
 
   @override
   Widget build(BuildContext context) {
