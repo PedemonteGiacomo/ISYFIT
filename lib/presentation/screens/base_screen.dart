@@ -7,6 +7,7 @@ import 'isy_check/isy_check_main_screen.dart';
 import 'account/account_screen.dart';
 import 'isy_diary/isy_diary_main_screen.dart';
 import '../widgets/radial_menu.dart';
+import '../widgets/navigation_bar.dart' as nav;
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -42,59 +43,22 @@ class _BaseScreenState extends State<BaseScreen> {
   Widget build(BuildContext context) {
     const hubSize = 56.0;
     const menuRadius = 110.0;
-    const menuContainer = menuRadius * 2 + 40;
+    const barHeight = 64.0;
 
     return Scaffold(
-      body: _screens[_currentIndex],
       extendBody: true,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildMiniTab(
-              icon: Icons.home,
-              selected: _currentIndex == 0,
-              onTap: () => _onTabChanged(0),
-            ),
-            const SizedBox(width: menuContainer / 2),
-            _buildMiniTab(
-              icon: Icons.person,
-              selected: _currentIndex == 5,
-              onTap: () => _onTabChanged(5),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: SizedBox(
-        width: menuContainer,
-        height: menuContainer,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            RadialMenu(
+      body: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          _screens[_currentIndex],
+          Positioned(
+            bottom: barHeight / 2,
+            child: RadialMenu(
               radius: menuRadius,
               startAngle: math.pi,
               sweepAngle: math.pi,
               spin: false,
               open: _menuOpen,
-              center: GestureDetector(
-                onTap: () {
-                  setState(() => _menuOpen = !_menuOpen);
-                },
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                        'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
-                  ),
-                ),
-              ),
               items: const [
                 RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
                 RadialMenuItem(Icons.science, 'IsyLab'),
@@ -108,24 +72,15 @@ class _BaseScreenState extends State<BaseScreen> {
                 });
               },
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: nav.NavigationBar(
+        currentIndex: _currentIndex,
+        onIndexChanged: _onTabChanged,
+        onLogoTap: () => setState(() => _menuOpen = !_menuOpen),
+        hubSize: hubSize,
       ),
     );
   }
-
-  Widget _buildMiniTab({
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-  }) =>
-      IconButton(
-        icon: Icon(
-          icon,
-          color: selected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(.6),
-        ),
-        onPressed: onTap,
-      );
 }

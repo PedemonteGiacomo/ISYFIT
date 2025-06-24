@@ -146,7 +146,7 @@ class _RadialIconButton extends StatelessWidget {
     return Material(
       color: Colors.white,
       shape: const CircleBorder(),
-      elevation: 0,
+      elevation: 4,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
