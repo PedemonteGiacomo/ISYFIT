@@ -90,8 +90,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     constraints: BoxConstraints(
                       maxWidth: cardWidth,
                       minHeight: isPortrait
-                          ? constraints.maxHeight * 0.4
-                          : constraints.maxHeight * 0.70, // card più alta
+                          ? constraints.maxHeight * 0.35
+                          : constraints.maxHeight * 0.40, // card più alta
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -147,27 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Center(
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ForgotPasswordScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Password dimenticata?',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
 
                           // Login Button al centro
                           _isLoading
@@ -196,6 +175,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                           const SizedBox(height: 16),
 
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Password dimenticata?',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+
                           // Redirect alla registrazione al centro
                           Center(
                             child: TextButton(
@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               },
                               child: Text(
-                                'Non sei registrato? Clicca qui',
+                                'Non sei registrato? Registrati ora!',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
