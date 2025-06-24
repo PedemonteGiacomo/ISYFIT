@@ -38,20 +38,20 @@ class NavigationBar extends StatelessWidget {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: "Notifiche",
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: "IsyTraining",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.science_outlined),
+            icon: Icon(Icons.science),
             label: "IsyLab",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline),
+            icon: Icon(Icons.check_circle),
             label: "IsyCheck",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.apple),
+            label: "IsyDiary",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
