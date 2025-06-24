@@ -34,4 +34,16 @@ class AuthRepository {
   Future<void> confirmPasswordReset(String code, String newPassword) {
     return _auth.confirmPasswordReset(code: code, newPassword: newPassword);
   }
+
+  /// Update password for the current user.
+  Future<void> updatePassword(String newPassword) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-user',
+        message: 'No user is currently signed in.',
+      );
+    }
+    return user.updatePassword(newPassword);
+  }
 }

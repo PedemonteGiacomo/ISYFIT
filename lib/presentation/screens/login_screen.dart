@@ -73,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, constraints) {
             final isPortrait =
                 MediaQuery.of(context).orientation == Orientation.portrait;
-            final widthFactor = isPortrait ? 0.9 : 0.6;
+            final widthFactor = isPortrait ? 0.8 : 0.6;
             final cardWidth =
                 (constraints.maxWidth * widthFactor).clamp(320.0, 500.0);
 
