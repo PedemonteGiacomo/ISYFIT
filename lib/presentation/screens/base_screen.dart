@@ -45,8 +45,6 @@ class _BaseScreenState extends State<BaseScreen> {
       body: _screens[_currentIndex],
       extendBody: true,
       bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -66,39 +64,35 @@ class _BaseScreenState extends State<BaseScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
-        width: hubSize,
-        height: hubSize,
-        child: OverflowBox(
-          maxWidth: hubSize * 3,
-          maxHeight: hubSize * 3,
-          alignment: Alignment.topCenter,
-          child: Transform.translate(
-            offset: const Offset(0, 16),
-            child: RadialMenu(
-              radius: hubSize / 2 + 40,
-              startAngle: math.pi,
-              sweepAngle: math.pi,
-              spin: false,
-              center: GestureDetector(
-                onTap: () {},
-                child: Material(
-                  elevation: 6,
-                  shape: const CircleBorder(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                        'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
-                  ),
+        width: hubSize + 80,
+        height: hubSize + 80,
+        child: Transform.translate(
+          offset: const Offset(0, 16),
+          child: RadialMenu(
+            radius: (hubSize / 2) + 40,
+            startAngle: math.pi,
+            sweepAngle: math.pi,
+            spin: false,
+            center: GestureDetector(
+              onTap: () {},
+              child: Material(
+                color: Colors.white,
+                shape: const CircleBorder(),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(
+                      'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
                 ),
               ),
-              items: const [
-                RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
-                RadialMenuItem(Icons.science, 'IsyLab'),
-                RadialMenuItem(Icons.check_circle, 'IsyCheck'),
-                RadialMenuItem(Icons.apple, 'IsyDiary'),
-              ],
-              onItemTap: (i) => _onTabChanged(i + 1),
             ),
+            items: const [
+              RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
+              RadialMenuItem(Icons.science, 'IsyLab'),
+              RadialMenuItem(Icons.check_circle, 'IsyCheck'),
+              RadialMenuItem(Icons.apple, 'IsyDiary'),
+            ],
+            onItemTap: (i) => _onTabChanged(i + 1),
           ),
         ),
       ),
