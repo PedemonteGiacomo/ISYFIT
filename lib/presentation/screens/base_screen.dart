@@ -15,6 +15,12 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
+  // Size of the central IsyFit logo in the bottom bar.
+  static const double _fabSize = 72.0;
+  // Distance between the logo's center and the arc of icons. Modify this
+  // value to move the arc closer or farther from the logo.
+  static const double _arcGap = 16.0;
+
   int _currentIndex = 0;
   late List<Widget> _screens;
   bool _menuOpen = false;
@@ -44,8 +50,8 @@ class _BaseScreenState extends State<BaseScreen> {
       floatingActionButton: GestureDetector(
         onTap: () => setState(() => _menuOpen = !_menuOpen),
         child: Container(
-          width: 72,
-          height: 72,
+          width: _fabSize,
+          height: _fabSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,
@@ -69,7 +75,7 @@ class _BaseScreenState extends State<BaseScreen> {
         children: [
           _screens[_currentIndex],
           Positioned(
-            bottom: 80,
+            bottom: _fabSize / 2 + _arcGap,
             child: RadialMenu(
               open: _menuOpen,
               onSelected: (i) => setState(() {
