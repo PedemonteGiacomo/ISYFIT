@@ -10,7 +10,9 @@ import '../widgets/radial_menu.dart';
 import 'dart:math' as math;
 
 class _CenterDockedNoMargin extends FloatingActionButtonLocation {
-  const _CenterDockedNoMargin();
+  const _CenterDockedNoMargin([this.dy = 0]);
+
+  final double dy;
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
@@ -19,7 +21,7 @@ class _CenterDockedNoMargin extends FloatingActionButtonLocation {
         2.0;
     final double contentBottom = geometry.contentBottom;
     double fabY =
-        contentBottom - geometry.floatingActionButtonSize.height / 2.0;
+        contentBottom - geometry.floatingActionButtonSize.height / 2.0 + dy;
 
     final double bottomSheetHeight = geometry.bottomSheetSize.height;
     final double snackBarHeight = geometry.snackBarSize.height;
@@ -50,7 +52,7 @@ class _BaseScreenState extends State<BaseScreen> {
   bool _menuOpen = false;
 
   // List of screens to show based on bottom nav index
-  final List<Widget> _screens = [
+      floatingActionButtonLocation: const _CenterDockedNoMargin(8),
     const HomeScreen(),
     const IsyTrainingMainScreen(),
     const IsyLabMainScreen(),
