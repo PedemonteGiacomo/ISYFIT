@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
+import 'forgot_password_screen.dart';
 import '../../domain/utils/firebase_error_translator.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
+      if (!mounted) return;
       // Navigate to BaseScreen on success:
       Navigator.pushReplacement(
         context,
@@ -40,14 +42,24 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } on FirebaseAuthException catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
     } catch (e) {
       final msg = FirebaseErrorTranslator.fromException(e as Exception);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -79,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       maxWidth: cardWidth,
                       minHeight: isPortrait
                           ? constraints.maxHeight * 0.35
-                          : constraints.maxHeight * 0.70, // card più alta
+                          : constraints.maxHeight * 0.40,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -134,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
 
                           // Login Button al centro
                           _isLoading
@@ -163,6 +175,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                           const SizedBox(height: 16),
 
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Password dimenticata?',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+
                           // Redirect alla registrazione al centro
                           Center(
                             child: TextButton(
@@ -176,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               },
                               child: Text(
-                                'Non sei registrato? Clicca qui',
+                                'Non sei registrato? Registrati ora!',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,

@@ -19,4 +19,31 @@ class AuthRepository {
       password: password,
     );
   }
+
+  /// Send a password reset email to the given address.
+  Future<void> sendPasswordReset(String email) {
+    return _auth.sendPasswordResetEmail(email: email);
+  }
+
+  /// Verify a password reset code sent via email and return the associated email.
+  Future<String> verifyResetCode(String code) {
+    return _auth.verifyPasswordResetCode(code);
+  }
+
+  /// Confirm the password reset with the given code and new password.
+  Future<void> confirmPasswordReset(String code, String newPassword) {
+    return _auth.confirmPasswordReset(code: code, newPassword: newPassword);
+  }
+
+  /// Update password for the current user.
+  Future<void> updatePassword(String newPassword) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-user',
+        message: 'No user is currently signed in.',
+      );
+    }
+    return user.updatePassword(newPassword);
+  }
 }
