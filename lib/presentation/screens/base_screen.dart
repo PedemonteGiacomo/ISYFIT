@@ -19,19 +19,14 @@ class _CenterDockedNoMargin extends FloatingActionButtonLocation {
     final double fabX = (geometry.scaffoldSize.width -
             geometry.floatingActionButtonSize.width) /
         2.0;
+    
+    // Calculate base Y position
     final double contentBottom = geometry.contentBottom;
-    double fabY =
-        contentBottom - geometry.floatingActionButtonSize.height / 2.0 + dy;
-
-    final double bottomSheetHeight = geometry.bottomSheetSize.height;
-    final double snackBarHeight = geometry.snackBarSize.height;
-    fabY = math.min(
-        fabY,
-        geometry.scaffoldSize.height -
-            geometry.floatingActionButtonSize.height -
-            bottomSheetHeight -
-            snackBarHeight);
-
+    double fabY = contentBottom - geometry.floatingActionButtonSize.height / 2.0;
+    
+    // Apply the vertical offset
+    fabY += dy;
+    
     return Offset(fabX, fabY);
   }
 }
@@ -46,18 +41,16 @@ class _BaseScreenState extends State<BaseScreen> {
   // Size of the central IsyFit logo in the bottom bar.
   static const double _fabSize = 72.0;
   static const double _arcGap = 20.0;
-      // Lower the logo slightly so it sits inside the bottom bar notch.
-      floatingActionButtonLocation: const _CenterDockedNoMargin(16),
   
-  int _currentIndex = 0;
-  bool _menuOpen = false;
+  int _currentIndex = 0;  bool _menuOpen = false;
+
   // List of screens to show based on bottom nav index
   final List<Widget> _screens = [
     const HomeScreen(),
+    const AccountScreen(),
     const IsyTrainingMainScreen(),
     const IsyLabMainScreen(),
     const IsyCheckMainScreen(),
-    const AccountScreen(),
     const IsyDiaryMainScreen(),
   ];
   @override
@@ -68,7 +61,7 @@ class _BaseScreenState extends State<BaseScreen> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
       ),
-      floatingActionButtonLocation: const _CenterDockedNoMargin(8),
+      floatingActionButtonLocation: const _CenterDockedNoMargin(-5),
       floatingActionButton: SizedBox(
         width: 252,
         height: 252,
@@ -77,11 +70,10 @@ class _BaseScreenState extends State<BaseScreen> {
           clipBehavior: Clip.none,
           children: [
             if (_menuOpen) Transform.translate(
-              offset: const Offset(0, -_arcGap),
-              child: RadialMenu(
-                open: _menuOpen,
-                onSelected: (i) => setState(() {
-                  _currentIndex = i;
+              offset: const Offset(0, -_arcGap),              child: RadialMenu(
+                open: _menuOpen,                onSelected: (i) => setState(() {
+                  // Map RadialMenu index to screen index
+                  _currentIndex = i + 1; // +1 because first item is Home
                   _menuOpen = false;
                 }),
               ),

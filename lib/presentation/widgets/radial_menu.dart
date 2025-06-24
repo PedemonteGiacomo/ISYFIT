@@ -87,32 +87,36 @@ class _RadialMenuState extends State<RadialMenu>
     );
     final pair = RadialMenu._items[index];
     final icon = pair.$1;
-    final label = pair.$2;
-    return IgnorePointer(
-      ignoring: progress < 1,
-      child: Transform.translate(
-        offset: offset,
-        child: Opacity(
-          opacity: progress,
+    final label = pair.$2;      return Transform.translate(
+      offset: offset,
+      child: Opacity(
+        opacity: progress,
+        child: GestureDetector(
+          onTap: progress > 0.9 ? () => widget.onSelected(index) : null,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Material(
                 shape: const CircleBorder(),
                 color: Colors.white,
-                child: InkWell(
-                  onTap: () => widget.onSelected(index + 1),
-                  customBorder: const CircleBorder(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(icon, size: 28),
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(icon, size: 28),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelSmall,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white,
+                  shadows: const [
+                    Shadow(
+                      color: Colors.black54,
+                      offset: Offset(0, 1),
+                      blurRadius: 3,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
