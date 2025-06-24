@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -269,6 +270,7 @@ class _SplashScreenState extends State<SplashScreen>
   // ------------------------------------------------------------
   Widget _buildSplashUI(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final baseDim = math.min(size.width, size.height);
 
     return Stack(
       children: [
@@ -278,7 +280,7 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: size.width * .5, // logo largo la metà dello schermo
+                width: baseDim * .5, // scale with the smallest side
                 child: Image.asset(
                   'assets/images/ISYFIT_LOGO_new-removebg-resized.png',
                   fit: BoxFit.contain,
@@ -313,7 +315,7 @@ class _SplashScreenState extends State<SplashScreen>
                 position: _hintAnim,
                 child: Image.asset(
                   'assets/images/swipe_up-removebg.png',
-                  width: size.width * .35,
+                  width: baseDim * .35,
                 ),
               ),
             ),
