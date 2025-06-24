@@ -7,6 +7,32 @@ import 'account/account_screen.dart';
 import 'isy_diary/isy_diary_main_screen.dart';
 import '../widgets/fancy_bottom_bar.dart';
 import '../widgets/radial_menu.dart';
+import 'dart:math' as math;
+
+class _CenterDockedNoMargin extends FloatingActionButtonLocation {
+  const _CenterDockedNoMargin();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
+    final double fabX = (geometry.scaffoldSize.width -
+            geometry.floatingActionButtonSize.width) /
+        2.0;
+    final double contentBottom = geometry.contentBottom;
+    double fabY =
+        contentBottom - geometry.floatingActionButtonSize.height / 2.0;
+
+    final double bottomSheetHeight = geometry.bottomSheetSize.height;
+    final double snackBarHeight = geometry.snackBarSize.height;
+    fabY = math.min(
+        fabY,
+        geometry.scaffoldSize.height -
+            geometry.floatingActionButtonSize.height -
+            bottomSheetHeight -
+            snackBarHeight);
+
+    return Offset(fabX, fabY);
+  }
+}
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -19,7 +45,7 @@ class _BaseScreenState extends State<BaseScreen> {
   static const double _fabSize = 72.0;
   // Distance between the logo's center and the arc of icons. Modify this
   // value to move the arc closer or farther from the logo.
-  static const double _arcGap = -50.0;
+      floatingActionButtonLocation: const _CenterDockedNoMargin(),
 
   int _currentIndex = 0;
   late List<Widget> _screens;
