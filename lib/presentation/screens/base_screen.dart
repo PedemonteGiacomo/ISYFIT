@@ -42,7 +42,7 @@ class _BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     const hubSize = 56.0;
-    const menuRadius = 110.0;
+    const menuRadius = 80.0;
     const barHeight = 64.0;
 
     return Scaffold(
@@ -52,7 +52,7 @@ class _BaseScreenState extends State<BaseScreen> {
         children: [
           _screens[_currentIndex],
           Positioned(
-            bottom: barHeight / 2,
+            bottom: barHeight / 2 - menuRadius,
             child: RadialMenu(
               radius: menuRadius,
               startAngle: math.pi,

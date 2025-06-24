@@ -141,6 +141,8 @@ class _RadialIconButton extends StatelessWidget {
   final RadialMenuItem item;
   final VoidCallback onTap;
 
+  static const double _size = 80.0;
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -150,18 +152,24 @@ class _RadialIconButton extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(item.icon, size: 24),
-              const SizedBox(height: 4),
-              Text(
-                item.tooltip,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-            ],
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(item.icon, size: 24),
+                const SizedBox(height: 4),
+                Text(
+                  item.tooltip,
+                  style: Theme.of(context).textTheme.labelSmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
