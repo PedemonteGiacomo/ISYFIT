@@ -15,6 +15,7 @@ void main() {
               child: RadialMenu(
                 spin: false,
                 radius: 40,
+                open: true,
                 items: const [
                   RadialMenuItem(Icons.fitness_center, 'Training'),
                   RadialMenuItem(Icons.science, 'Lab'),

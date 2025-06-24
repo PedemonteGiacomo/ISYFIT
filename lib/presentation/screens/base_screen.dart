@@ -17,6 +17,7 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   int _currentIndex = 0;
   late List<Widget> _screens;
+  bool _menuOpen = false;
 
   @override
   void initState() {
@@ -66,34 +67,44 @@ class _BaseScreenState extends State<BaseScreen> {
       floatingActionButton: SizedBox(
         width: hubSize + 80,
         height: hubSize + 80,
-        child: Transform.translate(
-          offset: const Offset(0, 16),
-          child: RadialMenu(
-            radius: (hubSize / 2) + 40,
-            startAngle: math.pi,
-            sweepAngle: math.pi,
-            spin: false,
-            center: GestureDetector(
-              onTap: () {},
-              child: Material(
-                color: Colors.white,
-                shape: const CircleBorder(),
-                elevation: 0,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(
-                      'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            RadialMenu(
+              radius: (hubSize / 2) + 40,
+              startAngle: math.pi,
+              sweepAngle: math.pi,
+              spin: false,
+              open: _menuOpen,
+              center: GestureDetector(
+                onTap: () {
+                  setState(() => _menuOpen = !_menuOpen);
+                },
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                        'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+                  ),
                 ),
               ),
+              items: const [
+                RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
+                RadialMenuItem(Icons.science, 'IsyLab'),
+                RadialMenuItem(Icons.check_circle, 'IsyCheck'),
+                RadialMenuItem(Icons.apple, 'IsyDiary'),
+              ],
+              onItemTap: (i) {
+                setState(() {
+                  _menuOpen = false;
+                  _currentIndex = i + 1;
+                });
+              },
             ),
-            items: const [
-              RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
-              RadialMenuItem(Icons.science, 'IsyLab'),
-              RadialMenuItem(Icons.check_circle, 'IsyCheck'),
-              RadialMenuItem(Icons.apple, 'IsyDiary'),
-            ],
-            onItemTap: (i) => _onTabChanged(i + 1),
-          ),
+          ],
         ),
       ),
     );

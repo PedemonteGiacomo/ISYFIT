@@ -12,6 +12,8 @@ class RadialMenu extends StatefulWidget {
     this.spin = false,
     this.startAngle = math.pi,
     this.sweepAngle = math.pi,
+    this.open = false,
+    this.animationDuration = const Duration(milliseconds: 300),
   }) : super(key: key);
 
   final List<RadialMenuItem> items;
@@ -21,38 +23,57 @@ class RadialMenu extends StatefulWidget {
   final Widget? center;
   final double startAngle;
   final double sweepAngle;
+  final bool open;
+  final Duration animationDuration;
 
   @override
   State<RadialMenu> createState() => _RadialMenuState();
 }
 
-class _RadialMenuState extends State<RadialMenu>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
+class _RadialMenuState extends State<RadialMenu> with TickerProviderStateMixin {
+  late final AnimationController _rotationCtl;
+  late final AnimationController _openCtl;
 
   @override
   void initState() {
     super.initState();
-    _ctl = AnimationController(
+    _rotationCtl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
     );
-    if (widget.spin) _ctl.repeat();
+    if (widget.spin) _rotationCtl.repeat();
+
+    _openCtl = AnimationController(
+      vsync: this,
+      duration: widget.animationDuration,
+    );
+    if (widget.open) {
+      _openCtl.value = 1.0;
+    }
   }
 
   @override
   void didUpdateWidget(covariant RadialMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.spin && !_ctl.isAnimating) {
-      _ctl.repeat();
-    } else if (!widget.spin && _ctl.isAnimating) {
-      _ctl.stop();
+    if (widget.spin && !_rotationCtl.isAnimating) {
+      _rotationCtl.repeat();
+    } else if (!widget.spin && _rotationCtl.isAnimating) {
+      _rotationCtl.stop();
+    }
+
+    if (widget.open != oldWidget.open) {
+      if (widget.open) {
+        _openCtl.forward();
+      } else {
+        _openCtl.reverse();
+      }
     }
   }
 
   @override
   void dispose() {
-    _ctl.dispose();
+    _rotationCtl.dispose();
+    _openCtl.dispose();
     super.dispose();
   }
 
@@ -62,9 +83,10 @@ class _RadialMenuState extends State<RadialMenu>
       width: widget.radius * 2,
       height: widget.radius * 2,
       child: AnimatedBuilder(
-        animation: _ctl,
+        animation: Listenable.merge([_rotationCtl, _openCtl]),
         builder: (_, __) {
-          final angleOffset = widget.spin ? _ctl.value * 2 * math.pi : 0.0;
+          final angleOffset =
+              widget.spin ? _rotationCtl.value * 2 * math.pi : 0.0;
           final step = widget.items.length > 1
               ? widget.sweepAngle / (widget.items.length - 1)
               : 0.0;
@@ -84,14 +106,21 @@ class _RadialMenuState extends State<RadialMenu>
 
   Positioned _buildItem(double angleOffset, double step, int i) {
     final theta = widget.startAngle + angleOffset + step * i;
-    final dx = widget.radius + widget.radius * math.cos(theta);
-    final dy = widget.radius + widget.radius * math.sin(theta);
+    final r = widget.radius * _openCtl.value;
+    final dx = widget.radius + r * math.cos(theta);
+    final dy = widget.radius + r * math.sin(theta);
     return Positioned(
       left: dx,
       top: dy,
-      child: _RadialIconButton(
-        item: widget.items[i],
-        onTap: () => widget.onItemTap(i),
+      child: FadeTransition(
+        opacity: _openCtl,
+        child: ScaleTransition(
+          scale: _openCtl,
+          child: _RadialIconButton(
+            item: widget.items[i],
+            onTap: () => widget.onItemTap(i),
+          ),
+        ),
       ),
     );
   }
@@ -123,8 +152,18 @@ class _RadialIconButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Icon(item.icon, size: 24),
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, size: 24),
+              const SizedBox(height: 4),
+              Text(
+                item.tooltip,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
+          ),
         ),
       ),
     );
