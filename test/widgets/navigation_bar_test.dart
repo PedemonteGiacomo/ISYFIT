@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/presentation/widgets/navigation_bar.dart' as nav;
+import 'package:isyfit/presentation/widgets/fancy_bottom_bar.dart';
 
 void main() {
-  testWidgets('NavigationBar notifies index changes', (tester) async {
-    int selected = -1;
+  testWidgets('FancyBottomBar notifies taps', (tester) async {
+    int tapped = -1;
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          bottomNavigationBar: nav.NavigationBar(
+          bottomNavigationBar: FancyBottomBar(
             currentIndex: 0,
-            onIndexChanged: (i) => selected = i,
+            onTap: (i) => tapped = i,
           ),
         ),
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.fitness_center));
+    await tester.tap(find.byIcon(Icons.person));
     await tester.pumpAndSettle();
 
-    expect(selected, 1);
+    expect(tapped, 5);
   });
 }
