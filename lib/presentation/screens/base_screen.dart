@@ -5,7 +5,7 @@ import 'isy_lab/isy_lab_main_screen.dart';
 import 'isy_check/isy_check_main_screen.dart';
 import 'account/account_screen.dart';
 import 'isy_diary/isy_diary_main_screen.dart';
-import '../widgets/fancy_bottom_bar.dart';
+import '../widgets/radial_menu.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -38,37 +38,82 @@ class _BaseScreenState extends State<BaseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const hubSize = 96.0;
+
     return Scaffold(
       body: _screens[_currentIndex],
       extendBody: true,
-      bottomNavigationBar: FancyBottomBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabChanged,
-      ),
-      floatingActionButton: GestureDetector(
-        onTap: () => setState(() => _currentIndex = 0),
-        child: Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                offset: const Offset(0, 4),
-                blurRadius: 8,
-                color: Colors.black.withOpacity(.15),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Image.asset(
-                'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
-          ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildMiniTab(
+              icon: Icons.home,
+              selected: _currentIndex == 0,
+              onTap: () => _onTabChanged(0),
+            ),
+            const SizedBox(width: hubSize / 2),
+            _buildMiniTab(
+              icon: Icons.person,
+              selected: _currentIndex == 5,
+              onTap: () => _onTabChanged(5),
+            ),
+          ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: SizedBox(
+        width: hubSize,
+        height: hubSize,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              bottom: -16,
+              child: GestureDetector(
+                onTap: () {},
+                child: Material(
+                  elevation: 6,
+                  shape: const CircleBorder(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                        'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+                  ),
+                ),
+              ),
+            ),
+            RadialMenu(
+              radius: hubSize / 2 + 40,
+              items: const [
+                RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
+                RadialMenuItem(Icons.science, 'IsyLab'),
+                RadialMenuItem(Icons.check_circle, 'IsyCheck'),
+                RadialMenuItem(Icons.apple, 'IsyDiary'),
+              ],
+              onItemTap: (i) => _onTabChanged(i + 1),
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+  Widget _buildMiniTab({
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) =>
+      IconButton(
+        icon: Icon(
+          icon,
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(.6),
+        ),
+        onPressed: onTap,
+      );
 }
