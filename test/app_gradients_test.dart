@@ -10,6 +10,6 @@ void main() {
     );
     final colors = AppGradients.primaryColors(theme);
     expect(colors.first, primaryColor);
-    expect(colors.last, primaryColor.withOpacity(0.6));
+    expect(colors.last, primaryColor.withOpacity(0.64));
   });
 }
