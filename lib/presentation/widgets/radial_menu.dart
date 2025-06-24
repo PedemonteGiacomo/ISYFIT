@@ -78,8 +78,8 @@ class _RadialMenuState extends State<RadialMenu>
   }
 
   Widget _buildItem(int index, double progress, double radius) {
-    final angleStart = -math.pi / 2;
-    final angleStep = math.pi / (RadialMenu._items.length - 1);
+    final angleStart = math.pi;
+    final angleStep = -math.pi / (RadialMenu._items.length - 1);
     final angle = angleStart + angleStep * index;
     final offset = Offset(
       radius * progress * math.cos(angle),
@@ -88,29 +88,35 @@ class _RadialMenuState extends State<RadialMenu>
     final pair = RadialMenu._items[index];
     final icon = pair.$1;
     final label = pair.$2;
-    return Transform.translate(
-      offset: offset,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Material(
-            shape: const CircleBorder(),
-            color: Colors.white,
-            child: InkWell(
-              onTap: () => widget.onSelected(index + 1),
-              customBorder: const CircleBorder(),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Icon(icon, size: 28),
+    return IgnorePointer(
+      ignoring: progress < 1,
+      child: Transform.translate(
+        offset: offset,
+        child: Opacity(
+          opacity: progress,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Material(
+                shape: const CircleBorder(),
+                color: Colors.white,
+                child: InkWell(
+                  onTap: () => widget.onSelected(index + 1),
+                  customBorder: const CircleBorder(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(icon, size: 28),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+        ),
       ),
     );
   }
