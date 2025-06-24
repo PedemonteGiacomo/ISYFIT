@@ -45,8 +45,9 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   // Size of the central IsyFit logo in the bottom bar.
   static const double _fabSize = 72.0;
-  // Distance between the logo's center and the arc of icons.
   static const double _arcGap = 20.0;
+      // Lower the logo slightly so it sits inside the bottom bar notch.
+      floatingActionButtonLocation: const _CenterDockedNoMargin(16),
   
   int _currentIndex = 0;
   bool _menuOpen = false;
