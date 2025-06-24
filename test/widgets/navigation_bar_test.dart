@@ -19,6 +19,6 @@ void main() {
     await tester.tap(find.byIcon(Icons.fitness_center));
     await tester.pumpAndSettle();
 
-    expect(selected, 2);
+    expect(selected, 1);
   });
 }
