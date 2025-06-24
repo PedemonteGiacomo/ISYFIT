@@ -83,7 +83,7 @@ class _RadialMenuState extends State<RadialMenu>
     final angle = angleStart + angleStep * index;
     final offset = Offset(
       radius * progress * math.cos(angle),
-      radius * progress * math.sin(angle),
+      -radius * progress * math.sin(angle),
     );
     final pair = RadialMenu._items[index];
     final icon = pair.$1;
