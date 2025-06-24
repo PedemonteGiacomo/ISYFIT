@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
-import 'forgot_password_screen.dart';
 import '../../domain/utils/firebase_error_translator.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _forgotMode = false;
 
   Future<void> _login() async {
     setState(() {
@@ -54,6 +54,33 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(content: Text(msg)),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _sendReset() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await widget.authRepository.sendPasswordReset(
+        _emailController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email di reset inviata. Controlla la tua casella.'),
+        ),
+      );
+      setState(() => _forgotMode = false);
+    } on FirebaseAuthException catch (e) {
+      final msg = FirebaseErrorTranslator.fromException(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
       if (mounted) {
         setState(() {
@@ -131,29 +158,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Password Field
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.lock,
-                                color: theme.colorScheme.primary,
+                          if (!_forgotMode) ...[
+                            // Password Field
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock,
+                                  color: theme.colorScheme.primary,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 16),
+                          ],
 
                           // Login Button al centro
                           _isLoading
                               ? const CircularProgressIndicator()
                               : Center(
                                   child: ElevatedButton(
-                                    onPressed: _login,
+                                    onPressed:
+                                        _forgotMode ? _sendReset : _login,
                                     style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
@@ -165,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                     child: Text(
-                                      'Login',
+                                      _forgotMode ? 'Reset' : 'Login',
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: theme.colorScheme.onPrimary,
@@ -178,16 +208,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           Center(
                             child: TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ForgotPasswordScreen(),
-                                  ),
-                                );
+                                setState(() => _forgotMode = !_forgotMode);
                               },
                               child: Text(
-                                'Password dimenticata?',
+                                _forgotMode
+                                    ? 'Torna al login'
+                                    : 'Password dimenticata?',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -197,26 +223,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
 
                           // Redirect alla registrazione al centro
-                          Center(
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegistrationScreen(),
+                          if (!_forgotMode)
+                            Center(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const RegistrationScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Non sei registrato? Registrati ora!',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                );
-                              },
-                              child: Text(
-                                'Non sei registrato? Registrati ora!',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),
