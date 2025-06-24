@@ -74,8 +74,8 @@ class _LoginScreenState extends State<LoginScreen> {
             final isPortrait =
                 MediaQuery.of(context).orientation == Orientation.portrait;
             final widthFactor = isPortrait ? 0.8 : 0.6;
-            final cardWidth =
-                (constraints.maxWidth * widthFactor).clamp(320.0, 500.0);
+            final cardWidth = (constraints.maxWidth * widthFactor)
+                .clamp(isPortrait ? 280.0 : 320.0, 500.0);
 
             return Center(
               child: SingleChildScrollView(
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       maxWidth: cardWidth,
                       minHeight: isPortrait
                           ? constraints.maxHeight * 0.35
-                          : constraints.maxHeight * 0.40, // card più alta
+                          : constraints.maxHeight * 0.40,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
