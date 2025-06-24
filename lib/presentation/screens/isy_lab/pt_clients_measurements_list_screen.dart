@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:isyfit/presentation/screens/base_screen.dart';
 
 // Import the screen that shows the tabbed 3-tab layout for IsyLab
 import 'package:isyfit/presentation/screens/isy_lab/isy_lab_main_screen.dart';
@@ -125,6 +126,20 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
     return Scaffold(
       appBar: GradientAppBar(
         title: 'My Clients - IsyLab',
+        actions: [
+            // Add a "Home" icon that takes the PT back to the main flow.
+            IconButton(
+              icon: Icon(Icons.home,
+                  color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () {
+                // For example, pushReplacement to the main BaseScreen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BaseScreen()),
+                );
+              },
+            ),
+          ],
       ),
       body: Column(
         children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:isyfit/presentation/screens/base_screen.dart';
 
 // Import your MedicalHistoryScreen & QuestionnaireScreen
 import 'package:isyfit/presentation/screens/medical_history/anamnesis_screen.dart';
@@ -109,7 +110,21 @@ class _PTClientsMedicalListScreenState
     final theme = Theme.of(context);
     return Scaffold(
       appBar: GradientAppBar(
-        title: 'IsyCheck- My Clients',
+        title: 'My Clients - IsyCheck',
+        actions: [
+            // Add a "Home" icon that takes the PT back to the main flow.
+            IconButton(
+              icon: Icon(Icons.home,
+                  color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () {
+                // For example, pushReplacement to the main BaseScreen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BaseScreen()),
+                );
+              },
+            ),
+          ],
       ),
       body: Column(
         children: [
