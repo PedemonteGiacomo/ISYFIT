@@ -41,7 +41,7 @@ class _BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     const hubSize = 56.0;
-    const menuRadius = 80.0;
+    const menuRadius = 110.0;
     const menuContainer = menuRadius * 2 + 40;
 
     return Scaffold(
