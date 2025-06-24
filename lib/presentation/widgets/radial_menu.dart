@@ -104,14 +104,13 @@ class _RadialMenuState extends State<RadialMenu> with TickerProviderStateMixin {
     );
   }
 
-  Positioned _buildItem(double angleOffset, double step, int i) {
+  Widget _buildItem(double angleOffset, double step, int i) {
     final theta = widget.startAngle + angleOffset + step * i;
     final r = widget.radius * _openCtl.value;
-    final dx = widget.radius + r * math.cos(theta);
-    final dy = widget.radius + r * math.sin(theta);
-    return Positioned(
-      left: dx,
-      top: dy,
+    final dx = math.cos(theta) * r / widget.radius;
+    final dy = math.sin(theta) * r / widget.radius;
+    return Align(
+      alignment: Alignment(dx, dy),
       child: FadeTransition(
         opacity: _openCtl,
         child: ScaleTransition(
