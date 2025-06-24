@@ -6,6 +6,7 @@ import 'isy_check/isy_check_main_screen.dart';
 import 'account/account_screen.dart';
 import 'isy_diary/isy_diary_main_screen.dart';
 import '../widgets/fancy_bottom_bar.dart';
+import '../widgets/radial_menu.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   int _currentIndex = 0;
   late List<Widget> _screens;
+  bool _menuOpen = false;
 
   @override
   void initState() {
@@ -34,14 +36,13 @@ class _BaseScreenState extends State<BaseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: _screens[_currentIndex],
       bottomNavigationBar: FancyBottomBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: GestureDetector(
-        onTap: () => setState(() => _currentIndex = 0),
+        onTap: () => setState(() => _menuOpen = !_menuOpen),
         child: Container(
           width: 72,
           height: 72,
@@ -62,6 +63,22 @@ class _BaseScreenState extends State<BaseScreen> {
                 'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
           ),
         ),
+      ),
+      body: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          _screens[_currentIndex],
+          Positioned(
+            bottom: 80,
+            child: RadialMenu(
+              open: _menuOpen,
+              onSelected: (i) => setState(() {
+                _currentIndex = i;
+                _menuOpen = false;
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }

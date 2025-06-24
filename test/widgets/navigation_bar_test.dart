@@ -16,9 +16,9 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.science));
+    await tester.tap(find.byIcon(Icons.person));
     await tester.pumpAndSettle();
 
-    expect(tapped, 2);
+    expect(tapped, 1);
   });
 }

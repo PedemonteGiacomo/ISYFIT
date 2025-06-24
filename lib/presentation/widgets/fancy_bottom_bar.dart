@@ -46,10 +46,6 @@ class FancyBottomBar extends StatelessWidget {
 
   static const _items = [
     (Icons.home, 'Home'),
-    (Icons.fitness_center, 'IsyTraining'),
-    (Icons.science, 'IsyLab'),
-    (Icons.check_circle, 'IsyCheck'),
-    (Icons.apple, 'IsyDiary'),
     (Icons.person, 'Account'),
   ];
 
@@ -67,35 +63,40 @@ class FancyBottomBar extends StatelessWidget {
         painter: _NavBackgroundPainter(Colors.white, fabRadius + notchPadding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(_items.length, (i) {
-            if (i == 3) return SizedBox(width: gap);
-            final pair = _items[i];
-            final icon = pair.$1;
-            final label = pair.$2;
-            final selected = i == currentIndex;
-            return Expanded(
-              child: InkWell(
-                onTap: () => onTap(i),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icon,
-                        size: 26,
-                        color: selected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withOpacity(.7),
-                      ),
-                      const SizedBox(height: 4),
-                      _buildLabel(context, label, selected),
-                    ],
-                  ),
-                ),
+          children: [
+            _buildItem(context, _items[0], 0, theme),
+            SizedBox(width: gap),
+            _buildItem(context, _items[1], 1, theme),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItem(BuildContext context, (IconData, String) pair, int index,
+      ThemeData theme) {
+    final icon = pair.$1;
+    final label = pair.$2;
+    final selected = index == currentIndex;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onTap(index),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 26,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withOpacity(.7),
               ),
-            );
-          }),
+              const SizedBox(height: 4),
+              _buildLabel(context, label, selected),
+            ],
+          ),
         ),
       ),
     );
