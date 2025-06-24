@@ -42,11 +42,11 @@ class NavigationBar extends StatelessWidget {
             label: "IsyTraining",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.science_outlined),
+            icon: Icon(Icons.science),
             label: "IsyLab",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline),
+            icon: Icon(Icons.check_circle),
             label: "IsyCheck",
           ),
           BottomNavigationBarItem(
