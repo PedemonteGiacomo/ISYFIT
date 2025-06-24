@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'home_screen.dart';
 import 'isy_training/isy_training_main_screen.dart';
 import 'isy_lab/isy_lab_main_screen.dart';
 import 'isy_check/isy_check_main_screen.dart';
 import 'account/account_screen.dart';
 import 'isy_diary/isy_diary_main_screen.dart';
-import '../widgets/radial_menu.dart';
-import '../widgets/navigation_bar.dart' as nav;
+import '../widgets/fancy_bottom_bar.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({Key? key}) : super(key: key);
@@ -18,7 +16,6 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   int _currentIndex = 0;
   late List<Widget> _screens;
-  bool _menuOpen = false;
 
   @override
   void initState() {
@@ -33,53 +30,38 @@ class _BaseScreenState extends State<BaseScreen> {
     ];
   }
 
-  void _onTabChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    const hubSize = 56.0;
-    const menuRadius = 80.0;
-    const barHeight = 64.0;
-
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          _screens[_currentIndex],
-          Positioned(
-            bottom: barHeight / 2 - menuRadius,
-            child: RadialMenu(
-              radius: menuRadius,
-              startAngle: math.pi,
-              sweepAngle: math.pi,
-              spin: false,
-              open: _menuOpen,
-              items: const [
-                RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
-                RadialMenuItem(Icons.science, 'IsyLab'),
-                RadialMenuItem(Icons.check_circle, 'IsyCheck'),
-                RadialMenuItem(Icons.apple, 'IsyDiary'),
-              ],
-              onItemTap: (i) {
-                setState(() {
-                  _menuOpen = false;
-                  _currentIndex = i + 1;
-                });
-              },
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: nav.NavigationBar(
+      body: _screens[_currentIndex],
+      bottomNavigationBar: FancyBottomBar(
         currentIndex: _currentIndex,
-        onIndexChanged: _onTabChanged,
-        onLogoTap: () => setState(() => _menuOpen = !_menuOpen),
-        hubSize: hubSize,
+        onTap: (i) => setState(() => _currentIndex = i),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: GestureDetector(
+        onTap: () => setState(() => _currentIndex = 0),
+        child: Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, 4),
+                blurRadius: 8,
+                color: Colors.black.withOpacity(.15),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+                'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+          ),
+        ),
       ),
     );
   }
