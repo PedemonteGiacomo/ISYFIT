@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
+import 'forgot_password_screen.dart';
 import '../../domain/utils/firebase_error_translator.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,8 +86,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center, // elementi centrati verticalmente
-                        crossAxisAlignment: CrossAxisAlignment.center, // elementi centrati orizzontalmente
+                        mainAxisAlignment: MainAxisAlignment
+                            .center, // elementi centrati verticalmente
+                        crossAxisAlignment: CrossAxisAlignment
+                            .center, // elementi centrati orizzontalmente
                         children: [
                           // Logo (rimane a sinistra per mantenere il branding)
                           Align(
@@ -132,6 +135,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Password dimenticata?',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 24),
 
                           // Login Button al centro
@@ -142,7 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: _login,
                                     style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12.0,

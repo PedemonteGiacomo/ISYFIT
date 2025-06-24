@@ -19,4 +19,9 @@ class AuthRepository {
       password: password,
     );
   }
+
+  /// Send a password reset email to the given address.
+  Future<void> sendPasswordReset(String email) {
+    return _auth.sendPasswordResetEmail(email: email);
+  }
 }
