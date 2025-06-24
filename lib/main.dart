@@ -12,6 +12,7 @@ import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/reset_password_screen.dart';
 import 'presentation/screens/base_screen.dart';
 import 'presentation/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'presentation/screens/medical_history/anamnesis_screen.dart';
@@ -84,6 +85,16 @@ class _IsyFitAppState extends State<IsyFitApp> {
         if (ctx != null) {
           ScaffoldMessenger.of(ctx).showSnackBar(
             const SnackBar(content: Text('Pagamento annullato')),
+          );
+        }
+        break;
+      case 'reset': // isyfit://reset?oobCode=abc
+        final code = uri.queryParameters['oobCode'];
+        if (code != null && code.isNotEmpty) {
+          _navKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => ResetPasswordScreen(actionCode: code),
+            ),
           );
         }
         break;
