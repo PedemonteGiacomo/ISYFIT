@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isyfit/presentation/widgets/navigation_bar.dart' as nav;
+import 'package:isyfit/presentation/widgets/fancy_bottom_bar.dart' as nav;
 
 void main() {
-  testWidgets('NavigationBar notifies index changes', (tester) async {
+  testWidgets('FancyBottomBar notifies index changes', (tester) async {
     int selected = -1;
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          bottomNavigationBar: nav.NavigationBar(
+          bottomNavigationBar: nav.FancyBottomBar(
             currentIndex: 0,
-            onIndexChanged: (i) => selected = i,
+            onTap: (i) => selected = i,
           ),
         ),
       ),
