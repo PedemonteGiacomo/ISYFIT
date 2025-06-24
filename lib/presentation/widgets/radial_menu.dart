@@ -8,13 +8,17 @@ class RadialMenu extends StatefulWidget {
     required this.items,
     required this.radius,
     required this.onItemTap,
-    this.spin = true,
+    this.spin = false,
+    this.startAngle = math.pi,
+    this.sweepAngle = math.pi,
   }) : super(key: key);
 
   final List<RadialMenuItem> items;
   final double radius;
   final ValueChanged<int> onItemTap;
   final bool spin;
+  final double startAngle;
+  final double sweepAngle;
 
   @override
   State<RadialMenu> createState() => _RadialMenuState();
@@ -35,6 +39,16 @@ class _RadialMenuState extends State<RadialMenu>
   }
 
   @override
+  void didUpdateWidget(covariant RadialMenu oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.spin && !_ctl.isAnimating) {
+      _ctl.repeat();
+    } else if (!widget.spin && _ctl.isAnimating) {
+      _ctl.stop();
+    }
+  }
+
+  @override
   void dispose() {
     _ctl.dispose();
     super.dispose();
@@ -42,29 +56,34 @@ class _RadialMenuState extends State<RadialMenu>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctl,
-      builder: (_, __) {
-        final angleOffset = widget.spin ? _ctl.value * 2 * math.pi : 0.0;
-        return Stack(
-          clipBehavior: Clip.none,
-          children: List.generate(widget.items.length, (i) {
-            final theta = angleOffset +
-                (2 * math.pi / widget.items.length) * i -
-                math.pi / 2;
-            final dx = widget.radius * math.cos(theta);
-            final dy = widget.radius * math.sin(theta);
-            return Positioned(
-              left: dx,
-              top: dy,
-              child: _RadialIconButton(
-                item: widget.items[i],
-                onTap: () => widget.onItemTap(i),
-              ),
-            );
-          }),
-        );
-      },
+    return SizedBox(
+      width: widget.radius * 2,
+      height: widget.radius * 2,
+      child: AnimatedBuilder(
+        animation: _ctl,
+        builder: (_, __) {
+          final angleOffset = widget.spin ? _ctl.value * 2 * math.pi : 0.0;
+          final step = widget.items.length > 1
+              ? widget.sweepAngle / (widget.items.length - 1)
+              : 0.0;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: List.generate(widget.items.length, (i) {
+              final theta = widget.startAngle + angleOffset + step * i;
+              final dx = widget.radius + widget.radius * math.cos(theta);
+              final dy = widget.radius + widget.radius * math.sin(theta);
+              return Positioned(
+                left: dx,
+                top: dy,
+                child: _RadialIconButton(
+                  item: widget.items[i],
+                  onTap: () => widget.onItemTap(i),
+                ),
+              );
+            }),
+          );
+        },
+      ),
     );
   }
 }

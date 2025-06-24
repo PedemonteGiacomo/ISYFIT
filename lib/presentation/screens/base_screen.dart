@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'home_screen.dart';
 import 'isy_training/isy_training_main_screen.dart';
 import 'isy_lab/isy_lab_main_screen.dart';
@@ -38,7 +39,7 @@ class _BaseScreenState extends State<BaseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const hubSize = 96.0;
+    const hubSize = 56.0;
 
     return Scaffold(
       body: _screens[_currentIndex],
@@ -88,6 +89,9 @@ class _BaseScreenState extends State<BaseScreen> {
             ),
             RadialMenu(
               radius: hubSize / 2 + 40,
+              startAngle: math.pi,
+              sweepAngle: math.pi,
+              spin: false,
               items: const [
                 RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
                 RadialMenuItem(Icons.science, 'IsyLab'),
