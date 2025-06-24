@@ -50,9 +50,8 @@ class _BaseScreenState extends State<BaseScreen> {
   
   int _currentIndex = 0;
   bool _menuOpen = false;
-
   // List of screens to show based on bottom nav index
-      floatingActionButtonLocation: const _CenterDockedNoMargin(8),
+  final List<Widget> _screens = [
     const HomeScreen(),
     const IsyTrainingMainScreen(),
     const IsyLabMainScreen(),
@@ -68,7 +67,7 @@ class _BaseScreenState extends State<BaseScreen> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
       ),
-      floatingActionButtonLocation: const _CenterDockedNoMargin(),
+      floatingActionButtonLocation: const _CenterDockedNoMargin(8),
       floatingActionButton: SizedBox(
         width: 252,
         height: 252,
