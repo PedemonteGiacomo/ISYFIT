@@ -61,9 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, constraints) {
             final isPortrait =
                 MediaQuery.of(context).orientation == Orientation.portrait;
-            final widthFactor = isPortrait ? 0.9 : 0.6;
-            final cardWidth =
-                (constraints.maxWidth * widthFactor).clamp(320.0, 500.0);
+            final widthFactor = isPortrait ? 0.8 : 0.6;
+            final cardWidth = (constraints.maxWidth * widthFactor)
+                .clamp(isPortrait ? 280.0 : 320.0, 500.0);
 
             return Center(
               child: SingleChildScrollView(
@@ -78,15 +78,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     constraints: BoxConstraints(
                       maxWidth: cardWidth,
                       minHeight: isPortrait
-                          ? constraints.maxHeight * 0.4
+                          ? constraints.maxHeight * 0.35
                           : constraints.maxHeight * 0.70, // card più alta
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center, // elementi centrati verticalmente
-                        crossAxisAlignment: CrossAxisAlignment.center, // elementi centrati orizzontalmente
+                        mainAxisAlignment: MainAxisAlignment
+                            .center, // elementi centrati verticalmente
+                        crossAxisAlignment: CrossAxisAlignment
+                            .center, // elementi centrati orizzontalmente
                         children: [
                           // Logo (rimane a sinistra per mantenere il branding)
                           Align(
@@ -142,7 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: _login,
                                     style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12.0,
