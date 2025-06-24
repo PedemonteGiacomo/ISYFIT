@@ -47,45 +47,50 @@ class _BaseScreenState extends State<BaseScreen> {
         onTap: (i) => setState(() => _currentIndex = i),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: GestureDetector(
-        onTap: () => setState(() => _menuOpen = !_menuOpen),
-        child: Container(
-          width: _fabSize,
-          height: _fabSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                offset: const Offset(0, 4),
-                blurRadius: 8,
-                color: Colors.black.withOpacity(.15),
+      floatingActionButton: SizedBox(
+        width: 252,
+        height: 252,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: const Offset(0, -_arcGap),
+              child: RadialMenu(
+                open: _menuOpen,
+                onSelected: (i) => setState(() {
+                  _currentIndex = i;
+                  _menuOpen = false;
+                }),
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Image.asset(
-                'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
-          ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _menuOpen = !_menuOpen),
+              child: Container(
+                width: _fabSize,
+                height: _fabSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                      color: Colors.black.withOpacity(.15),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Image.asset(
+                      'assets/images/ISYFIT_LOGO_new-removebg-resized.png'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          _screens[_currentIndex],
-          Positioned(
-            bottom: _fabSize / 2 + _arcGap,
-            child: RadialMenu(
-              open: _menuOpen,
-              onSelected: (i) => setState(() {
-                _currentIndex = i;
-                _menuOpen = false;
-              }),
-            ),
-          ),
-        ],
-      ),
+      body: _screens[_currentIndex],
     );
   }
 }

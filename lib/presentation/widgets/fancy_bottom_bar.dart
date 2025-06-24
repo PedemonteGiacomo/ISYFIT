@@ -66,7 +66,7 @@ class FancyBottomBar extends StatelessWidget {
           children: [
             _buildItem(context, _items[0], 0, theme),
             SizedBox(width: gap),
-            _buildItem(context, _items[1], 1, theme),
+            _buildItem(context, _items[1], 5, theme),
           ],
         ),
       ),

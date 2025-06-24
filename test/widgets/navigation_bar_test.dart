@@ -19,6 +19,6 @@ void main() {
     await tester.tap(find.byIcon(Icons.person));
     await tester.pumpAndSettle();
 
-    expect(tapped, 1);
+    expect(tapped, 5);
   });
 }
