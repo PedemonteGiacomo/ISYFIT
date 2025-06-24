@@ -8,6 +8,7 @@ class RadialMenu extends StatefulWidget {
     required this.items,
     required this.radius,
     required this.onItemTap,
+    this.center,
     this.spin = false,
     this.startAngle = math.pi,
     this.sweepAngle = math.pi,
@@ -17,6 +18,7 @@ class RadialMenu extends StatefulWidget {
   final double radius;
   final ValueChanged<int> onItemTap;
   final bool spin;
+  final Widget? center;
   final double startAngle;
   final double sweepAngle;
 
@@ -67,22 +69,29 @@ class _RadialMenuState extends State<RadialMenu>
               ? widget.sweepAngle / (widget.items.length - 1)
               : 0.0;
           return Stack(
+            alignment: Alignment.center,
             clipBehavior: Clip.none,
-            children: List.generate(widget.items.length, (i) {
-              final theta = widget.startAngle + angleOffset + step * i;
-              final dx = widget.radius + widget.radius * math.cos(theta);
-              final dy = widget.radius + widget.radius * math.sin(theta);
-              return Positioned(
-                left: dx,
-                top: dy,
-                child: _RadialIconButton(
-                  item: widget.items[i],
-                  onTap: () => widget.onItemTap(i),
-                ),
-              );
-            }),
+            children: [
+              if (widget.center != null) widget.center!,
+              for (var i = 0; i < widget.items.length; i++)
+                _buildItem(angleOffset, step, i),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Positioned _buildItem(double angleOffset, double step, int i) {
+    final theta = widget.startAngle + angleOffset + step * i;
+    final dx = widget.radius + widget.radius * math.cos(theta);
+    final dy = widget.radius + widget.radius * math.sin(theta);
+    return Positioned(
+      left: dx,
+      top: dy,
+      child: _RadialIconButton(
+        item: widget.items[i],
+        onTap: () => widget.onItemTap(i),
       ),
     );
   }

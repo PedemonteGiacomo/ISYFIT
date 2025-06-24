@@ -68,13 +68,18 @@ class _BaseScreenState extends State<BaseScreen> {
       floatingActionButton: SizedBox(
         width: hubSize,
         height: hubSize,
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              bottom: -16,
-              child: GestureDetector(
+        child: OverflowBox(
+          maxWidth: hubSize * 3,
+          maxHeight: hubSize * 3,
+          alignment: Alignment.topCenter,
+          child: Transform.translate(
+            offset: const Offset(0, 16),
+            child: RadialMenu(
+              radius: hubSize / 2 + 40,
+              startAngle: math.pi,
+              sweepAngle: math.pi,
+              spin: false,
+              center: GestureDetector(
                 onTap: () {},
                 child: Material(
                   elevation: 6,
@@ -86,12 +91,6 @@ class _BaseScreenState extends State<BaseScreen> {
                   ),
                 ),
               ),
-            ),
-            RadialMenu(
-              radius: hubSize / 2 + 40,
-              startAngle: math.pi,
-              sweepAngle: math.pi,
-              spin: false,
               items: const [
                 RadialMenuItem(Icons.fitness_center, 'IsyTraining'),
                 RadialMenuItem(Icons.science, 'IsyLab'),
@@ -100,7 +99,7 @@ class _BaseScreenState extends State<BaseScreen> {
               ],
               onItemTap: (i) => _onTabChanged(i + 1),
             ),
-          ],
+          ),
         ),
       ),
     );
