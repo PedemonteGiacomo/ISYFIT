@@ -8,7 +8,7 @@ import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/constants/layout_constants.dart';
-import '../../domain/utils/validators.dart';
+import 'package:isyfit/domain/utils/validators.dart';
 
 //TODO: implement the settings part here
 
