@@ -4,6 +4,7 @@ import '../../data/repositories/auth_repository.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'registration/registration_screen.dart';
 import '../../domain/utils/firebase_error_translator.dart';
+import '../../domain/utils/validators.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthRepository authRepository;
@@ -22,6 +23,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _forgotMode = false;
+  bool _obscurePassword = true;
+
+  bool get _isEmailValid => isValidEmail(_emailController.text.trim());
 
   Future<void> _login() async {
     setState(() {
@@ -29,6 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      if (!_isEmailValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid email.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
       await widget.authRepository.signIn(
         _emailController.text.trim(),
         _passwordController.text.trim(),
@@ -68,6 +79,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
     try {
+      if (!_isEmailValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid email.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
       await widget.authRepository.sendPasswordReset(
         _emailController.text.trim(),
       );
@@ -162,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Password Field
                             TextField(
                               controller: _passwordController,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 border: OutlineInputBorder(
@@ -171,6 +189,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 prefixIcon: Icon(
                                   Icons.lock,
                                   color: theme.colorScheme.primary,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_obscurePassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
                                 ),
                               ),
                             ),
