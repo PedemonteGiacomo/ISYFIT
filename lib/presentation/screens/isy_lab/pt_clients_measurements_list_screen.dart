@@ -11,6 +11,7 @@ import 'package:isyfit/presentation/screens/isy_lab/isy_lab_main_screen.dart';
 // Import your gradient app bar and gradient button
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// This screen shows the PT’s clients for IsyLab.
 ///  - By default, shows only clients who DO have measurement data
@@ -26,8 +27,34 @@ class PTClientsIsyLabListScreen extends StatefulWidget {
       _PTClientsIsyLabListScreenState();
 }
 
+enum ClientFilterOption { withData, withoutData, all }
+
+enum ClientSortOption { nameAsc, nameDesc }
+
 class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
-  bool showClientsWithoutMeasurements = false;
+  ClientFilterOption _filterOption = ClientFilterOption.withData;
+  ClientSortOption _sortOption = ClientSortOption.nameAsc;
+
+  void _cycleFilter() {
+    setState(() {
+      _filterOption = _filterOption == ClientFilterOption.withData
+          ? ClientFilterOption.withoutData
+          : _filterOption == ClientFilterOption.withoutData
+              ? ClientFilterOption.all
+              : ClientFilterOption.withData;
+    });
+  }
+
+  String _filterLabel() {
+    switch (_filterOption) {
+      case ClientFilterOption.withData:
+        return 'Clients WITH Measurements';
+      case ClientFilterOption.withoutData:
+        return 'Clients WITHOUT Measurements';
+      case ClientFilterOption.all:
+        return 'All Clients';
+    }
+  }
 
   // We’ll store the entire fetched list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
@@ -98,25 +125,40 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
   /// Filter the loaded clients by:
   ///   1) Data presence toggle
   ///   2) Search text
+  ///   3) Sorting preference
   List<Map<String, dynamic>> _buildFilteredClients() {
     // First filter by data presence
     final filteredByData = _allClients.where((c) {
       final hasData = c['hasMeasurementData'] == true;
-      // If we are showing clients WITHOUT measurements, we want !hasData
-      // If not, we want hasData
-      return showClientsWithoutMeasurements ? !hasData : hasData;
+      switch (_filterOption) {
+        case ClientFilterOption.withData:
+          return hasData;
+        case ClientFilterOption.withoutData:
+          return !hasData;
+        case ClientFilterOption.all:
+          return true;
+      }
     }).toList();
 
     // Next filter by searchTerm
     final searchLower = _searchTerm.toLowerCase();
-    if (searchLower.isEmpty) return filteredByData;
-
-    return filteredByData.where((c) {
+    var filtered = filteredByData.where((c) {
+      if (searchLower.isEmpty) return true;
       final nameLower = (c['name'] as String).toLowerCase();
       final emailLower = (c['email'] as String).toLowerCase();
       return nameLower.contains(searchLower) ||
           emailLower.contains(searchLower);
     }).toList();
+
+    // Sort according to preference
+    filtered.sort((a, b) {
+      final nameA = (a['name'] as String).toLowerCase();
+      final nameB = (b['name'] as String).toLowerCase();
+      final cmp = nameA.compareTo(nameB);
+      return _sortOption == ClientSortOption.nameAsc ? cmp : -cmp;
+    });
+
+    return filtered;
   }
 
   @override
@@ -127,60 +169,83 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
       appBar: GradientAppBar(
         title: 'My Clients - IsyLab',
         actions: [
-            // Add a "Home" icon that takes the PT back to the main flow.
-            IconButton(
-              icon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              onPressed: () {
-                // For example, pushReplacement to the main BaseScreen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BaseScreen()),
-                );
-              },
-            ),
-          ],
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
           const SizedBox(height: 16),
 
-          // Search field
+          // Search field with sort icon
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchTerm = val;
-                });
-              },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search client by name or email...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchTerm = val;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search client by name or email...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Sort',
+                  icon: Icon(
+                    _sortOption == ClientSortOption.nameAsc
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _sortOption = _sortOption == ClientSortOption.nameAsc
+                          ? ClientSortOption.nameDesc
+                          : ClientSortOption.nameAsc;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
 
           const SizedBox(height: 12),
 
-          // Toggle button
+          // Filter toggle
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GradientButton(
-              label: showClientsWithoutMeasurements
-                  ? 'Show Clients WITH Measurements'
-                  : 'Show Clients WITHOUT Measurements',
-              icon: Icons.swap_horiz,
-              onPressed: () {
-                setState(() {
-                  showClientsWithoutMeasurements =
-                      !showClientsWithoutMeasurements;
-                });
-              },
+            child: Row(
+              children: [
+                Expanded(
+                  child: GradientButton(
+                    label: _filterLabel(),
+                    icon: Icons.swap_horiz,
+                    onPressed: () {
+                      _cycleFilter();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -204,15 +269,16 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
                 if (displayedClients.isEmpty) {
                   return Center(
                     child: Text(
-                      showClientsWithoutMeasurements
-                          ? 'No clients are missing measurement data.'
-                          : 'No matching clients have measurement data.',
+                      _filterOption == ClientFilterOption.withData
+                          ? 'No matching clients have measurement data.'
+                          : _filterOption == ClientFilterOption.withoutData
+                              ? 'No clients are missing measurement data.'
+                              : 'No matching clients.',
                       style: theme.textTheme.titleMedium,
                     ),
                   );
-                }
-
-                return ListView.builder(
+                }                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
                   itemCount: displayedClients.length,
                   itemBuilder: (ctx, index) {
                     final c = displayedClients[index];

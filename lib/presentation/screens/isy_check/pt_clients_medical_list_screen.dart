@@ -10,6 +10,7 @@ import 'package:isyfit/presentation/screens/medical_history/medical_questionnair
 // Import your gradient widgets / custom UI
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// If the user is a PT and no clientUid is given, we display
 /// a list of PT’s clients, toggling "with data" vs. "without data",
@@ -22,9 +23,35 @@ class PTClientsMedicalListScreen extends StatefulWidget {
       _PTClientsMedicalListScreenState();
 }
 
+enum ClientFilterOption { withData, withoutData, all }
+
+enum ClientSortOption { nameAsc, nameDesc }
+
 class _PTClientsMedicalListScreenState
     extends State<PTClientsMedicalListScreen> {
-  bool showClientsWithoutData = false;
+  ClientFilterOption _filterOption = ClientFilterOption.withData;
+  ClientSortOption _sortOption = ClientSortOption.nameAsc;
+
+  void _cycleFilter() {
+    setState(() {
+      _filterOption = _filterOption == ClientFilterOption.withData
+          ? ClientFilterOption.withoutData
+          : _filterOption == ClientFilterOption.withoutData
+              ? ClientFilterOption.all
+              : ClientFilterOption.withData;
+    });
+  }
+
+  String _filterLabel() {
+    switch (_filterOption) {
+      case ClientFilterOption.withData:
+        return 'Clients WITH Medical Data';
+      case ClientFilterOption.withoutData:
+        return 'Clients WITHOUT Medical Data';
+      case ClientFilterOption.all:
+        return 'All Clients';
+    }
+  }
 
   // We'll store the entire list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
@@ -84,17 +111,23 @@ class _PTClientsMedicalListScreenState
     return Future.wait(tasks);
   }
 
-  /// Apply toggles (with or without data) + search
+  /// Apply toggles (with or without data) + search + sort
   List<Map<String, dynamic>> _buildFilteredClients() {
-    // First filter by showClientsWithoutData
+    // Filter by selected option
     final filteredByData = _allClients.where((c) {
       final hasData = c['hasMedicalData'] == true;
-      return showClientsWithoutData ? !hasData : hasData;
+      switch (_filterOption) {
+        case ClientFilterOption.withData:
+          return hasData;
+        case ClientFilterOption.withoutData:
+          return !hasData;
+        case ClientFilterOption.all:
+          return true;
+      }
     }).toList();
 
     final searchLower = _searchTerm.toLowerCase();
-    // Then filter by search
-    final finalFiltered = filteredByData.where((c) {
+    var filtered = filteredByData.where((c) {
       if (searchLower.isEmpty) return true;
       final nameLower = (c['name'] as String).toLowerCase();
       final emailLower = (c['email'] as String).toLowerCase();
@@ -102,7 +135,14 @@ class _PTClientsMedicalListScreenState
           emailLower.contains(searchLower);
     }).toList();
 
-    return finalFiltered;
+    filtered.sort((a, b) {
+      final nameA = (a['name'] as String).toLowerCase();
+      final nameB = (b['name'] as String).toLowerCase();
+      final cmp = nameA.compareTo(nameB);
+      return _sortOption == ClientSortOption.nameAsc ? cmp : -cmp;
+    });
+
+    return filtered;
   }
 
   @override
@@ -112,58 +152,82 @@ class _PTClientsMedicalListScreenState
       appBar: GradientAppBar(
         title: 'My Clients - IsyCheck',
         actions: [
-            // Add a "Home" icon that takes the PT back to the main flow.
-            IconButton(
-              icon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              onPressed: () {
-                // For example, pushReplacement to the main BaseScreen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BaseScreen()),
-                );
-              },
-            ),
-          ],
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
           const SizedBox(height: 16),
 
-          // Search Bar
+          // Search bar with sort icon
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchTerm = val;
-                });
-              },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search by name or email...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchTerm = val;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by name or email...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Sort',
+                  icon: Icon(
+                    _sortOption == ClientSortOption.nameAsc
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _sortOption = _sortOption == ClientSortOption.nameAsc
+                          ? ClientSortOption.nameDesc
+                          : ClientSortOption.nameAsc;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Toggle Button
+          // Filter toggle
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GradientButton(
-              label: showClientsWithoutData
-                  ? 'Show Clients WITH Medical Data'
-                  : 'Show Clients WITHOUT Medical Data',
-              icon: Icons.swap_horiz,
-              onPressed: () {
-                setState(() {
-                  showClientsWithoutData = !showClientsWithoutData;
-                });
-              },
+            child: Row(
+              children: [
+                Expanded(
+                  child: GradientButton(
+                    label: _filterLabel(),
+                    icon: Icons.swap_horiz,
+                    onPressed: () {
+                      _cycleFilter();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -189,15 +253,16 @@ class _PTClientsMedicalListScreenState
                 if (displayedClients.isEmpty) {
                   return Center(
                     child: Text(
-                      showClientsWithoutData
-                          ? 'No clients are missing medical data.'
-                          : 'No matching clients have medical data.',
+                      _filterOption == ClientFilterOption.withData
+                          ? 'No matching clients have medical data.'
+                          : _filterOption == ClientFilterOption.withoutData
+                              ? 'No clients are missing medical data.'
+                              : 'No matching clients.',
                       style: theme.textTheme.titleMedium,
                     ),
                   );
-                }
-
-                return ListView.builder(
+                }                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
                   itemCount: displayedClients.length,
                   itemBuilder: (ctx, index) {
                     final c = displayedClients[index];
