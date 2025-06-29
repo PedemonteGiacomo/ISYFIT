@@ -159,24 +159,12 @@ class _ClientDashboardState extends State<ClientDashboard> {
 
             final bool isSolo = userData['isSolo'] == true;
             final String? reqStatus = userData['requestStatus'] as String?;
+            final String? requestedPt = userData['requestedPT'] as String?;
             if (isSolo) {
               return Column(
                 children: [
                   if (reqStatus != null)
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            reqStatus == 'pending'
-                                ? 'Request pending approval.'
-                                : 'Request $reqStatus',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildRequestStatusCard(reqStatus, requestedPt),
                   _buildSoloCard(context),
                 ],
               );
@@ -261,6 +249,58 @@ class _ClientDashboardState extends State<ClientDashboard> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestStatusCard(String status, String? ptId) {
+    final theme = Theme.of(context);
+    IconData icon;
+    Color color;
+    String text;
+    String? ptEmail;
+    if (ptId != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(ptId)
+          .get()
+          .then((doc) {
+        setState(() {
+          ptEmail = doc.data()?['email'];
+        });
+      });
+    }
+    if (status == 'pending') {
+      icon = Icons.hourglass_top;
+      color = Colors.orange;
+      text = ptEmail != null
+          ? 'Awaiting approval from \$ptEmail'
+          : 'Link request pending approval.';
+    } else {
+      icon = Icons.cancel;
+      color = theme.colorScheme.error;
+      text = ptEmail != null
+          ? 'Request to \$ptEmail was rejected. You can send a new one from the Account screen.'
+          : 'Link request rejected. You can send a new request from the Account screen.';
+    }
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
           ),
         ),
       ),

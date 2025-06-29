@@ -37,6 +37,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
   bool _isEditMode = false;
 
+  // --- PT linking state ---
+  bool _isSolo = true;
+  String? _requestStatus;
+  String? _requestedPt;
+  String? _requestedPtEmail;
+  final TextEditingController _ptEmailController = TextEditingController();
+  bool _isSendingRequest = false;
+
   /// Return [widget.clientUid] if provided, else the current user's UID.
   String? get targetUid {
     if (widget.clientUid != null) {
@@ -77,6 +85,21 @@ class _AccountScreenState extends State<AccountScreen> {
             _dateOfBirth = DateTime.tryParse(data['dateOfBirth']);
           }
           _profileImageUrl = data['profileImageUrl'];
+          _isSolo = data['isSolo'] ?? true;
+          _requestStatus = data['requestStatus'];
+          _requestedPt = data['requestedPT'];
+          _requestedPtEmail = null;
+          if (_requestedPt != null && _requestStatus != null) {
+            _firestore
+                .collection('users')
+                .doc(_requestedPt)
+                .get()
+                .then((ptDoc) {
+              setState(() {
+                _requestedPtEmail = ptDoc.data()?['email'];
+              });
+            });
+          }
         });
       }
     } catch (e) {
@@ -168,6 +191,63 @@ class _AccountScreenState extends State<AccountScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving changes: $e')),
       );
+    }
+  }
+
+  Future<void> _sendPtRequest() async {
+    final uid = targetUid;
+    if (uid == null) return;
+    final email = _ptEmailController.text.trim();
+    if (email.isEmpty) return;
+    setState(() => _isSendingRequest = true);
+    try {
+      final query = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .where('role', isEqualTo: 'PT')
+          .limit(1)
+          .get();
+      if (query.docs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No PT found with this email.')),
+        );
+        return;
+      }
+      final ptDoc = query.docs.first;
+      final ptId = ptDoc.id;
+      final ptEmail = ptDoc['email'] as String?;
+      await _firestore.collection('users').doc(uid).update({
+        'requestedPT': ptId,
+        'requestStatus': 'pending',
+      });
+      final notifId = _firestore.collection('tmp').doc().id;
+      final notif = {
+        'id': notifId,
+        'clientId': uid,
+        'clientName': _name ?? '',
+        'clientSurname': _surname ?? '',
+        'clientEmail': _email ?? '',
+        'status': 'pending',
+        'read': false,
+        'timestamp': Timestamp.now(),
+      };
+      await _firestore.collection('users').doc(ptId).update({
+        'notifications': FieldValue.arrayUnion([notif])
+      });
+      setState(() {
+        _requestStatus = 'pending';
+        _requestedPt = ptId;
+        _requestedPtEmail = ptEmail;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request sent to PT.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending request: $e')),
+      );
+    } finally {
+      setState(() => _isSendingRequest = false);
     }
   }
 
@@ -387,6 +467,72 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            _buildPtLinkCard(context),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPtLinkCard(BuildContext context) {
+    if (!_isSolo) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    if (_requestStatus == 'pending') {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const Icon(Icons.hourglass_top, color: Colors.orange),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _requestedPtEmail != null
+                      ? 'Awaiting approval from \$_requestedPtEmail'
+                      : 'Link request pending approval.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_requestStatus == 'rejected')
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  _requestedPtEmail != null
+                      ? 'Request to \$_requestedPtEmail was rejected. You can send a new one.'
+                      : 'Previous request was rejected. You can send a new one.',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
+            TextField(
+              controller: _ptEmailController,
+              decoration: const InputDecoration(
+                labelText: 'PT Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _isSendingRequest
+                ? const Center(child: CircularProgressIndicator())
+                : FilledButton(
+                    onPressed: _sendPtRequest,
+                    child: const Text('Send Request'),
+                  ),
           ],
         ),
       ),
@@ -574,6 +720,12 @@ class _AccountScreenState extends State<AccountScreen> {
             )
           : Text(value ?? 'Not available'),
     );
+  }
+
+  @override
+  void dispose() {
+    _ptEmailController.dispose();
+    super.dispose();
   }
 
   /// Non-editable tile for user’s own side
