@@ -9,6 +9,7 @@ import '../base_screen.dart';
 import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 import "../../../domain/utils/firebase_error_translator.dart";
+import '../../../domain/utils/validators.dart';
 
 class RegisterClientScreen extends StatefulWidget {
   const RegisterClientScreen({Key? key}) : super(key: key);
@@ -21,10 +22,14 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   // -------------------- Controllers --------------------
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ptEmailController = TextEditingController();
+  final FocusNode _ptEmailNode = FocusNode();
+  final FocusNode _confirmPasswordNode = FocusNode();
   final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State Variables --------------------
@@ -34,7 +39,41 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
   bool _emailFieldTouched = false;
+  bool _ptEmailTouched = false;
+  bool _showConfirmInfo = false;
+  bool _confirmTouched = false;
   bool isSolo = true; // If false => user wants to assign PT
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ptEmailNode.addListener(() {
+      if (!_ptEmailNode.hasFocus) {
+        setState(() => _ptEmailTouched = true);
+      }
+    });
+    _confirmPasswordNode.addListener(() {
+      if (!_confirmPasswordNode.hasFocus) {
+        setState(() => _confirmTouched = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _surnameController.dispose();
+    _phoneController.dispose();
+    _ptEmailController.dispose();
+    _ptEmailNode.dispose();
+    _confirmPasswordNode.dispose();
+    super.dispose();
+  }
 
   // -------------------- Gender Field --------------------
   String? _gender; // "Male" or "Female"
@@ -48,9 +87,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool get _hasMinLength => _passwordController.text.length >= 8;
 
   /// Email Regex check
-  bool get _isEmailValid => RegExp(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-      ).hasMatch(_emailController.text);
+  bool get _passwordsMatch =>
+      _passwordController.text == _confirmPasswordController.text;
+  bool get _isEmailValid => isValidEmail(_emailController.text);
+  bool get _isPtEmailValid => isValidEmail(_ptEmailController.text.trim());
 
   /// If all password checks are true => user meets requirements
   bool get _allRequirementsMet =>
@@ -111,7 +151,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       return;
     }
 
-    // 6) Check phone number is provided
+    // 6) Ensure passwords match
+    if (!_passwordsMatch) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
+
+    // 7) Check phone number is provided
     if (_phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Phone number is required.')),
@@ -119,7 +167,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       return;
     }
 
-    // 7) Attempt creation
+    // 8) Attempt creation
     setState(() => _isLoading = true);
 
     UserCredential? userCredential;
@@ -148,6 +196,13 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       // 9) If user chooses "Assign PT", just notify the PT
       String? ptId;
       if (!isSolo) {
+        if (!_isPtEmailValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter a valid PT email.')),
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
         final ptQuery = await FirebaseFirestore.instance
             .collection('users')
             .where('email', isEqualTo: _ptEmailController.text.trim())
@@ -257,6 +312,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       child: _showPasswordInfo
           ? Container(
               key: const ValueKey('password_info'),
+              width: double.infinity,
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(top: 8),
               decoration: BoxDecoration(
@@ -276,6 +332,28 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                   _buildPasswordRequirement(
                       'At least one special character', _hasSpecialChar),
                 ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildConfirmInfo() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _showConfirmInfo && !_passwordsMatch
+          ? Container(
+              key: const ValueKey('confirm_info'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Le due password non corrispondono',
+                style: TextStyle(color: Colors.red),
               ),
             )
           : const SizedBox.shrink(),
@@ -511,43 +589,89 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           // Password Field with Info Icon
                           // ---------------------------------------------------
-                          Stack(
-                            children: [
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: true,
-                                onChanged: (value) {
-                                  setState(() {});
-                                },
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _showPasswordInfo = !_showPasswordInfo;
-                                  }),
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    color: _allRequirementsMet
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: theme.colorScheme.primary,
                               ),
-                            ],
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => setState(() =>
+                                        _showPasswordInfo = !_showPasswordInfo),
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      color: _allRequirementsMet
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(_obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                    onPressed: () => setState(() =>
+                                        _obscurePassword = !_obscurePassword),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                           _buildPasswordInfo(),
+                          const SizedBox(height: 16),
+
+                          TextField(
+                            controller: _confirmPasswordController,
+                            focusNode: _confirmPasswordNode,
+                            obscureText: _obscureConfirmPassword,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Confirm Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: theme.colorScheme.primary,
+                              ),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_confirmTouched)
+                                    GestureDetector(
+                                      onTap: () => setState(() =>
+                                          _showConfirmInfo = !_showConfirmInfo),
+                                      child: Icon(
+                                        _passwordsMatch
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: _passwordsMatch
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  IconButton(
+                                    icon: Icon(_obscureConfirmPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                    onPressed: () => setState(() =>
+                                        _obscureConfirmPassword =
+                                            !_obscureConfirmPassword),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          _buildConfirmInfo(),
                           const SizedBox(height: 16),
 
                           // Phone
@@ -728,15 +852,33 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           if (!isSolo)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: TextField(
-                                controller: _ptEmailController,
-                                decoration: InputDecoration(
-                                  labelText: 'PT Email',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              child: Focus(
+                                onFocusChange: (hasFocus) {
+                                  if (!hasFocus) {
+                                    setState(() => _ptEmailTouched = true);
+                                  }
+                                },
+                                child: TextField(
+                                  controller: _ptEmailController,
+                                  focusNode: _ptEmailNode,
+                                  decoration: InputDecoration(
+                                    labelText: 'PT Email',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    prefixIcon: Icon(Icons.email_outlined,
+                                        color: theme.colorScheme.primary),
+                                    suffixIcon: _ptEmailTouched
+                                        ? Icon(
+                                            _isPtEmailValid
+                                                ? Icons.check_circle
+                                                : Icons.cancel,
+                                            color: _isPtEmailValid
+                                                ? Colors.green
+                                                : Colors.red,
+                                          )
+                                        : null,
                                   ),
-                                  prefixIcon: Icon(Icons.email_outlined,
-                                      color: theme.colorScheme.primary),
                                 ),
                               ),
                             ),
