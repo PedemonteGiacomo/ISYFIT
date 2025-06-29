@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 //TODO: implement the settings part here
 
@@ -36,6 +37,15 @@ class _AccountScreenState extends State<AccountScreen> {
   String? _profileImageUrl;
 
   bool _isEditMode = false;
+
+  // --- PT linking state ---
+  bool _isSolo = false;
+  String? _role;
+  String? _requestStatus;
+  String? _requestedPt;
+  String? _requestedPtEmail;
+  final TextEditingController _ptEmailController = TextEditingController();
+  bool _isSendingRequest = false;
 
   /// Return [widget.clientUid] if provided, else the current user's UID.
   String? get targetUid {
@@ -77,6 +87,22 @@ class _AccountScreenState extends State<AccountScreen> {
             _dateOfBirth = DateTime.tryParse(data['dateOfBirth']);
           }
           _profileImageUrl = data['profileImageUrl'];
+          _role = data['role'];
+          _isSolo = data['role'] == 'Client' && data['isSolo'] == true;
+          _requestStatus = data['requestStatus'];
+          _requestedPt = data['requestedPT'];
+          _requestedPtEmail = null;
+          if (_requestedPt != null && _requestStatus != null) {
+            _firestore
+                .collection('users')
+                .doc(_requestedPt)
+                .get()
+                .then((ptDoc) {
+              setState(() {
+                _requestedPtEmail = ptDoc.data()?['email'];
+              });
+            });
+          }
         });
       }
     } catch (e) {
@@ -171,6 +197,63 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  Future<void> _sendPtRequest() async {
+    final uid = targetUid;
+    if (uid == null) return;
+    final email = _ptEmailController.text.trim();
+    if (email.isEmpty) return;
+    setState(() => _isSendingRequest = true);
+    try {
+      final query = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .where('role', isEqualTo: 'PT')
+          .limit(1)
+          .get();
+      if (query.docs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No PT found with this email.')),
+        );
+        return;
+      }
+      final ptDoc = query.docs.first;
+      final ptId = ptDoc.id;
+      final ptEmail = ptDoc['email'] as String?;
+      await _firestore.collection('users').doc(uid).update({
+        'requestedPT': ptId,
+        'requestStatus': 'pending',
+      });
+      final notifId = _firestore.collection('tmp').doc().id;
+      final notif = {
+        'id': notifId,
+        'clientId': uid,
+        'clientName': _name ?? '',
+        'clientSurname': _surname ?? '',
+        'clientEmail': _email ?? '',
+        'status': 'pending',
+        'read': false,
+        'timestamp': Timestamp.now(),
+      };
+      await _firestore.collection('users').doc(ptId).update({
+        'notifications': FieldValue.arrayUnion([notif])
+      });
+      setState(() {
+        _requestStatus = 'pending';
+        _requestedPt = ptId;
+        _requestedPtEmail = ptEmail;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request sent to PT.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending request: $e')),
+      );
+    } finally {
+      setState(() => _isSendingRequest = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
@@ -201,6 +284,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -387,6 +471,94 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            _buildPtLinkCard(context),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPtLinkCard(BuildContext context) {
+    if (!_isSolo || _role != 'Client') return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    if (_requestStatus == 'pending') {
+      return Card(
+        elevation: 4,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              const Icon(Icons.hourglass_top, color: Colors.orange, size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _requestedPtEmail != null
+                      ? 'Awaiting approval from $_requestedPtEmail'
+                      : 'Link request pending approval.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.person_add,
+                    color: theme.colorScheme.primary, size: 32),
+                const SizedBox(width: 12),
+                Text(
+                  'Connect with a Personal Trainer',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_requestStatus == 'rejected')
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  _requestedPtEmail != null
+                      ? 'Request to $_requestedPtEmail was rejected. You can send a new one.'
+                      : 'Previous request was rejected. You can send a new one.',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
+            Text(
+              'Enter your trainer\'s email to send a link request.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _ptEmailController,
+              decoration: const InputDecoration(
+                labelText: 'PT Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _isSendingRequest
+                ? const Center(child: CircularProgressIndicator())
+                : FilledButton(
+                    onPressed: _sendPtRequest,
+                    child: const Text('Send Request'),
+                  ),
           ],
         ),
       ),
@@ -417,7 +589,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, kScreenBottomPadding),
         child: Column(
           children: [
             /// 1) A bigger "profile" card with tinted surface
@@ -574,6 +746,12 @@ class _AccountScreenState extends State<AccountScreen> {
             )
           : Text(value ?? 'Not available'),
     );
+  }
+
+  @override
+  void dispose() {
+    _ptEmailController.dispose();
+    super.dispose();
   }
 
   /// Non-editable tile for user’s own side

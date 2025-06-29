@@ -66,7 +66,7 @@ class _ClientDashboardState extends State<ClientDashboard> {
           (_lastNotifiedMs == null || latest > _lastNotifiedMs!)) {
         NotificationService.instance.showNotification(
           title: 'Nuova notifica',
-          body: 'Il tuo PT ha aggiornato le notifiche',
+          body: 'Il tuo PT ha aggiornato lo stato della tua richiesta.',
           target: NotificationTarget.client,
         );
         _lastNotifiedMs = latest;
@@ -157,25 +157,26 @@ class _ClientDashboardState extends State<ClientDashboard> {
               );
             }
 
-            final bool isSolo = userData['isSolo'] == true;
+            final bool isSolo =
+                userData['role'] == 'Client' && userData['isSolo'] == true;
             final String? reqStatus = userData['requestStatus'] as String?;
+            final String? requestedPt = userData['requestedPT'] as String?;
             if (isSolo) {
               return Column(
                 children: [
                   if (reqStatus != null)
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            reqStatus == 'pending'
-                                ? 'Request pending approval.'
-                                : 'Request $reqStatus',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
+                    FutureBuilder<DocumentSnapshot?>(
+                      future: requestedPt != null
+                          ? FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(requestedPt)
+                              .get()
+                          : Future.value(null),
+                      builder: (context, ptSnap) {
+                        final data = ptSnap.data?.data() as Map<String, dynamic>?;
+                        final email = data?['email'] as String?;
+                        return _buildRequestStatusCard(reqStatus, email);
+                      },
                     ),
                   _buildSoloCard(context),
                 ],
@@ -261,6 +262,46 @@ class _ClientDashboardState extends State<ClientDashboard> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestStatusCard(String status, String? ptEmail) {
+    final theme = Theme.of(context);
+    IconData icon;
+    Color color;
+    String text;
+    if (status == 'pending') {
+      icon = Icons.hourglass_top;
+      color = Colors.orange;
+      text = ptEmail != null
+          ? 'Awaiting approval from $ptEmail'
+          : 'Link request pending approval.';
+    } else {
+      icon = Icons.cancel;
+      color = theme.colorScheme.error;
+      text = ptEmail != null
+          ? 'Request to $ptEmail was rejected. You can send a new one from the Account screen.'
+          : 'Link request rejected. You can send a new request from the Account screen.';
+    }
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
           ),
         ),
       ),

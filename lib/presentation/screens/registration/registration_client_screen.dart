@@ -6,6 +6,7 @@ import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import '../../widgets/country_codes.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../base_screen.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 import "../../../domain/utils/firebase_error_translator.dart";
 
@@ -405,6 +406,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       ),
       body: Center(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
           child: Column(
             children: [
               /// The main Card container
