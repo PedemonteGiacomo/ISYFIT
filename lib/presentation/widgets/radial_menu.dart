@@ -106,16 +106,10 @@ class _RadialMenuState extends State<RadialMenu>
               ),
               const SizedBox(height: 4),
               Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  shadows: const [
-                    Shadow(
-                      color: Colors.black54,
-                      offset: Offset(0, 1),
-                      blurRadius: 3,
-                    ),
-                  ],
+                label,                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
