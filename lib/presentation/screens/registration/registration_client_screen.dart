@@ -453,42 +453,38 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           LayoutBuilder(
                             builder: (context, constraints) {
                               final wide = constraints.maxWidth > 360;
-                              final nameField = Expanded(
-                                child: TextField(
-                                  controller: _nameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Name',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                              final nameField = TextField(
+                                controller: _nameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Name',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               );
-                              final surnameField = Expanded(
-                                child: TextField(
-                                  controller: _surnameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Surname',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person_outline,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                              final surnameField = TextField(
+                                controller: _surnameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Surname',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               );
                               if (wide) {
                                 return Row(
                                   children: [
-                                    nameField,
+                                    Expanded(child: nameField),
                                     const SizedBox(width: 16),
-                                    surnameField,
+                                    Expanded(child: surnameField),
                                   ],
                                 );
                               }

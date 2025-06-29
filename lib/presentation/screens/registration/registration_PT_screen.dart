@@ -335,17 +335,15 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final wide = constraints.maxWidth > 360;
-                        final nameField = Expanded(
-                            child: _textField(
-                                _nameController, 'Name', Icons.person));
-                        final surnameField = Expanded(
-                            child: _textField(_surnameController, 'Surname',
-                                Icons.person_outline));
+                        final nameField =
+                            _textField(_nameController, 'Name', Icons.person);
+                        final surnameField = _textField(_surnameController,
+                            'Surname', Icons.person_outline);
                         if (wide) {
                           return Row(children: [
-                            nameField,
+                            Expanded(child: nameField),
                             const SizedBox(width: 16),
-                            surnameField,
+                            Expanded(child: surnameField),
                           ]);
                         }
                         return Column(children: [
