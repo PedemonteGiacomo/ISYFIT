@@ -10,6 +10,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../widgets/country_codes.dart';
 import '../../widgets/gradient_app_bar.dart';
 import "../../../domain/utils/firebase_error_translator.dart";
+import '../../../domain/utils/validators.dart';
 import '../base_screen.dart';
 import 'plan_selection_screen.dart';
 
@@ -24,11 +25,13 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   // -------------------- Controllers --------------------
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _vatController = TextEditingController();
   final _legalInfoController = TextEditingController();
   final _phoneController = TextEditingController();
+  final FocusNode _confirmPasswordNode = FocusNode();
   final AuthRepository _authRepo = AuthRepository();
 
   // -------------------- State --------------------
@@ -40,23 +43,33 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   bool _emailTouched = false;
   bool _isLoading = false;
   bool _isPayLoading = false;
+  bool _confirmTouched = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   QueryDocumentSnapshot<Map<String, dynamic>>? _selectedPlan;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sessionSub;
 
-  // -------------------- Validators --------------------
-  bool get _isEmailValid {
-    final email = _emailController.text.trim();
-    final regex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
-    return regex.hasMatch(email);
+  @override
+  void initState() {
+    super.initState();
+    _confirmPasswordNode.addListener(() {
+      if (!_confirmPasswordNode.hasFocus) {
+        setState(() => _confirmTouched = true);
+      }
+    });
   }
 
+  // -------------------- Validators --------------------
+  bool get _isEmailValid => isValidEmail(_emailController.text);
   bool get _pwdUpper => _passwordController.text.contains(RegExp(r'[A-Z]'));
   bool get _pwdLower => _passwordController.text.contains(RegExp(r'[a-z]'));
   bool get _pwdNum => _passwordController.text.contains(RegExp(r'[0-9]'));
   bool get _pwdSpec =>
       _passwordController.text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
   bool get _pwdLen => _passwordController.text.length >= 8;
+  bool get _passwordsMatch =>
+      _passwordController.text == _confirmPasswordController.text;
   bool get _pwdOk => _pwdUpper && _pwdLower && _pwdNum && _pwdSpec && _pwdLen;
 
   @override
@@ -70,6 +83,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     if (!_agreeToTerms) return _msg('You must accept terms.');
     if (!_isEmailValid) return _msg('Invalid email.');
     if (!_pwdOk) return _msg('Password not strong enough.');
+    if (!_passwordsMatch) return _msg('Passwords do not match.');
     if (_nameController.text.trim().isEmpty)
       return _msg('Please enter your name.');
     if (_surnameController.text.trim().isEmpty)
@@ -344,13 +358,20 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     Stack(children: [
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           labelText: 'Password',
                           border: outline,
                           prefixIcon:
                               Icon(Icons.lock, color: t.colorScheme.primary),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
                         ),
                       ),
                       Positioned(
@@ -388,6 +409,42 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             )
                           : const SizedBox.shrink(),
                     ),
+                    const SizedBox(height: 16),
+
+                    Stack(children: [
+                      TextField(
+                        controller: _confirmPasswordController,
+                        focusNode: _confirmPasswordNode,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: outline,
+                          prefixIcon: Icon(Icons.lock_outline,
+                              color: t.colorScheme.primary),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 10,
+                        top: 10,
+                        child: _confirmTouched
+                            ? Icon(
+                                _passwordsMatch
+                                    ? Icons.check_circle
+                                    : Icons.cancel,
+                                color:
+                                    _passwordsMatch ? Colors.green : Colors.red,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ]),
                     const SizedBox(height: 16),
 
                     // Phone

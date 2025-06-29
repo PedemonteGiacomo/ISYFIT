@@ -10,6 +10,7 @@ import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/isy_client_options_dialog.dart';
 
 import "../../domain/utils/firebase_error_translator.dart";
+import '../../domain/utils/validators.dart';
 
 enum ClientSortOption {
   nameAsc,
@@ -471,7 +472,12 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
   }
 
   Future<void> _checkEmailAndProceed(String email) async {
-    if (email.isEmpty) return;
+    if (email.isEmpty || !isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email.')),
+      );
+      return;
+    }
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -506,6 +512,11 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         final TextEditingController nameCtrl = TextEditingController();
         final TextEditingController surnameCtrl = TextEditingController();
         final TextEditingController passCtrl = TextEditingController();
+        final TextEditingController confirmCtrl = TextEditingController();
+        final FocusNode confirmNode = FocusNode();
+        bool confirmTouched = false;
+        bool obscurePass = true;
+        bool obscureConfirm = true;
         final TextEditingController phoneCtrl = TextEditingController();
         String? selectedGender;
         DateTime? selectedDOB;
@@ -529,6 +540,12 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     setStateDialog(() => selectedDOB = picked);
                   }
                 }
+
+                confirmNode.addListener(() {
+                  if (!confirmNode.hasFocus) {
+                    setStateDialog(() => confirmTouched = true);
+                  }
+                });
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -610,13 +627,53 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: passCtrl,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: obscurePass,
+                      onChanged: (_) => setStateDialog(() {}),
+                      decoration: InputDecoration(
                         labelText: 'Temporary Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePass
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () =>
+                              setStateDialog(() => obscurePass = !obscurePass),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmCtrl,
+                      focusNode: confirmNode,
+                      obscureText: obscureConfirm,
+                      onChanged: (_) => setStateDialog(() {}),
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureConfirm
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () => setStateDialog(
+                              () => obscureConfirm = !obscureConfirm),
+                        ),
+                      ),
+                    ),
+                    if (confirmTouched)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Icon(
+                          passCtrl.text == confirmCtrl.text
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: passCtrl.text == confirmCtrl.text
+                              ? Colors.green
+                              : Colors.red,
+                          size: 20,
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: phoneCtrl,
@@ -651,6 +708,14 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                             icon: const Icon(Icons.app_registration),
                             label: const Text('Register'),
                             onPressed: () {
+                              if (passCtrl.text.trim() !=
+                                  confirmCtrl.text.trim()) {
+                                ScaffoldMessenger.of(ctx2).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Passwords do not match.')),
+                                );
+                                return;
+                              }
                               Navigator.pop(ctx2);
                               _registerClient(
                                 email: email,
@@ -724,10 +789,15 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
     required String? gender,
     required DateTime? dob,
   }) async {
-    if (email.isEmpty || name.isEmpty || surname.isEmpty || password.isEmpty) {
+    if (email.isEmpty ||
+        !isValidEmail(email) ||
+        name.isEmpty ||
+        surname.isEmpty ||
+        password.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill all fields.')),
+          const SnackBar(
+              content: Text('Please fill all fields with valid data.')),
         );
       }
       return;
