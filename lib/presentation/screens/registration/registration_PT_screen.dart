@@ -270,24 +270,22 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
         ],
       );
 
-  Widget _genderOpt(String g, IconData icn) {
-    final c = Theme.of(context).colorScheme;
+  Widget _genderOpt(String g, IconData icn, Color color) {
     final sel = _gender == g;
-    return GestureDetector(
-      onTap: () => setState(() => _gender = g),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: sel ? c.primary : Colors.grey),
-          color: sel ? c.primary.withOpacity(.15) : Colors.transparent,
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icn, color: sel ? c.primary : Colors.grey),
-          const SizedBox(width: 8),
-          Text(g, style: TextStyle(color: sel ? c.primary : Colors.grey)),
-        ]),
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icn, color: sel ? Colors.white : color),
+          const SizedBox(width: 6),
+          Text(g),
+        ],
       ),
+      selected: sel,
+      selectedColor: color,
+      backgroundColor: Colors.grey.shade200,
+      labelStyle: TextStyle(color: sel ? Colors.white : color),
+      onSelected: (_) => setState(() => _gender = g),
     );
   }
 
@@ -334,22 +332,36 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Name & Surname
-                    Row(children: [
-                      Expanded(
-                          child: _textField(
-                              _nameController, 'Name', Icons.person)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                          child: _textField(_surnameController, 'Surname',
-                              Icons.person_outline)),
-                    ]),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final wide = constraints.maxWidth > 360;
+                        final nameField = Expanded(
+                            child: _textField(
+                                _nameController, 'Name', Icons.person));
+                        final surnameField = Expanded(
+                            child: _textField(_surnameController, 'Surname',
+                                Icons.person_outline));
+                        if (wide) {
+                          return Row(children: [
+                            nameField,
+                            const SizedBox(width: 16),
+                            surnameField,
+                          ]);
+                        }
+                        return Column(children: [
+                          nameField,
+                          const SizedBox(height: 16),
+                          surnameField,
+                        ]);
+                      },
+                    ),
                     const SizedBox(height: 16),
 
                     // Gender
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      _genderOpt('Male', Icons.male),
+                      _genderOpt('Male', Icons.male, Colors.blue),
                       const SizedBox(width: 16),
-                      _genderOpt('Female', Icons.female),
+                      _genderOpt('Female', Icons.female, Colors.pink),
                     ]),
                     const SizedBox(height: 16),
 
@@ -477,11 +489,25 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     // Phone
                     Row(children: [
                       Expanded(
-                        flex: 2, // Takes 2/5 of the available space
-                        child: DropdownButton2<String>(
+                        flex: 2,
+                        child: DropdownButtonFormField2<String>(
                           value: _selectedCountryCode,
-                          hint: const Text('Prefix'),
-                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: 'Prefix',
+                            border: outline,
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Text(
+                                countryCodes
+                                    .firstWhere(
+                                        (c) =>
+                                            c['code'] == _selectedCountryCode,
+                                        orElse: () => {'flag': '🌐'})['flag']!
+                                    .toString(),
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
                           items: [
                             for (final c in countryCodes)
                               DropdownMenuItem(
@@ -494,25 +520,14 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                                 ]),
                               ),
                           ],
-                          selectedItemBuilder: (ctx) => countryCodes.map((c) {
-                            return Row(
-                              children: [
-                                Text(c['flag']!,
-                                    style: const TextStyle(fontSize: 18)),
-                                const SizedBox(width: 6),
-                                Text(c['code']!),
-                              ],
-                            );
-                          }).toList(),
                           onChanged: (v) =>
                               setState(() => _selectedCountryCode = v),
-                          buttonStyleData: const ButtonStyleData(height: 48),
                           dropdownStyleData: DropdownStyleData(width: 250),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        flex: 3, // Takes 3/5 of the available space
+                        flex: 3,
                         child: _textField(
                             _phoneController, 'Phone', Icons.phone,
                             keyboard: TextInputType.phone),

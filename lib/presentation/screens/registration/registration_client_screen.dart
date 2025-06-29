@@ -383,90 +383,34 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
     );
   }
 
-  /// Gender selection with icon buttons for Male and Female.
-  Widget _buildGenderSelection() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _genderChip(String value, IconData icon, Color activeColor) {
+    final selected = _gender == value;
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          //const Text("Gender: "),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Male";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Male"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Male"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.male,
-                      color: _gender == "Male"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Male",
-                      style: TextStyle(
-                          color: _gender == "Male"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Female";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Female"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Female"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.female,
-                      color: _gender == "Female"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Female",
-                      style: TextStyle(
-                          color: _gender == "Female"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
-              ),
-            ),
-          ),
+          Icon(icon, color: selected ? Colors.white : activeColor),
+          const SizedBox(width: 6),
+          Text(value)
         ],
       ),
+      selected: selected,
+      onSelected: (_) => setState(() => _gender = value),
+      selectedColor: activeColor,
+      backgroundColor: Colors.grey.shade200,
+      labelStyle: TextStyle(color: selected ? Colors.white : activeColor),
+    );
+  }
+
+  /// Gender selection using colorful chips.
+  Widget _buildGenderSelection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _genderChip('Male', Icons.male, Colors.blue),
+        const SizedBox(width: 16),
+        _genderChip('Female', Icons.female, Colors.pink),
+      ],
     );
   }
 
@@ -482,7 +426,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       appBar: GradientAppBar(
         title: 'Registration',
       ),
-      body: Center(        child: SingleChildScrollView(
+      body: Center(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
           child: Column(
             children: [
@@ -505,9 +450,10 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           // Name + Surname
                           // ---------------------------------------------------
-                          Row(
-                            children: [
-                              Expanded(
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final wide = constraints.maxWidth > 360;
+                              final nameField = Expanded(
                                 child: TextField(
                                   controller: _nameController,
                                   decoration: InputDecoration(
@@ -521,9 +467,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
+                              );
+                              final surnameField = Expanded(
                                 child: TextField(
                                   controller: _surnameController,
                                   decoration: InputDecoration(
@@ -537,8 +482,24 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              );
+                              if (wide) {
+                                return Row(
+                                  children: [
+                                    nameField,
+                                    const SizedBox(width: 16),
+                                    surnameField,
+                                  ],
+                                );
+                              }
+                              return Column(
+                                children: [
+                                  nameField,
+                                  const SizedBox(height: 16),
+                                  surnameField,
+                                ],
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
 
@@ -676,11 +637,29 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // Phone
                           Row(children: [
                             Expanded(
-                              flex: 2, // Takes 2/5 of the available space
-                              child: DropdownButton2<String>(
+                              flex: 2,
+                              child: DropdownButtonFormField2<String>(
                                 value: _selectedCountryCode,
-                                hint: const Text('Prefix'),
-                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: 'Prefix',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Text(
+                                      countryCodes
+                                          .firstWhere(
+                                              (c) =>
+                                                  c['code'] ==
+                                                  _selectedCountryCode,
+                                              orElse: () =>
+                                                  {'flag': '🌐'})['flag']!
+                                          .toString(),
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                  ),
+                                ),
                                 items: [
                                   for (final c in countryCodes)
                                     DropdownMenuItem(
@@ -694,28 +673,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                       ]),
                                     ),
                                 ],
-                                selectedItemBuilder: (ctx) =>
-                                    countryCodes.map((c) {
-                                  return Row(
-                                    children: [
-                                      Text(c['flag']!,
-                                          style: const TextStyle(fontSize: 18)),
-                                      const SizedBox(width: 6),
-                                      Text(c['code']!),
-                                    ],
-                                  );
-                                }).toList(),
                                 onChanged: (v) =>
                                     setState(() => _selectedCountryCode = v),
-                                buttonStyleData:
-                                    const ButtonStyleData(height: 48),
                                 dropdownStyleData:
                                     DropdownStyleData(width: 250),
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              flex: 3, // Takes 3/5 of the available space
+                              flex: 3,
                               child: _textField(
                                   _phoneController, 'Phone', Icons.phone,
                                   keyboard: TextInputType.phone),
@@ -820,28 +786,35 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           Row(
                             children: [
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Go SOLO"),
-                                  value: true,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? true;
-                                    });
-                                  },
-                                ),
+                              ChoiceChip(
+                                label: const Text('Go SOLO'),
+                                selected: isSolo,
+                                onSelected: (_) =>
+                                    setState(() => isSolo = true),
                               ),
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Assign PT"),
-                                  value: false,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? false;
-                                    });
-                                  },
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                                label: const Text('Assign PT'),
+                                selected: !isSolo,
+                                onSelected: (_) =>
+                                    setState(() => isSolo = false),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.info_outline),
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text('Assign PT'),
+                                    content: const Text(
+                                        'Choosing Assign PT lets you connect with your personal trainer. '
+                                        'Go SOLO to use the app without linking to a trainer.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
