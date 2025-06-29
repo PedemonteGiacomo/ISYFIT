@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../widgets/app_snackbars.dart';
 
 import 'package:isyfit/presentation/widgets/measurement_type_tab_bar_widget.dart'; // <<-- Import the new widget
 
@@ -282,14 +283,10 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
 
       await _recordsCollection.add(record);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("BIA inserted successfully.")),
-      );
+      showSuccessSnackBar(context, "BIA inserted successfully.");
       _clearBIAFields();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      showErrorSnackBar(context, "Error: $e");
     }
   }
 
@@ -378,14 +375,10 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
 
       await _recordsCollection.add(record);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("U.S. Army inserted successfully.")),
-      );
+      showSuccessSnackBar(context, "U.S. Army inserted successfully.");
       _clearUSArmyFields();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      showErrorSnackBar(context, "Error: $e");
     }
   }
 
@@ -500,14 +493,10 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
 
       await _recordsCollection.add(record);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Plicometro inserted successfully.")),
-      );
+      showSuccessSnackBar(context, "Plicometro inserted successfully.");
       _clearPlicFields();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      showErrorSnackBar(context, "Error: $e");
     }
   }
 

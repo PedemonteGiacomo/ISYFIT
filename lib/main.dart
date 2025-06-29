@@ -17,6 +17,7 @@ import 'presentation/screens/base_screen.dart';
 import 'presentation/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'presentation/screens/medical_history/anamnesis_screen.dart';
 import 'presentation/theme/app_theme.dart';
+import 'presentation/widgets/app_snackbars.dart';
 import 'domain/providers/auth_provider.dart';
 import 'data/services/notification_service.dart';
 
@@ -83,9 +84,7 @@ class _IsyFitAppState extends State<IsyFitApp> {
       case 'cancel': // isyfit://cancel
         final ctx = _navKey.currentContext;
         if (ctx != null) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            const SnackBar(content: Text('Pagamento annullato')),
-          );
+          showInfoSnackBar(ctx, 'Pagamento annullato');
         }
         break;
       case 'reset': // isyfit://reset?oobCode=abc

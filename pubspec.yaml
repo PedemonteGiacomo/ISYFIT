@@ -39,6 +39,7 @@ dependencies:
 
   # --- NUOVO: runtime per il builder usato ---
   json_annotation: ^4.9.0         # ← NEW
+  top_snackbar_flutter: ^3.3.0
 
 dev_dependencies:
   flutter_test:
