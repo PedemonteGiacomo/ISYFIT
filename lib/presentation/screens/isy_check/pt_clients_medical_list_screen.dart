@@ -10,6 +10,7 @@ import 'package:isyfit/presentation/screens/medical_history/medical_questionnair
 // Import your gradient widgets / custom UI
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// If the user is a PT and no clientUid is given, we display
 /// a list of PT’s clients, toggling "with data" vs. "without data",
@@ -260,9 +261,8 @@ class _PTClientsMedicalListScreenState
                       style: theme.textTheme.titleMedium,
                     ),
                   );
-                }
-
-                return ListView.builder(
+                }                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
                   itemCount: displayedClients.length,
                   itemBuilder: (ctx, index) {
                     final c = displayedClients[index];

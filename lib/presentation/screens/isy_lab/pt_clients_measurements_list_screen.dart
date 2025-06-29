@@ -11,6 +11,7 @@ import 'package:isyfit/presentation/screens/isy_lab/isy_lab_main_screen.dart';
 // Import your gradient app bar and gradient button
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// This screen shows the PT’s clients for IsyLab.
 ///  - By default, shows only clients who DO have measurement data
@@ -276,9 +277,8 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
                       style: theme.textTheme.titleMedium,
                     ),
                   );
-                }
-
-                return ListView.builder(
+                }                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
                   itemCount: displayedClients.length,
                   itemBuilder: (ctx, index) {
                     final c = displayedClients[index];
