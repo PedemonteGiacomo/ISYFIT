@@ -22,9 +22,14 @@ class PTClientsMedicalListScreen extends StatefulWidget {
       _PTClientsMedicalListScreenState();
 }
 
+enum ClientFilterOption { withData, withoutData, all }
+
+enum ClientSortOption { nameAsc, nameDesc }
+
 class _PTClientsMedicalListScreenState
     extends State<PTClientsMedicalListScreen> {
-  bool showClientsWithoutData = false;
+  ClientFilterOption _filterOption = ClientFilterOption.withData;
+  ClientSortOption _sortOption = ClientSortOption.nameAsc;
 
   // We'll store the entire list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
@@ -84,17 +89,23 @@ class _PTClientsMedicalListScreenState
     return Future.wait(tasks);
   }
 
-  /// Apply toggles (with or without data) + search
+  /// Apply toggles (with or without data) + search + sort
   List<Map<String, dynamic>> _buildFilteredClients() {
-    // First filter by showClientsWithoutData
+    // Filter by selected option
     final filteredByData = _allClients.where((c) {
       final hasData = c['hasMedicalData'] == true;
-      return showClientsWithoutData ? !hasData : hasData;
+      switch (_filterOption) {
+        case ClientFilterOption.withData:
+          return hasData;
+        case ClientFilterOption.withoutData:
+          return !hasData;
+        case ClientFilterOption.all:
+          return true;
+      }
     }).toList();
 
     final searchLower = _searchTerm.toLowerCase();
-    // Then filter by search
-    final finalFiltered = filteredByData.where((c) {
+    var filtered = filteredByData.where((c) {
       if (searchLower.isEmpty) return true;
       final nameLower = (c['name'] as String).toLowerCase();
       final emailLower = (c['email'] as String).toLowerCase();
@@ -102,7 +113,14 @@ class _PTClientsMedicalListScreenState
           emailLower.contains(searchLower);
     }).toList();
 
-    return finalFiltered;
+    filtered.sort((a, b) {
+      final nameA = (a['name'] as String).toLowerCase();
+      final nameB = (b['name'] as String).toLowerCase();
+      final cmp = nameA.compareTo(nameB);
+      return _sortOption == ClientSortOption.nameAsc ? cmp : -cmp;
+    });
+
+    return filtered;
   }
 
   @override
@@ -112,19 +130,19 @@ class _PTClientsMedicalListScreenState
       appBar: GradientAppBar(
         title: 'My Clients - IsyCheck',
         actions: [
-            // Add a "Home" icon that takes the PT back to the main flow.
-            IconButton(
-              icon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              onPressed: () {
-                // For example, pushReplacement to the main BaseScreen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BaseScreen()),
-                );
-              },
-            ),
-          ],
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -151,19 +169,50 @@ class _PTClientsMedicalListScreenState
           ),
           const SizedBox(height: 12),
 
-          // Toggle Button
+          // Toggle button + sort dropdown
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GradientButton(
-              label: showClientsWithoutData
-                  ? 'Show Clients WITH Medical Data'
-                  : 'Show Clients WITHOUT Medical Data',
-              icon: Icons.swap_horiz,
-              onPressed: () {
-                setState(() {
-                  showClientsWithoutData = !showClientsWithoutData;
-                });
-              },
+            child: Row(
+              children: [
+                Expanded(
+                  child: GradientButton(
+                    label: _filterOption == ClientFilterOption.withData
+                        ? 'Show Clients WITHOUT Medical Data'
+                        : _filterOption == ClientFilterOption.withoutData
+                            ? 'Show ALL Clients'
+                            : 'Show Clients WITH Medical Data',
+                    icon: Icons.swap_horiz,
+                    onPressed: () {
+                      setState(() {
+                        _filterOption = _filterOption ==
+                                ClientFilterOption.withData
+                            ? ClientFilterOption.withoutData
+                            : _filterOption == ClientFilterOption.withoutData
+                                ? ClientFilterOption.all
+                                : ClientFilterOption.withData;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                DropdownButton<ClientSortOption>(
+                  value: _sortOption,
+                  underline: const SizedBox.shrink(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _sortOption = val);
+                  },
+                  items: const [
+                    DropdownMenuItem(
+                      value: ClientSortOption.nameAsc,
+                      child: Text('A-Z'),
+                    ),
+                    DropdownMenuItem(
+                      value: ClientSortOption.nameDesc,
+                      child: Text('Z-A'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
@@ -189,9 +238,11 @@ class _PTClientsMedicalListScreenState
                 if (displayedClients.isEmpty) {
                   return Center(
                     child: Text(
-                      showClientsWithoutData
-                          ? 'No clients are missing medical data.'
-                          : 'No matching clients have medical data.',
+                      _filterOption == ClientFilterOption.withData
+                          ? 'No matching clients have medical data.'
+                          : _filterOption == ClientFilterOption.withoutData
+                              ? 'No clients are missing medical data.'
+                              : 'No matching clients.',
                       style: theme.textTheme.titleMedium,
                     ),
                   );
