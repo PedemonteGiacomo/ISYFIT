@@ -40,18 +40,18 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   // Size of the central IsyFit logo in the bottom bar.
   static const double _fabSize = 72.0;
-  static const double _arcGap = 20.0;
+  static const double _arcGap = 30.0;
   
   int _currentIndex = 0;  bool _menuOpen = false;
 
   // List of screens to show based on bottom nav index
   final List<Widget> _screens = [
     const HomeScreen(),
-    const AccountScreen(),
     const IsyTrainingMainScreen(),
     const IsyLabMainScreen(),
     const IsyCheckMainScreen(),
     const IsyDiaryMainScreen(),
+    const AccountScreen(),
   ];
   @override
   Widget build(BuildContext context) {
