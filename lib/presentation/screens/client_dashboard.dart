@@ -173,7 +173,8 @@ class _ClientDashboardState extends State<ClientDashboard> {
                               .get()
                           : Future.value(null),
                       builder: (context, ptSnap) {
-                        final email = ptSnap.data?.data()?['email'] as String?;
+                        final data = ptSnap.data?.data() as Map<String, dynamic>?;
+                        final email = data?['email'] as String?;
                         return _buildRequestStatusCard(reqStatus, email);
                       },
                     ),
