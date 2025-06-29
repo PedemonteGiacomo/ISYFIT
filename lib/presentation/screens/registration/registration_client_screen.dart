@@ -28,6 +28,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ptEmailController = TextEditingController();
+  final FocusNode _ptEmailNode = FocusNode();
   final FocusNode _confirmPasswordNode = FocusNode();
   final AuthRepository _authRepo = AuthRepository();
 
@@ -38,6 +39,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
   bool _emailFieldTouched = false;
+  bool _ptEmailTouched = false;
   bool _showConfirmInfo = false;
   bool _confirmTouched = false;
   bool isSolo = true; // If false => user wants to assign PT
@@ -47,11 +49,30 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   @override
   void initState() {
     super.initState();
+    _ptEmailNode.addListener(() {
+      if (!_ptEmailNode.hasFocus) {
+        setState(() => _ptEmailTouched = true);
+      }
+    });
     _confirmPasswordNode.addListener(() {
       if (!_confirmPasswordNode.hasFocus) {
         setState(() => _confirmTouched = true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _surnameController.dispose();
+    _phoneController.dispose();
+    _ptEmailController.dispose();
+    _ptEmailNode.dispose();
+    _confirmPasswordNode.dispose();
+    super.dispose();
   }
 
   // -------------------- Gender Field --------------------
@@ -69,6 +90,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool get _passwordsMatch =>
       _passwordController.text == _confirmPasswordController.text;
   bool get _isEmailValid => isValidEmail(_emailController.text);
+  bool get _isPtEmailValid => isValidEmail(_ptEmailController.text.trim());
 
   /// If all password checks are true => user meets requirements
   bool get _allRequirementsMet =>
@@ -174,6 +196,13 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       // 9) If user chooses "Assign PT", just notify the PT
       String? ptId;
       if (!isSolo) {
+        if (!_isPtEmailValid) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter a valid PT email.')),
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
         final ptQuery = await FirebaseFirestore.instance
             .collection('users')
             .where('email', isEqualTo: _ptEmailController.text.trim())
@@ -821,15 +850,33 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           if (!isSolo)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: TextField(
-                                controller: _ptEmailController,
-                                decoration: InputDecoration(
-                                  labelText: 'PT Email',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              child: Focus(
+                                onFocusChange: (hasFocus) {
+                                  if (!hasFocus) {
+                                    setState(() => _ptEmailTouched = true);
+                                  }
+                                },
+                                child: TextField(
+                                  controller: _ptEmailController,
+                                  focusNode: _ptEmailNode,
+                                  decoration: InputDecoration(
+                                    labelText: 'PT Email',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    prefixIcon: Icon(Icons.email_outlined,
+                                        color: theme.colorScheme.primary),
+                                    suffixIcon: _ptEmailTouched
+                                        ? Icon(
+                                            _isPtEmailValid
+                                                ? Icons.check_circle
+                                                : Icons.cancel,
+                                            color: _isPtEmailValid
+                                                ? Colors.green
+                                                : Colors.red,
+                                          )
+                                        : null,
                                   ),
-                                  prefixIcon: Icon(Icons.email_outlined,
-                                      color: theme.colorScheme.primary),
                                 ),
                               ),
                             ),
