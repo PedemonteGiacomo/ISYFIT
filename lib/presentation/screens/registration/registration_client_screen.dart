@@ -312,6 +312,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       child: _showPasswordInfo
           ? Container(
               key: const ValueKey('password_info'),
+              width: double.infinity,
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(top: 8),
               decoration: BoxDecoration(
@@ -343,6 +344,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       child: _showConfirmInfo && !_passwordsMatch
           ? Container(
               key: const ValueKey('confirm_info'),
+              width: double.infinity,
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(top: 8),
               decoration: BoxDecoration(

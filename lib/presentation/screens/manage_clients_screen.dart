@@ -556,6 +556,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                             passCtrl.text != confirmCtrl.text
                         ? Container(
                             key: const ValueKey('confirm_info'),
+                            width: double.infinity,
                             margin: const EdgeInsets.only(top: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(

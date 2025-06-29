@@ -297,6 +297,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
       child: _showConfirmInfo && !_passwordsMatch
           ? Container(
               key: const ValueKey('confirm_info'),
+              width: double.infinity,
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -411,6 +412,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                       child: _showPwdInfo
                           ? Container(
                               key: const ValueKey('pwd'),
+                              width: double.infinity,
                               margin: const EdgeInsets.only(top: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
