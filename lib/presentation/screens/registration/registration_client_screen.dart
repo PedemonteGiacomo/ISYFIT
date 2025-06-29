@@ -482,8 +482,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       appBar: GradientAppBar(
         title: 'Registration',
       ),
-      body: Center(
-        child: SingleChildScrollView(
+      body: Center(        child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
           child: Column(
             children: [

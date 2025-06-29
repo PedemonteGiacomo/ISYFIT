@@ -12,7 +12,8 @@ import 'package:isyfit/presentation/screens/medical_history/pdf_view_screen.dart
 import 'package:isyfit/presentation/screens/medical_history/image_view_screen.dart';
 import 'package:isyfit/presentation/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
-import 'package:isyfit/presentation/widgets/gradient_button.dart'; // <-- Import your custom GradientButton
+import 'package:isyfit/presentation/widgets/gradient_button.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// Helper function: Calculate age from dateOfBirth string
 int calculateAge(String? dateOfBirth) {
