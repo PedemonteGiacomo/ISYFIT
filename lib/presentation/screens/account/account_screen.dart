@@ -8,6 +8,7 @@ import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/constants/layout_constants.dart';
+import '../../domain/utils/validators.dart';
 
 //TODO: implement the settings part here
 
@@ -45,7 +46,11 @@ class _AccountScreenState extends State<AccountScreen> {
   String? _requestedPt;
   String? _requestedPtEmail;
   final TextEditingController _ptEmailController = TextEditingController();
+  final FocusNode _ptEmailNode = FocusNode();
+  bool _ptEmailTouched = false;
   bool _isSendingRequest = false;
+
+  bool get _isPtEmailValid => isValidEmail(_ptEmailController.text.trim());
 
   /// Return [widget.clientUid] if provided, else the current user's UID.
   String? get targetUid {
@@ -66,6 +71,11 @@ class _AccountScreenState extends State<AccountScreen> {
   void initState() {
     super.initState();
     _fetchUserData();
+    _ptEmailNode.addListener(() {
+      if (!_ptEmailNode.hasFocus) {
+        setState(() => _ptEmailTouched = true);
+      }
+    });
   }
 
   /// Fetch the user data for targetUid
@@ -201,7 +211,12 @@ class _AccountScreenState extends State<AccountScreen> {
     final uid = targetUid;
     if (uid == null) return;
     final email = _ptEmailController.text.trim();
-    if (email.isEmpty) return;
+    if (email.isEmpty || !_isPtEmailValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email.')),
+      );
+      return;
+    }
     setState(() => _isSendingRequest = true);
     try {
       final query = await _firestore
@@ -545,11 +560,23 @@ class _AccountScreenState extends State<AccountScreen> {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _ptEmailController,
-              decoration: const InputDecoration(
-                labelText: 'PT Email',
-                border: OutlineInputBorder(),
+            Focus(
+              onFocusChange: (hasFocus) {
+                if (!hasFocus) setState(() => _ptEmailTouched = true);
+              },
+              child: TextField(
+                controller: _ptEmailController,
+                focusNode: _ptEmailNode,
+                decoration: InputDecoration(
+                  labelText: 'PT Email',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _ptEmailTouched
+                      ? Icon(
+                          _isPtEmailValid ? Icons.check_circle : Icons.cancel,
+                          color: _isPtEmailValid ? Colors.green : Colors.red,
+                        )
+                      : null,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -751,6 +778,7 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void dispose() {
     _ptEmailController.dispose();
+    _ptEmailNode.dispose();
     super.dispose();
   }
 
