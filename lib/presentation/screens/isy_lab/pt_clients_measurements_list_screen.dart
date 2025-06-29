@@ -26,8 +26,10 @@ class PTClientsIsyLabListScreen extends StatefulWidget {
       _PTClientsIsyLabListScreenState();
 }
 
+enum _ClientFilter { withData, withoutData, all }
+
 class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
-  bool showClientsWithoutMeasurements = false;
+  _ClientFilter _filter = _ClientFilter.withData;
 
   // We’ll store the entire fetched list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
@@ -99,12 +101,17 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
   ///   1) Data presence toggle
   ///   2) Search text
   List<Map<String, dynamic>> _buildFilteredClients() {
-    // First filter by data presence
+    // Filter by the current filter option
     final filteredByData = _allClients.where((c) {
       final hasData = c['hasMeasurementData'] == true;
-      // If we are showing clients WITHOUT measurements, we want !hasData
-      // If not, we want hasData
-      return showClientsWithoutMeasurements ? !hasData : hasData;
+      switch (_filter) {
+        case _ClientFilter.withData:
+          return hasData;
+        case _ClientFilter.withoutData:
+          return !hasData;
+        case _ClientFilter.all:
+          return true;
+      }
     }).toList();
 
     // Next filter by searchTerm
@@ -127,19 +134,19 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
       appBar: GradientAppBar(
         title: 'My Clients - IsyLab',
         actions: [
-            // Add a "Home" icon that takes the PT back to the main flow.
-            IconButton(
-              icon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              onPressed: () {
-                // For example, pushReplacement to the main BaseScreen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BaseScreen()),
-                );
-              },
-            ),
-          ],
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -171,14 +178,16 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GradientButton(
-              label: showClientsWithoutMeasurements
-                  ? 'Show Clients WITH Measurements'
-                  : 'Show Clients WITHOUT Measurements',
+              label: _filter == _ClientFilter.withData
+                  ? 'Show Clients WITHOUT Measurements'
+                  : _filter == _ClientFilter.withoutData
+                      ? 'Show ALL Clients'
+                      : 'Show Clients WITH Measurements',
               icon: Icons.swap_horiz,
               onPressed: () {
                 setState(() {
-                  showClientsWithoutMeasurements =
-                      !showClientsWithoutMeasurements;
+                  final values = _ClientFilter.values;
+                  _filter = values[(_filter.index + 1) % values.length];
                 });
               },
             ),
@@ -202,11 +211,21 @@ class _PTClientsIsyLabListScreenState extends State<PTClientsIsyLabListScreen> {
 
                 final displayedClients = _buildFilteredClients();
                 if (displayedClients.isEmpty) {
+                  String message;
+                  switch (_filter) {
+                    case _ClientFilter.withData:
+                      message = 'No matching clients have measurement data.';
+                      break;
+                    case _ClientFilter.withoutData:
+                      message = 'No clients are missing measurement data.';
+                      break;
+                    case _ClientFilter.all:
+                      message = 'No clients found.';
+                      break;
+                  }
                   return Center(
                     child: Text(
-                      showClientsWithoutMeasurements
-                          ? 'No clients are missing measurement data.'
-                          : 'No matching clients have measurement data.',
+                      message,
                       style: theme.textTheme.titleMedium,
                     ),
                   );

@@ -22,9 +22,11 @@ class PTClientsMedicalListScreen extends StatefulWidget {
       _PTClientsMedicalListScreenState();
 }
 
+enum _ClientFilter { withData, withoutData, all }
+
 class _PTClientsMedicalListScreenState
     extends State<PTClientsMedicalListScreen> {
-  bool showClientsWithoutData = false;
+  _ClientFilter _filter = _ClientFilter.withData;
 
   // We'll store the entire list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
@@ -86,10 +88,17 @@ class _PTClientsMedicalListScreenState
 
   /// Apply toggles (with or without data) + search
   List<Map<String, dynamic>> _buildFilteredClients() {
-    // First filter by showClientsWithoutData
+    // Filter by the current filter option
     final filteredByData = _allClients.where((c) {
       final hasData = c['hasMedicalData'] == true;
-      return showClientsWithoutData ? !hasData : hasData;
+      switch (_filter) {
+        case _ClientFilter.withData:
+          return hasData;
+        case _ClientFilter.withoutData:
+          return !hasData;
+        case _ClientFilter.all:
+          return true;
+      }
     }).toList();
 
     final searchLower = _searchTerm.toLowerCase();
@@ -112,19 +121,19 @@ class _PTClientsMedicalListScreenState
       appBar: GradientAppBar(
         title: 'My Clients - IsyCheck',
         actions: [
-            // Add a "Home" icon that takes the PT back to the main flow.
-            IconButton(
-              icon: Icon(Icons.home,
-                  color: Theme.of(context).colorScheme.onPrimary),
-              onPressed: () {
-                // For example, pushReplacement to the main BaseScreen
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BaseScreen()),
-                );
-              },
-            ),
-          ],
+          // Add a "Home" icon that takes the PT back to the main flow.
+          IconButton(
+            icon: Icon(Icons.home,
+                color: Theme.of(context).colorScheme.onPrimary),
+            onPressed: () {
+              // For example, pushReplacement to the main BaseScreen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const BaseScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -155,13 +164,16 @@ class _PTClientsMedicalListScreenState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GradientButton(
-              label: showClientsWithoutData
-                  ? 'Show Clients WITH Medical Data'
-                  : 'Show Clients WITHOUT Medical Data',
+              label: _filter == _ClientFilter.withData
+                  ? 'Show Clients WITHOUT Medical Data'
+                  : _filter == _ClientFilter.withoutData
+                      ? 'Show ALL Clients'
+                      : 'Show Clients WITH Medical Data',
               icon: Icons.swap_horiz,
               onPressed: () {
                 setState(() {
-                  showClientsWithoutData = !showClientsWithoutData;
+                  final values = _ClientFilter.values;
+                  _filter = values[(_filter.index + 1) % values.length];
                 });
               },
             ),
@@ -187,11 +199,21 @@ class _PTClientsMedicalListScreenState
                 final displayedClients = _buildFilteredClients();
 
                 if (displayedClients.isEmpty) {
+                  String message;
+                  switch (_filter) {
+                    case _ClientFilter.withData:
+                      message = 'No matching clients have medical data.';
+                      break;
+                    case _ClientFilter.withoutData:
+                      message = 'No clients are missing medical data.';
+                      break;
+                    case _ClientFilter.all:
+                      message = 'No clients found.';
+                      break;
+                  }
                   return Center(
                     child: Text(
-                      showClientsWithoutData
-                          ? 'No clients are missing medical data.'
-                          : 'No matching clients have medical data.',
+                      message,
                       style: theme.textTheme.titleMedium,
                     ),
                   );
