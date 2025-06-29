@@ -25,10 +25,9 @@ class NotificationService {
   );
 
   int _counter = 0;
-
   /// must be called *before* runApp()
   Future<void> init() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@mipmap/launcher_icon');
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
 
@@ -56,13 +55,13 @@ class NotificationService {
     required String title,
     required String body,
     NotificationTarget target = NotificationTarget.pt,
-  }) async {
-    final androidDetails = AndroidNotificationDetails(
+  }) async {    final androidDetails = AndroidNotificationDetails(
       _channel.id,
       _channel.name,
       channelDescription: _channel.description,
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/launcher_icon',
     );
     const iosDetails = DarwinNotificationDetails();
     final detail =
