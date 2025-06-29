@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'package:isyfit/data/repositories/client_repository.dart';
 
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/isy_client_options_dialog.dart';
+import '../widgets/country_codes.dart';
 
 import "../../domain/utils/firebase_error_translator.dart";
 import '../../domain/utils/validators.dart';
@@ -503,314 +504,13 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
       }
     }
   }
-
   void _showRegisterNewClientDialog(String email) {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) {
-        final TextEditingController nameCtrl = TextEditingController();
-        final TextEditingController surnameCtrl = TextEditingController();
-        final TextEditingController passCtrl = TextEditingController();
-        final TextEditingController confirmCtrl = TextEditingController();
-        final FocusNode confirmNode = FocusNode();
-        bool confirmTouched = false;
-        bool showConfirmInfo = false;
-        bool obscurePass = true;
-        bool obscureConfirm = true;
-        final TextEditingController phoneCtrl = TextEditingController();
-        String? selectedGender;
-        DateTime? selectedDOB;
-
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: StatefulBuilder(
-              builder: (ctx2, setStateDialog) {
-                Future<void> pickDOB() async {
-                  final picked = await showDatePicker(
-                    context: ctx2,
-                    initialDate: DateTime(1990),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setStateDialog(() => selectedDOB = picked);
-                  }
-                }
-
-                confirmNode.addListener(() {
-                  if (!confirmNode.hasFocus) {
-                    setStateDialog(() => confirmTouched = true);
-                  }
-                });
-
-                Widget confirmInfo() {
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: showConfirmInfo &&
-                            confirmTouched &&
-                            passCtrl.text != confirmCtrl.text
-                        ? Container(
-                            key: const ValueKey('confirm_info'),
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(ctx2).colorScheme.surfaceVariant,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Le due password non corrispondono',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  );
-                }
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Register New Client',
-                      style: Theme.of(ctx2).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No existing client found for "$email".\n'
-                      'Please fill in details to create a new account.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: nameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Name',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.person),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: surnameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Surname',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.person_outline),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _genderOption(
-                          context: ctx2,
-                          label: 'Male',
-                          icon: Icons.male,
-                          isSelected: selectedGender == 'Male',
-                          onTap: () => setStateDialog(() {
-                            selectedGender = 'Male';
-                          }),
-                        ),
-                        const SizedBox(width: 16),
-                        _genderOption(
-                          context: ctx2,
-                          label: 'Female',
-                          icon: Icons.female,
-                          isSelected: selectedGender == 'Female',
-                          onTap: () => setStateDialog(() {
-                            selectedGender = 'Female';
-                          }),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      enabled: false,
-                      controller: TextEditingController(text: email),
-                      decoration: const InputDecoration(
-                        labelText: 'Client Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: passCtrl,
-                      obscureText: obscurePass,
-                      onChanged: (_) => setStateDialog(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Temporary Password',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscurePass
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () =>
-                              setStateDialog(() => obscurePass = !obscurePass),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: confirmCtrl,
-                      focusNode: confirmNode,
-                      obscureText: obscureConfirm,
-                      onChanged: (_) => setStateDialog(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (confirmTouched)
-                              GestureDetector(
-                                onTap: () => setStateDialog(
-                                    () => showConfirmInfo = !showConfirmInfo),
-                                child: Icon(
-                                  passCtrl.text == confirmCtrl.text
-                                      ? Icons.check_circle
-                                      : Icons.cancel,
-                                  color: passCtrl.text == confirmCtrl.text
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                              ),
-                            IconButton(
-                              icon: Icon(obscureConfirm
-                                  ? Icons.visibility
-                                  : Icons.visibility_off),
-                              onPressed: () => setStateDialog(
-                                  () => obscureConfirm = !obscureConfirm),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    confirmInfo(),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: pickDOB,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Date of Birth',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(
-                          selectedDOB == null
-                              ? 'Select DOB'
-                              : DateFormat('yyyy-MM-dd').format(selectedDOB!),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.app_registration),
-                            label: const Text('Register'),
-                            onPressed: () {
-                              if (passCtrl.text.trim() !=
-                                  confirmCtrl.text.trim()) {
-                                ScaffoldMessenger.of(ctx2).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Passwords do not match.')),
-                                );
-                                return;
-                              }
-                              Navigator.pop(ctx2);
-                              _registerClient(
-                                email: email,
-                                name: nameCtrl.text.trim(),
-                                surname: surnameCtrl.text.trim(),
-                                password: passCtrl.text.trim(),
-                                phone: phoneCtrl.text.trim(),
-                                gender: selectedGender,
-                                dob: selectedDOB,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
+      builder: (ctx) => _ClientRegistrationDialog(email: email, onRegister: _registerClient),
     );
   }
-
-  Widget _genderOption({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary.withOpacity(0.2) : null,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : Colors.grey,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? theme.colorScheme.primary : Colors.grey,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? theme.colorScheme.primary : Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _registerClient({
     required String email,
     required String name,
@@ -903,6 +603,637 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         clientUid: clientUid,
         clientName: clientName,
         clientSurname: clientSurname,
+      ),
+    );
+  }
+}
+
+class _ClientRegistrationDialog extends StatefulWidget {
+  final String email;
+  final Function({
+    required String email,
+    required String name,
+    required String surname,
+    required String password,
+    required String phone,
+    required String? gender,
+    required DateTime? dob,
+  }) onRegister;
+
+  const _ClientRegistrationDialog({
+    required this.email,
+    required this.onRegister,
+  });
+
+  @override
+  State<_ClientRegistrationDialog> createState() => _ClientRegistrationDialogState();
+}
+
+class _ClientRegistrationDialogState extends State<_ClientRegistrationDialog> {
+  // Controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surnameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final FocusNode _confirmPasswordNode = FocusNode();
+
+  // State variables
+  String? _selectedCountryCode;
+  DateTime? _selectedDate;
+  String? _gender;
+  bool _showPasswordInfo = false;
+  bool _showConfirmInfo = false;
+  bool _confirmTouched = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default Italian country code
+    final italianCode = countryCodes.firstWhere(
+      (c) => c['code'] == '+39',
+      orElse: () => countryCodes.first,
+    );
+    _selectedCountryCode = italianCode['code'];
+    
+    _confirmPasswordNode.addListener(() {
+      if (!_confirmPasswordNode.hasFocus) {
+        setState(() => _confirmTouched = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _surnameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
+    _confirmPasswordNode.dispose();
+    super.dispose();
+  }
+
+  // Password validation
+  bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
+  bool get _hasLowercase => _passwordController.text.contains(RegExp(r'[a-z]'));
+  bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
+  bool get _hasSpecialChar => _passwordController.text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+  bool get _hasMinLength => _passwordController.text.length >= 8;
+  bool get _passwordsMatch => _passwordController.text == _confirmPasswordController.text;
+  bool get _allRequirementsMet => _hasUppercase && _hasLowercase && _hasNumber && _hasSpecialChar && _hasMinLength;
+
+  Widget _buildPasswordRequirement(String text, bool met) {
+    return Row(
+      children: [
+        Icon(
+          met ? Icons.check_circle : Icons.cancel,
+          color: met ? Colors.green : Colors.red,
+          size: 20,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            color: met ? Colors.green : Colors.red,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordInfo() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _showPasswordInfo
+          ? Container(
+              key: const ValueKey('password_info'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPasswordRequirement('At least 8 characters', _hasMinLength),
+                  _buildPasswordRequirement('At least one uppercase letter', _hasUppercase),
+                  _buildPasswordRequirement('At least one lowercase letter', _hasLowercase),
+                  _buildPasswordRequirement('At least one number', _hasNumber),
+                  _buildPasswordRequirement('At least one special character', _hasSpecialChar),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildConfirmInfo() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _showConfirmInfo && !_passwordsMatch
+          ? Container(
+              key: const ValueKey('confirm_info'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Le due password non corrispondono',
+                style: TextStyle(color: Colors.red),
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildGenderSelection() {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gender',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _genderChip('Male', Icons.male, Colors.blue),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _genderChip('Female', Icons.female, Colors.pink),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _genderChip(String value, IconData icon, Color activeColor) {
+    final selected = _gender == value;
+    return GestureDetector(
+      onTap: () => setState(() => _gender = value),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: selected ? activeColor.withOpacity(0.15) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? activeColor : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: selected ? activeColor : Colors.grey.shade600,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: TextStyle(
+                color: selected ? activeColor : Colors.grey.shade600,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime(2000, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (pickedDate != null) {
+      setState(() => _selectedDate = pickedDate);
+    }
+  }
+
+  Widget _textField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType? keyboard,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  void _handleRegister() {
+    // Validation
+    if (_nameController.text.trim().isEmpty || _surnameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name and surname are required.')),
+      );
+      return;
+    }
+
+    if (_gender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your gender.')),
+      );
+      return;
+    }
+
+    if (!_allRequirementsMet || _passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must meet all requirements.')),
+      );
+      return;
+    }
+
+    if (!_passwordsMatch) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
+
+    if (_phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number is required.')),
+      );
+      return;
+    }
+
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your date of birth.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final fullPhone = '$_selectedCountryCode ${_phoneController.text.trim()}';
+    
+    Navigator.pop(context);
+    widget.onRegister(
+      email: widget.email,
+      name: _nameController.text.trim(),
+      surname: _surnameController.text.trim(),
+      password: _passwordController.text.trim(),
+      phone: fullPhone,
+      gender: _gender,
+      dob: _selectedDate,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_add,
+                      color: theme.colorScheme.primary,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Register New Client',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Creating account for: ${widget.email}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Name + Surname (responsive layout)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWideScreen = constraints.maxWidth > 360;
+                    final nameField = TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    );
+                    final surnameField = TextField(
+                      controller: _surnameController,
+                      decoration: InputDecoration(
+                        labelText: 'Surname',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    );
+
+                    if (isWideScreen) {
+                      return Row(
+                        children: [
+                          Expanded(child: nameField),
+                          const SizedBox(width: 16),
+                          Expanded(child: surnameField),
+                        ],
+                      );
+                    } else {
+                      return Column(
+                        children: [
+                          nameField,
+                          const SizedBox(height: 16),
+                          surnameField,
+                        ],
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Gender Selection
+                _buildGenderSelection(),
+                const SizedBox(height: 16),
+
+                // Email Field (disabled)
+                TextField(
+                  enabled: false,
+                  controller: TextEditingController(text: widget.email),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.email, color: theme.colorScheme.primary),
+                    fillColor: Colors.grey.shade100,
+                    filled: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Password Field with Info Icon
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'Temporary Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.lock,
+                      color: theme.colorScheme.primary,
+                    ),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => setState(() => _showPasswordInfo = !_showPasswordInfo),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: _allRequirementsMet ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildPasswordInfo(),
+                const SizedBox(height: 16),
+
+                // Confirm Password
+                TextField(
+                  controller: _confirmPasswordController,
+                  focusNode: _confirmPasswordNode,
+                  obscureText: _obscureConfirmPassword,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                      color: theme.colorScheme.primary,
+                    ),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_confirmTouched)
+                          GestureDetector(
+                            onTap: () => setState(() => _showConfirmInfo = !_showConfirmInfo),
+                            child: Icon(
+                              _passwordsMatch ? Icons.check_circle : Icons.cancel,
+                              color: _passwordsMatch ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        IconButton(
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildConfirmInfo(),
+                const SizedBox(height: 16),
+
+                // Phone with Country Code
+                Row(children: [
+                  Expanded(
+                    flex: 3,
+                    child: DropdownButtonFormField2<String>(
+                      value: countryCodes.any((c) => c['code'] == _selectedCountryCode) 
+                          ? _selectedCountryCode 
+                          : '+39',
+                      decoration: InputDecoration(
+                        labelText: 'Prefix',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 16,
+                        ),
+                      ),
+                      items: [
+                        for (final c in countryCodes)
+                          DropdownMenuItem(
+                            value: c['code'],
+                            child: Row(children: [
+                              Text(c['flag']!, style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '${c['name']} (${c['code']})',
+                                  style: const TextStyle(fontSize: 16),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ]),
+                          ),
+                      ],
+                      selectedItemBuilder: (context) {
+                        return countryCodes.map((c) {
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(c['flag']!, style: const TextStyle(fontSize: 16)),
+                                const SizedBox(width: 2),
+                                Flexible(
+                                  child: Text(
+                                    c['code']!,
+                                    style: const TextStyle(fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList();
+                      },
+                      onChanged: (v) => setState(() => _selectedCountryCode = v),
+                      dropdownStyleData: DropdownStyleData(
+                        width: 280,
+                        maxHeight: 300,
+                      ),
+                      buttonStyleData: const ButtonStyleData(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 4,
+                    child: _textField(_phoneController, 'Phone', Icons.phone, keyboard: TextInputType.phone),
+                  ),
+                ]),
+                const SizedBox(height: 16),
+
+                // Date Picker
+                GestureDetector(
+                  onTap: _pickDate,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Date of Birth',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(Icons.calendar_today, color: theme.colorScheme.primary),
+                    ),
+                    child: Text(
+                      _selectedDate == null
+                          ? 'Select Date'
+                          : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                      style: TextStyle(
+                        color: _selectedDate == null ? Colors.grey : theme.textTheme.bodyMedium?.color,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Register Button
+                if (_isLoading)
+                  const CircularProgressIndicator()
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          ),
+                          onPressed: _handleRegister,
+                          icon: const Icon(Icons.app_registration),
+                          label: const Text('Register Client', style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
