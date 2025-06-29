@@ -31,6 +31,27 @@ class _PTClientsMedicalListScreenState
   ClientFilterOption _filterOption = ClientFilterOption.withData;
   ClientSortOption _sortOption = ClientSortOption.nameAsc;
 
+  void _cycleFilter() {
+    setState(() {
+      _filterOption = _filterOption == ClientFilterOption.withData
+          ? ClientFilterOption.withoutData
+          : _filterOption == ClientFilterOption.withoutData
+              ? ClientFilterOption.all
+              : ClientFilterOption.withData;
+    });
+  }
+
+  String _filterLabel() {
+    switch (_filterOption) {
+      case ClientFilterOption.withData:
+        return 'Clients WITH Medical Data';
+      case ClientFilterOption.withoutData:
+        return 'Clients WITHOUT Medical Data';
+      case ClientFilterOption.all:
+        return 'All Clients';
+    }
+  }
+
   // We'll store the entire list once loaded, so we can filter
   List<Map<String, dynamic>> _allClients = [];
 
@@ -148,69 +169,62 @@ class _PTClientsMedicalListScreenState
         children: [
           const SizedBox(height: 16),
 
-          // Search Bar
+          // Search bar with sort icon
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchTerm = val;
-                });
-              },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search by name or email...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchTerm = val;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by name or email...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Sort',
+                  icon: Icon(
+                    _sortOption == ClientSortOption.nameAsc
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _sortOption = _sortOption == ClientSortOption.nameAsc
+                          ? ClientSortOption.nameDesc
+                          : ClientSortOption.nameAsc;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Toggle button + sort dropdown
+          // Filter toggle
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
                 Expanded(
                   child: GradientButton(
-                    label: _filterOption == ClientFilterOption.withData
-                        ? 'Show Clients WITHOUT Medical Data'
-                        : _filterOption == ClientFilterOption.withoutData
-                            ? 'Show ALL Clients'
-                            : 'Show Clients WITH Medical Data',
+                    label: _filterLabel(),
                     icon: Icons.swap_horiz,
                     onPressed: () {
-                      setState(() {
-                        _filterOption = _filterOption ==
-                                ClientFilterOption.withData
-                            ? ClientFilterOption.withoutData
-                            : _filterOption == ClientFilterOption.withoutData
-                                ? ClientFilterOption.all
-                                : ClientFilterOption.withData;
-                      });
+                      _cycleFilter();
                     },
                   ),
-                ),
-                const SizedBox(width: 12),
-                DropdownButton<ClientSortOption>(
-                  value: _sortOption,
-                  underline: const SizedBox.shrink(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _sortOption = val);
-                  },
-                  items: const [
-                    DropdownMenuItem(
-                      value: ClientSortOption.nameAsc,
-                      child: Text('A-Z'),
-                    ),
-                    DropdownMenuItem(
-                      value: ClientSortOption.nameDesc,
-                      child: Text('Z-A'),
-                    ),
-                  ],
                 ),
               ],
             ),
