@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../widgets/gradient_app_bar.dart';
 import '../../domain/utils/firebase_error_translator.dart';
+import '../../domain/utils/validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   final AuthRepository authRepository;
@@ -17,9 +18,29 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final FocusNode _emailNode = FocusNode();
+  bool _emailTouched = false;
   bool _isLoading = false;
 
+  bool get _isEmailValid => isValidEmail(_emailController.text.trim());
+
+  @override
+  void initState() {
+    super.initState();
+    _emailNode.addListener(() {
+      if (!_emailNode.hasFocus) {
+        setState(() => _emailTouched = true);
+      }
+    });
+  }
+
   Future<void> _sendReset() async {
+    if (!_isEmailValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email.')),
+      );
+      return;
+    }
     setState(() {
       _isLoading = true;
     });
@@ -49,6 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _emailNode.dispose();
     super.dispose();
   }
 
@@ -99,17 +121,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.email,
-                                color: theme.colorScheme.primary,
+                          Focus(
+                            onFocusChange: (hasFocus) {
+                              if (!hasFocus) {
+                                setState(() => _emailTouched = true);
+                              }
+                            },
+                            child: TextField(
+                              controller: _emailController,
+                              focusNode: _emailNode,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.email,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                suffixIcon: _emailTouched
+                                    ? Icon(
+                                        _isEmailValid
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: _isEmailValid
+                                            ? Colors.green
+                                            : Colors.red,
+                                      )
+                                    : null,
                               ),
                             ),
                           ),
