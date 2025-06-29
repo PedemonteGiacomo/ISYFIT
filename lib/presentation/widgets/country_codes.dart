@@ -1,6 +1,6 @@
 final List<Map<String, String>> countryCodes = [
   {'name': 'Italy', 'code': '+39', 'flag': '🇮🇹'},
-  {'name': 'USA/Canada', 'code': '+1', 'flag': '🇺🇸'},
+  {'name': 'USA', 'code': '+1', 'flag': '🇺🇸'},
   {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
   {'name': 'Germany', 'code': '+49', 'flag': '🇩🇪'},
   {'name': 'France', 'code': '+33', 'flag': '🇫🇷'},
