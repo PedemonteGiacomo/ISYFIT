@@ -87,7 +87,8 @@ class _RadialMenuState extends State<RadialMenu>
     );
     final pair = RadialMenu._items[index];
     final icon = pair.$1;
-    final label = pair.$2;      return Transform.translate(
+    final label = pair.$2;
+    return Transform.translate(
       offset: offset,
       child: Opacity(
         opacity: progress,
@@ -97,20 +98,32 @@ class _RadialMenuState extends State<RadialMenu>
             mainAxisSize: MainAxisSize.min,
             children: [
               Material(
+                elevation: 4,
                 shape: const CircleBorder(),
                 color: Colors.white,
+                shadowColor: Colors.black.withOpacity(0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Icon(icon, size: 28),
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                label,                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.black,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
+              Builder(
+                builder: (context) {
+                  final bg = Theme.of(context).scaffoldBackgroundColor;
+                  final brightness = ThemeData.estimateBrightnessForColor(bg);
+                  final labelColor = brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black;
+                  return Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: labelColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  );
+                },
               ),
             ],
           ),
