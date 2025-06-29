@@ -157,7 +157,8 @@ class _ClientDashboardState extends State<ClientDashboard> {
               );
             }
 
-            final bool isSolo = userData['isSolo'] == true;
+            final bool isSolo =
+                userData['role'] == 'Client' && userData['isSolo'] == true;
             final String? reqStatus = userData['requestStatus'] as String?;
             final String? requestedPt = userData['requestedPT'] as String?;
             if (isSolo) {

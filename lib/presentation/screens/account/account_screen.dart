@@ -38,7 +38,8 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _isEditMode = false;
 
   // --- PT linking state ---
-  bool _isSolo = true;
+  bool _isSolo = false;
+  String? _role;
   String? _requestStatus;
   String? _requestedPt;
   String? _requestedPtEmail;
@@ -85,7 +86,8 @@ class _AccountScreenState extends State<AccountScreen> {
             _dateOfBirth = DateTime.tryParse(data['dateOfBirth']);
           }
           _profileImageUrl = data['profileImageUrl'];
-          _isSolo = data['isSolo'] ?? true;
+          _role = data['role'];
+          _isSolo = data['role'] == 'Client' && data['isSolo'] == true;
           _requestStatus = data['requestStatus'];
           _requestedPt = data['requestedPT'];
           _requestedPtEmail = null;
@@ -476,7 +478,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildPtLinkCard(BuildContext context) {
-    if (!_isSolo) return const SizedBox.shrink();
+    if (!_isSolo || _role != 'Client') return const SizedBox.shrink();
     final theme = Theme.of(context);
 
     if (_requestStatus == 'pending') {
