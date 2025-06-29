@@ -49,11 +49,16 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   bool _obscureConfirmPassword = true;
 
   QueryDocumentSnapshot<Map<String, dynamic>>? _selectedPlan;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sessionSub;
-
-  @override
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sessionSub;  @override
   void initState() {
     super.initState();
+    // Set default Italian country code - ensure it exists in the list
+    final italianCode = countryCodes.firstWhere(
+      (c) => c['code'] == '+39',
+      orElse: () => countryCodes.first,
+    );
+    _selectedCountryCode = italianCode['code'];
+    
     _confirmPasswordNode.addListener(() {
       if (!_confirmPasswordNode.hasFocus) {
         setState(() => _confirmTouched = true);
@@ -268,24 +273,27 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
           const SizedBox(width: 6),
           Text(txt, style: TextStyle(color: ok ? Colors.green : Colors.red)),
         ],
-      );
-
-  Widget _genderOpt(String g, IconData icn) {
-    final c = Theme.of(context).colorScheme;
+      );  Widget _genderOpt(String g, IconData icn) {
     final sel = _gender == g;
+    // Use specific colors for Male/Female like in client screen
+    final activeColor = g == 'Male' ? Colors.blue : Colors.pink;
     return GestureDetector(
       onTap: () => setState(() => _gender = g),
       child: Container(
+        height: 48,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: sel ? c.primary : Colors.grey),
-          color: sel ? c.primary.withOpacity(.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: sel ? activeColor : Colors.grey.shade300, width: sel ? 2 : 1),
+          color: sel ? activeColor.withOpacity(.15) : Colors.grey.shade50,
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icn, color: sel ? c.primary : Colors.grey),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icn, color: sel ? activeColor : Colors.grey.shade600, size: 20),
           const SizedBox(width: 8),
-          Text(g, style: TextStyle(color: sel ? c.primary : Colors.grey)),
+          Text(g, style: TextStyle(
+            color: sel ? activeColor : Colors.grey.shade600,
+            fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+          )),
         ]),
       ),
     );
@@ -332,25 +340,55 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Name & Surname
-                    Row(children: [
-                      Expanded(
-                          child: _textField(
-                              _nameController, 'Name', Icons.person)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                          child: _textField(_surnameController, 'Surname',
-                              Icons.person_outline)),
-                    ]),
-                    const SizedBox(height: 16),
+                  children: [                    // Name & Surname (responsive layout)
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWideScreen = constraints.maxWidth > 360;
+                        final nameField = _textField(_nameController, 'Name', Icons.person);
+                        final surnameField = _textField(_surnameController, 'Surname', Icons.person_outline);
 
-                    // Gender
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      _genderOpt('Male', Icons.male),
-                      const SizedBox(width: 16),
-                      _genderOpt('Female', Icons.female),
-                    ]),
+                        if (isWideScreen) {
+                          return Row(children: [
+                            Expanded(child: nameField),
+                            const SizedBox(width: 16),
+                            Expanded(child: surnameField),
+                          ]);
+                        } else {
+                          return Column(children: [
+                            nameField,
+                            const SizedBox(height: 16),
+                            surnameField,
+                          ]);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),                    // Gender (improved layout)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gender',
+                            style: t.textTheme.labelLarge?.copyWith(
+                              color: t.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            Expanded(child: _genderOpt('Male', Icons.male)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _genderOpt('Female', Icons.female)),
+                          ]),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Email
@@ -475,44 +513,76 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     const SizedBox(height: 16),
 
                     // Phone
-                    Row(children: [
-                      Expanded(
-                        flex: 2, // Takes 2/5 of the available space
-                        child: DropdownButton2<String>(
-                          value: _selectedCountryCode,
-                          hint: const Text('Prefix'),
-                          isExpanded: true,
+                    Row(children: [                      Expanded(
+                        flex: 3, // Increased from 2 to 3 for more space
+                        child: DropdownButtonFormField2<String>(
+                          value: countryCodes.any((c) => c['code'] == _selectedCountryCode) 
+                              ? _selectedCountryCode 
+                              : '+39', // Fallback to Italy if current value is invalid
+                          decoration: InputDecoration(
+                            labelText: 'Prefix',
+                            border: outline,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, // Reduced padding
+                              vertical: 16,
+                            ),
+                          ),
                           items: [
                             for (final c in countryCodes)
                               DropdownMenuItem(
                                 value: c['code'],
                                 child: Row(children: [
                                   Text(c['flag']!,
-                                      style: const TextStyle(fontSize: 18)),
+                                      style: const TextStyle(fontSize: 16)),
                                   const SizedBox(width: 8),
-                                  Text('${c['name']} (${c['code']})'),
+                                  Flexible(
+                                    child: Text(
+                                      '${c['name']} (${c['code']})',
+                                      style: const TextStyle(fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ]),
                               ),
                           ],
-                          selectedItemBuilder: (ctx) => countryCodes.map((c) {
-                            return Row(
-                              children: [
-                                Text(c['flag']!,
-                                    style: const TextStyle(fontSize: 18)),
-                                const SizedBox(width: 6),
-                                Text(c['code']!),
-                              ],
-                            );
-                          }).toList(),
+                          selectedItemBuilder: (context) {
+                            return countryCodes.map((c) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 4), // Move content left
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      c['flag']!,
+                                      style: const TextStyle(fontSize: 16), // Slightly smaller
+                                    ),
+                                    const SizedBox(width: 2), // Reduced spacing
+                                    Flexible(
+                                      child: Text(
+                                        c['code']!,
+                                        style: const TextStyle(fontSize: 16), // Smaller text
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList();
+                          },
                           onChanged: (v) =>
                               setState(() => _selectedCountryCode = v),
-                          buttonStyleData: const ButtonStyleData(height: 48),
-                          dropdownStyleData: DropdownStyleData(width: 250),
+                          dropdownStyleData: DropdownStyleData(
+                            width: 280,
+                            maxHeight: 300,
+                          ),
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 4), // Reduced padding
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        flex: 3, // Takes 3/5 of the available space
+                        flex: 4, // Adjusted proportion
                         child: _textField(
                             _phoneController, 'Phone', Icons.phone,
                             keyboard: TextInputType.phone),
@@ -612,8 +682,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                               style: TextStyle(
                                   color: t.colorScheme.primary,
                                   decoration: TextDecoration.underline)),
-                        ),
-                      ),
+                        ),                      ),
                     ]),
                     const SizedBox(height: 24),
 
@@ -624,8 +693,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 32, vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(                                  borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text(
                               _isPayLoading ? 'Processing…' : 'Register & Pay',

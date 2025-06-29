@@ -30,11 +30,9 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   final TextEditingController _ptEmailController = TextEditingController();
   final FocusNode _ptEmailNode = FocusNode();
   final FocusNode _confirmPasswordNode = FocusNode();
-  final AuthRepository _authRepo = AuthRepository();
-
-  // -------------------- State Variables --------------------
+  final AuthRepository _authRepo = AuthRepository();  // -------------------- State Variables --------------------
   String? _selectedCountryCode;
-  DateTime _selectedDate = DateTime(2000, 1, 1); // Default date
+  DateTime? _selectedDate; // Make it nullable
   bool _isLoading = false;
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
@@ -44,11 +42,16 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool _confirmTouched = false;
   bool isSolo = true; // If false => user wants to assign PT
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-
-  @override
+  bool _obscureConfirmPassword = true;  @override
   void initState() {
     super.initState();
+    // Set default Italian country code - ensure it exists in the list
+    final italianCode = countryCodes.firstWhere(
+      (c) => c['code'] == '+39',
+      orElse: () => countryCodes.first,
+    );
+    _selectedCountryCode = italianCode['code'];
+    
     _ptEmailNode.addListener(() {
       if (!_ptEmailNode.hasFocus) {
         setState(() => _ptEmailTouched = true);
@@ -157,9 +160,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         const SnackBar(content: Text('Passwords do not match.')),
       );
       return;
-    }
-
-    // 7) Check phone number is provided
+    }    // 7) Check phone number is provided
     if (_phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Phone number is required.')),
@@ -167,7 +168,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       return;
     }
 
-    // 8) Attempt creation
+    // 8) Check if date of birth is selected
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your date of birth.')),
+      );
+      return;
+    }
+
+    // 9) Attempt creation
     setState(() => _isLoading = true);
 
     UserCredential? userCredential;
@@ -188,7 +197,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
         'name': _nameController.text.trim(),
         'surname': _surnameController.text.trim(),
         'phone': '$_selectedCountryCode ${_phoneController.text.trim()}',
-        'dateOfBirth': _selectedDate.toIso8601String(),
+        'dateOfBirth': _selectedDate!.toIso8601String(),
         'isSolo': true,
         'gender': _gender, // store the chosen gender
       };
@@ -269,14 +278,13 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       setState(() => _isLoading = false);
     }
   }
-
   // ===================================================================
   //                             UI Helpers
   // ===================================================================
   Future<void> _pickDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime(2000, 1, 1),
+      initialDate: _selectedDate ?? DateTime(2000, 1, 1),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -382,91 +390,287 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
       ),
     );
   }
-
-  /// Gender selection with icon buttons for Male and Female.
+  /// Gender selection using colorful chips with proper Material Design.
   Widget _buildGenderSelection() {
     final theme = Theme.of(context);
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //const Text("Gender: "),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Male";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Male"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Male"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.male,
-                      color: _gender == "Male"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Male",
-                      style: TextStyle(
-                          color: _gender == "Male"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
-              ),
+          Text(
+            'Gender',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _gender = "Female";
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
-                color: _gender == "Female"
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _gender == "Female"
-                      ? theme.colorScheme.primary
-                      : Colors.grey,
-                ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _genderChip('Male', Icons.male, Colors.blue),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.female,
-                      color: _gender == "Female"
-                          ? theme.colorScheme.primary
-                          : Colors.grey),
-                  const SizedBox(width: 8),
-                  Text("Female",
-                      style: TextStyle(
-                          color: _gender == "Female"
-                              ? theme.colorScheme.primary
-                              : Colors.grey)),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: _genderChip('Female', Icons.female, Colors.pink),
               ),
-            ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _genderChip(String value, IconData icon, Color activeColor) {
+    final selected = _gender == value;
+    return GestureDetector(
+      onTap: () => setState(() => _gender = value),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: selected ? activeColor.withOpacity(0.15) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? activeColor : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: selected ? activeColor : Colors.grey.shade600,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: TextStyle(
+                color: selected ? activeColor : Colors.grey.shade600,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  /// Solo vs PT assignment selection with modern Material Design
+  Widget _buildSoloPTSelection() {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Training Mode',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showTrainingModeInfo(),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _trainingModeChip(
+                  'Go SOLO',
+                  Icons.fitness_center,
+                  'Train independently',
+                  true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _trainingModeChip(
+                  'Assign PT',
+                  Icons.person_pin,
+                  'Get guided by a personal trainer',
+                  false,
+                ),
+              ),
+            ],
+          ),
+          if (!isSolo) ...[
+            const SizedBox(height: 16),
+            Focus(
+              onFocusChange: (hasFocus) {
+                if (!hasFocus) {
+                  setState(() => _ptEmailTouched = true);
+                }
+              },
+              child: TextField(
+                controller: _ptEmailController,
+                focusNode: _ptEmailNode,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Personal Trainer Email',
+                  hintText: 'trainer@example.com',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.alternate_email,
+                    color: theme.colorScheme.primary,
+                  ),
+                  suffixIcon: _ptEmailTouched
+                      ? Icon(
+                          _isPtEmailValid
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: _isPtEmailValid ? Colors.green : Colors.red,
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  Widget _trainingModeChip(String title, IconData icon, String subtitle, bool isSelected) {
+    final theme = Theme.of(context);
+    final selected = isSolo == isSelected;
+    return GestureDetector(
+      onTap: () => setState(() => isSolo = isSelected),
+      child: Container(
+        height: 120, // Fixed height for consistency
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected 
+              ? theme.colorScheme.primary.withOpacity(0.1) 
+              : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected 
+                ? theme.colorScheme.primary 
+                : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
+          children: [
+            Icon(
+              icon,
+              color: selected 
+                  ? theme.colorScheme.primary 
+                  : Colors.grey.shade600,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: selected 
+                    ? theme.colorScheme.primary 
+                    : Colors.grey.shade700,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Flexible( // Use Flexible to prevent overflow
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTrainingModeInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            const Text('Training Mode'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _infoRow(Icons.fitness_center, 'Go SOLO', 
+                'Train independently using our comprehensive workout library and tracking features.'),
+            const SizedBox(height: 16),
+            _infoRow(Icons.person_pin, 'Assign PT', 
+                'Connect with a certified personal trainer who will guide your fitness journey with personalized workouts and nutrition plans.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String title, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -501,44 +705,57 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                       constraints: const BoxConstraints(maxWidth: 400),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: [                          // ---------------------------------------------------
+                          // Name + Surname (responsive layout)
                           // ---------------------------------------------------
-                          // Name + Surname
-                          // ---------------------------------------------------
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _nameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Name',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isWideScreen = constraints.maxWidth > 360;
+                              final nameField = TextField(
+                                controller: _nameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Name',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextField(
-                                  controller: _surnameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Surname',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.person_outline,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                              );
+                              final surnameField = TextField(
+                                controller: _surnameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Surname',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
-                              ),
-                            ],
+                              );
+
+                              if (isWideScreen) {
+                                return Row(
+                                  children: [
+                                    Expanded(child: nameField),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: surnameField),
+                                  ],
+                                );
+                              } else {
+                                return Column(
+                                  children: [
+                                    nameField,
+                                    const SizedBox(height: 16),
+                                    surnameField,
+                                  ],
+                                );
+                              }
+                            },
                           ),
                           const SizedBox(height: 16),
 
@@ -671,51 +888,80 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                             ),
                           ),
                           _buildConfirmInfo(),
-                          const SizedBox(height: 16),
-
-                          // Phone
+                          const SizedBox(height: 16),                          // Phone
                           Row(children: [
                             Expanded(
-                              flex: 2, // Takes 2/5 of the available space
-                              child: DropdownButton2<String>(
-                                value: _selectedCountryCode,
-                                hint: const Text('Prefix'),
-                                isExpanded: true,
+                              flex: 3, // Increased from 2 to 3 for more space
+                              child: DropdownButtonFormField2<String>(
+                                value: countryCodes.any((c) => c['code'] == _selectedCountryCode) 
+                                    ? _selectedCountryCode 
+                                    : '+39', // Fallback to Italy if current value is invalid
+                                decoration: InputDecoration(
+                                  labelText: 'Prefix',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8, // Reduced padding
+                                    vertical: 16,
+                                  ),
+                                ),
                                 items: [
                                   for (final c in countryCodes)
                                     DropdownMenuItem(
                                       value: c['code'],
                                       child: Row(children: [
                                         Text(c['flag']!,
-                                            style:
-                                                const TextStyle(fontSize: 18)),
+                                            style: const TextStyle(fontSize: 16)),
                                         const SizedBox(width: 8),
-                                        Text('${c['name']} (${c['code']})'),
+                                        Flexible(
+                                          child: Text(
+                                            '${c['name']} (${c['code']})',
+                                            style: const TextStyle(fontSize: 16),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
                                       ]),
                                     ),
                                 ],
-                                selectedItemBuilder: (ctx) =>
-                                    countryCodes.map((c) {
-                                  return Row(
-                                    children: [
-                                      Text(c['flag']!,
-                                          style: const TextStyle(fontSize: 18)),
-                                      const SizedBox(width: 6),
-                                      Text(c['code']!),
-                                    ],
-                                  );
-                                }).toList(),
+                                selectedItemBuilder: (context) {
+                                  return countryCodes.map((c) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 4), // Move content left
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            c['flag']!,
+                                            style: const TextStyle(fontSize: 16), // Slightly smaller
+                                          ),
+                                          const SizedBox(width: 2), // Reduced spacing
+                                          Flexible(
+                                            child: Text(
+                                              c['code']!,
+                                              style: const TextStyle(fontSize: 16), // Smaller text
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList();
+                                },
                                 onChanged: (v) =>
                                     setState(() => _selectedCountryCode = v),
-                                buttonStyleData:
-                                    const ButtonStyleData(height: 48),
-                                dropdownStyleData:
-                                    DropdownStyleData(width: 250),
+                                dropdownStyleData: DropdownStyleData(
+                                  width: 280,
+                                  maxHeight: 300,
+                                ),
+                                buttonStyleData: const ButtonStyleData(
+                                  padding: EdgeInsets.symmetric(horizontal: 4), // Reduced padding
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              flex: 3, // Takes 3/5 of the available space
+                              flex: 4, // Adjusted proportion
                               child: _textField(
                                   _phoneController, 'Phone', Icons.phone,
                                   keyboard: TextInputType.phone),
@@ -818,69 +1064,8 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           // Solo or Assign PT
                           // ---------------------------------------------------
-                          Row(
-                            children: [
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Go SOLO"),
-                                  value: true,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? true;
-                                    });
-                                  },
-                                ),
-                              ),
-                              Expanded(
-                                child: RadioListTile<bool>(
-                                  title: const Text("Assign PT"),
-                                  value: false,
-                                  groupValue: isSolo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      isSolo = value ?? false;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
+                          _buildSoloPTSelection(),
 
-                          // If user chooses "Assign PT," show the PT email field
-                          if (!isSolo)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Focus(
-                                onFocusChange: (hasFocus) {
-                                  if (!hasFocus) {
-                                    setState(() => _ptEmailTouched = true);
-                                  }
-                                },
-                                child: TextField(
-                                  controller: _ptEmailController,
-                                  focusNode: _ptEmailNode,
-                                  decoration: InputDecoration(
-                                    labelText: 'PT Email',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    prefixIcon: Icon(Icons.email_outlined,
-                                        color: theme.colorScheme.primary),
-                                    suffixIcon: _ptEmailTouched
-                                        ? Icon(
-                                            _isPtEmailValid
-                                                ? Icons.check_circle
-                                                : Icons.cancel,
-                                            color: _isPtEmailValid
-                                                ? Colors.green
-                                                : Colors.red,
-                                          )
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
                           const SizedBox(height: 20),
 
                           // ---------------------------------------------------
