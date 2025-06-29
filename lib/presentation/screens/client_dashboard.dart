@@ -165,7 +165,18 @@ class _ClientDashboardState extends State<ClientDashboard> {
               return Column(
                 children: [
                   if (reqStatus != null)
-                    _buildRequestStatusCard(reqStatus, requestedPt),
+                    FutureBuilder<DocumentSnapshot?>(
+                      future: requestedPt != null
+                          ? FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(requestedPt)
+                              .get()
+                          : Future.value(null),
+                      builder: (context, ptSnap) {
+                        final email = ptSnap.data?.data()?['email'] as String?;
+                        return _buildRequestStatusCard(reqStatus, email);
+                      },
+                    ),
                   _buildSoloCard(context),
                 ],
               );
@@ -256,34 +267,22 @@ class _ClientDashboardState extends State<ClientDashboard> {
     );
   }
 
-  Widget _buildRequestStatusCard(String status, String? ptId) {
+  Widget _buildRequestStatusCard(String status, String? ptEmail) {
     final theme = Theme.of(context);
     IconData icon;
     Color color;
     String text;
-    String? ptEmail;
-    if (ptId != null) {
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(ptId)
-          .get()
-          .then((doc) {
-        setState(() {
-          ptEmail = doc.data()?['email'];
-        });
-      });
-    }
     if (status == 'pending') {
       icon = Icons.hourglass_top;
       color = Colors.orange;
       text = ptEmail != null
-          ? 'Awaiting approval from \$ptEmail'
+          ? 'Awaiting approval from $ptEmail'
           : 'Link request pending approval.';
     } else {
       icon = Icons.cancel;
       color = theme.colorScheme.error;
       text = ptEmail != null
-          ? 'Request to \$ptEmail was rejected. You can send a new one from the Account screen.'
+          ? 'Request to $ptEmail was rejected. You can send a new one from the Account screen.'
           : 'Link request rejected. You can send a new request from the Account screen.';
     }
     return Padding(

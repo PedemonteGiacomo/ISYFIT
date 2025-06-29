@@ -485,17 +485,19 @@ class _AccountScreenState extends State<AccountScreen> {
 
     if (_requestStatus == 'pending') {
       return Card(
+        elevation: 4,
         margin: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              const Icon(Icons.hourglass_top, color: Colors.orange),
+              const Icon(Icons.hourglass_top, color: Colors.orange, size: 32),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   _requestedPtEmail != null
-                      ? 'Awaiting approval from \$_requestedPtEmail'
+                      ? 'Awaiting approval from $_requestedPtEmail'
                       : 'Link request pending approval.',
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -507,22 +509,42 @@ class _AccountScreenState extends State<AccountScreen> {
     }
 
     return Card(
+      elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              children: [
+                Icon(Icons.person_add,
+                    color: theme.colorScheme.primary, size: 32),
+                const SizedBox(width: 12),
+                Text(
+                  'Connect with a Personal Trainer',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             if (_requestStatus == 'rejected')
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text(
                   _requestedPtEmail != null
-                      ? 'Request to \$_requestedPtEmail was rejected. You can send a new one.'
+                      ? 'Request to $_requestedPtEmail was rejected. You can send a new one.'
                       : 'Previous request was rejected. You can send a new one.',
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
+            Text(
+              'Enter your trainer\'s email to send a link request.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: _ptEmailController,
               decoration: const InputDecoration(
