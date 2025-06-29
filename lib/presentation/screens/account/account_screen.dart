@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:isyfit/presentation/screens/base_screen.dart';
 import 'package:isyfit/presentation/screens/login_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
+import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 //TODO: implement the settings part here
 
@@ -283,6 +284,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: kScreenBottomPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -565,7 +567,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, kScreenBottomPadding),
         child: Column(
           children: [
             /// 1) A bigger "profile" card with tinted surface
