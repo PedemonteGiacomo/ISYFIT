@@ -66,7 +66,7 @@ class _ClientDashboardState extends State<ClientDashboard> {
           (_lastNotifiedMs == null || latest > _lastNotifiedMs!)) {
         NotificationService.instance.showNotification(
           title: 'Nuova notifica',
-          body: 'Il tuo PT ha aggiornato le notifiche',
+          body: 'Il tuo PT ha aggiornato lo stato della tua richiesta.',
           target: NotificationTarget.client,
         );
         _lastNotifiedMs = latest;
