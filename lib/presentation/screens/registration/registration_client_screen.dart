@@ -38,6 +38,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
   bool _agreeToTerms = false;
   bool _showPasswordInfo = false;
   bool _emailFieldTouched = false;
+  bool _showConfirmInfo = false;
   bool _confirmTouched = false;
   bool isSolo = true; // If false => user wants to assign PT
   bool _obscurePassword = true;
@@ -301,6 +302,27 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                   _buildPasswordRequirement(
                       'At least one special character', _hasSpecialChar),
                 ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildConfirmInfo() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _showConfirmInfo && !_passwordsMatch
+          ? Container(
+              key: const ValueKey('confirm_info'),
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Le due password non corrispondono',
+                style: TextStyle(color: Colors.red),
               ),
             )
           : const SizedBox.shrink(),
@@ -576,23 +598,37 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           _buildPasswordInfo(),
                           const SizedBox(height: 16),
 
-                          Stack(
-                            children: [
-                              TextField(
-                                controller: _confirmPasswordController,
-                                focusNode: _confirmPasswordNode,
-                                obscureText: _obscureConfirmPassword,
-                                onChanged: (_) => setState(() {}),
-                                decoration: InputDecoration(
-                                  labelText: 'Confirm Password',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock_outline,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  suffixIcon: IconButton(
+                          TextField(
+                            controller: _confirmPasswordController,
+                            focusNode: _confirmPasswordNode,
+                            obscureText: _obscureConfirmPassword,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Confirm Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: theme.colorScheme.primary,
+                              ),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_confirmTouched)
+                                    GestureDetector(
+                                      onTap: () => setState(() =>
+                                          _showConfirmInfo = !_showConfirmInfo),
+                                      child: Icon(
+                                        _passwordsMatch
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: _passwordsMatch
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  IconButton(
                                     icon: Icon(_obscureConfirmPassword
                                         ? Icons.visibility
                                         : Icons.visibility_off),
@@ -600,24 +636,11 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                                         _obscureConfirmPassword =
                                             !_obscureConfirmPassword),
                                   ),
-                                ),
+                                ],
                               ),
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: _confirmTouched
-                                    ? Icon(
-                                        _passwordsMatch
-                                            ? Icons.check_circle
-                                            : Icons.cancel,
-                                        color: _passwordsMatch
-                                            ? Colors.green
-                                            : Colors.red,
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
-                            ],
+                            ),
                           ),
+                          _buildConfirmInfo(),
                           const SizedBox(height: 16),
 
                           // Phone

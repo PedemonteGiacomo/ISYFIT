@@ -515,6 +515,7 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
         final TextEditingController confirmCtrl = TextEditingController();
         final FocusNode confirmNode = FocusNode();
         bool confirmTouched = false;
+        bool showConfirmInfo = false;
         bool obscurePass = true;
         bool obscureConfirm = true;
         final TextEditingController phoneCtrl = TextEditingController();
@@ -546,6 +547,29 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                     setStateDialog(() => confirmTouched = true);
                   }
                 });
+
+                Widget confirmInfo() {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: showConfirmInfo &&
+                            confirmTouched &&
+                            passCtrl.text != confirmCtrl.text
+                        ? Container(
+                            key: const ValueKey('confirm_info'),
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(ctx2).colorScheme.surfaceVariant,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Le due password non corrispondono',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  );
+                }
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -652,28 +676,34 @@ class _ManageClientsScreenState extends State<ManageClientsScreen> {
                         labelText: 'Confirm Password',
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirm
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () => setStateDialog(
-                              () => obscureConfirm = !obscureConfirm),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (confirmTouched)
+                              GestureDetector(
+                                onTap: () => setStateDialog(
+                                    () => showConfirmInfo = !showConfirmInfo),
+                                child: Icon(
+                                  passCtrl.text == confirmCtrl.text
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color: passCtrl.text == confirmCtrl.text
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            IconButton(
+                              icon: Icon(obscureConfirm
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () => setStateDialog(
+                                  () => obscureConfirm = !obscureConfirm),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    if (confirmTouched)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Icon(
-                          passCtrl.text == confirmCtrl.text
-                              ? Icons.check_circle
-                              : Icons.cancel,
-                          color: passCtrl.text == confirmCtrl.text
-                              ? Colors.green
-                              : Colors.red,
-                          size: 20,
-                        ),
-                      ),
+                    confirmInfo(),
                     const SizedBox(height: 12),
                     TextField(
                       controller: phoneCtrl,

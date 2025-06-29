@@ -43,6 +43,7 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
   bool _emailTouched = false;
   bool _isLoading = false;
   bool _isPayLoading = false;
+  bool _showConfirmInfo = false;
   bool _confirmTouched = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -290,6 +291,27 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
     );
   }
 
+  Widget _buildConfirmInfo() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _showConfirmInfo && !_passwordsMatch
+          ? Container(
+              key: const ValueKey('confirm_info'),
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Le due password non corrispondono',
+                style: TextStyle(color: Colors.red),
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
@@ -410,40 +432,44 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    Stack(children: [
-                      TextField(
-                        controller: _confirmPasswordController,
-                        focusNode: _confirmPasswordNode,
-                        obscureText: _obscureConfirmPassword,
-                        decoration: InputDecoration(
-                          labelText: 'Confirm Password',
-                          border: outline,
-                          prefixIcon: Icon(Icons.lock_outline,
-                              color: t.colorScheme.primary),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirmPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(() =>
-                                _obscureConfirmPassword =
-                                    !_obscureConfirmPassword),
-                          ),
+                    TextField(
+                      controller: _confirmPasswordController,
+                      focusNode: _confirmPasswordNode,
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
+                        border: outline,
+                        prefixIcon: Icon(Icons.lock_outline,
+                            color: t.colorScheme.primary),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_confirmTouched)
+                              GestureDetector(
+                                onTap: () => setState(
+                                    () => _showConfirmInfo = !_showConfirmInfo),
+                                child: Icon(
+                                  _passwordsMatch
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color: _passwordsMatch
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            IconButton(
+                              icon: Icon(_obscureConfirmPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () => setState(() =>
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword),
+                            ),
+                          ],
                         ),
                       ),
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: _confirmTouched
-                            ? Icon(
-                                _passwordsMatch
-                                    ? Icons.check_circle
-                                    : Icons.cancel,
-                                color:
-                                    _passwordsMatch ? Colors.green : Colors.red,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ]),
+                    ),
+                    _buildConfirmInfo(),
                     const SizedBox(height: 16),
 
                     // Phone
