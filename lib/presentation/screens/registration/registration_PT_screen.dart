@@ -355,36 +355,35 @@ class _RegisterPTScreenState extends State<RegisterPTScreen> {
                     const SizedBox(height: 16),
 
                     // Password
-                    Stack(children: [
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          border: outline,
-                          prefixIcon:
-                              Icon(Icons.lock, color: t.colorScheme.primary),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
-                          ),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: outline,
+                        prefixIcon:
+                            Icon(Icons.lock, color: t.colorScheme.primary),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => _showPwdInfo = !_showPwdInfo),
+                              child: Icon(Icons.info_outline,
+                                  color: _pwdOk ? Colors.green : Colors.red),
+                            ),
+                            IconButton(
+                              icon: Icon(_obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
+                            ),
+                          ],
                         ),
                       ),
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _showPwdInfo = !_showPwdInfo),
-                          child: Icon(Icons.info_outline,
-                              color: _pwdOk ? Colors.green : Colors.red),
-                        ),
-                      ),
-                    ]),
+                    ),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: _showPwdInfo

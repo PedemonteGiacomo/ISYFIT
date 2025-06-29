@@ -536,46 +536,42 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                           // ---------------------------------------------------
                           // Password Field with Info Icon
                           // ---------------------------------------------------
-                          Stack(
-                            children: [
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                onChanged: (_) => setState(() {}),
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: theme.colorScheme.primary,
+                              ),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => setState(() =>
+                                        _showPasswordInfo = !_showPasswordInfo),
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      color: _allRequirementsMet
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
                                   ),
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  suffixIcon: IconButton(
+                                  IconButton(
                                     icon: Icon(_obscurePassword
                                         ? Icons.visibility
                                         : Icons.visibility_off),
                                     onPressed: () => setState(() =>
                                         _obscurePassword = !_obscurePassword),
                                   ),
-                                ),
+                                ],
                               ),
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _showPasswordInfo = !_showPasswordInfo;
-                                  }),
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    color: _allRequirementsMet
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                           _buildPasswordInfo(),
                           const SizedBox(height: 16),
