@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/app_snackbars.dart';
+import '../../theme/app_gradients.dart';
 
 import 'package:isyfit/presentation/widgets/measurement_type_tab_bar_widget.dart'; // <<-- Import the new widget
 
@@ -215,39 +216,186 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
   // ---------------------------------------------------------------------------
   Widget _buildBIAForm(BuildContext context, String gender, double age) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
-        children: [
-          Text("Insert BIA Measurements",
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
-              )),
-          const SizedBox(height: 16),
-          _buildNumberField(_biaHeightCtrl, "Height (cm) *"),
-          _buildNumberField(_biaWeightCtrl, "Weight (kg) *"),
-          _buildNumberField(
-              _biaSkeletalMuscleMassCtrl, "Skeletal Muscle Mass (kg)"),
-          _buildNumberField(_biaBodyFatKgCtrl, "Body Fat (kg)"),
-          _buildNumberField(_biaBMICtrl, "BMI (optional; can auto-compute)"),
-          _buildNumberField(
-              _biaBasalMetabolicRateCtrl, "Basal Metabolic Rate (kcal)"),
-          _buildNumberField(_biaWaistHipRatioCtrl, "Waist-Hip Ratio"),
-          _buildNumberField(_biaVisceralFatLevelCtrl, "Visceral Fat Level"),
-          _buildNumberField(_biaTargetWeightCtrl, "Target Weight"),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _onSaveBIA(gender, age),
-            icon: Icon(Icons.save,
-                color: Theme.of(context).colorScheme.onPrimary),
-            label: Text(
-              "Save BIA",
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          children: [
+            // Hero Header with Modern Glassmorphism Effect
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppGradients.primary(Theme.of(context)),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: const Icon(Icons.biotech, color: Colors.white, size: 32),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "BIA Analysis",
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Bioelectrical Impedance Analysis",
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 24),
+
+            // Modern Floating Cards with Advanced Styling
+            _buildAdvancedSectionCard(
+              title: "Physical Metrics",
+              icon: Icons.straighten,
+              iconColor: const Color(0xFF4CAF50),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildAdvancedNumberField(
+                        _biaHeightCtrl, 
+                        "Height", 
+                        icon: Icons.height, 
+                        suffixText: "cm",
+                        gradientColors: [Colors.blue.shade400, Colors.blue.shade600],
+                      )
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildAdvancedNumberField(
+                        _biaWeightCtrl, 
+                        "Weight", 
+                        icon: Icons.monitor_weight, 
+                        suffixText: "kg",
+                        gradientColors: [Colors.green.shade400, Colors.green.shade600],
+                      )
+                    ),
+                  ],
+                ),
+                _buildAdvancedNumberField(
+                  _biaBMICtrl, 
+                  "BMI (auto-calculated)", 
+                  icon: Icons.calculate, 
+                  suffixText: "kg/m²",
+                  gradientColors: [Colors.purple.shade400, Colors.purple.shade600],
+                ),
+              ],
+            ),
+
+            _buildAdvancedSectionCard(
+              title: "Body Composition",
+              icon: Icons.accessibility_new,
+              iconColor: const Color(0xFFFF9800),
+              children: [
+                _buildAdvancedNumberField(
+                  _biaSkeletalMuscleMassCtrl, 
+                  "Skeletal Muscle Mass", 
+                  icon: Icons.fitness_center, 
+                  suffixText: "kg",
+                  gradientColors: [Colors.red.shade400, Colors.red.shade600],
+                ),
+                _buildAdvancedNumberField(
+                  _biaBodyFatKgCtrl, 
+                  "Body Fat Mass", 
+                  icon: Icons.water_drop, 
+                  suffixText: "kg",
+                  gradientColors: [Colors.orange.shade400, Colors.orange.shade600],
+                ),
+                _buildAdvancedNumberField(
+                  _biaVisceralFatLevelCtrl, 
+                  "Visceral Fat Level", 
+                  icon: Icons.favorite, 
+                  suffixText: "level",
+                  gradientColors: [Colors.pink.shade400, Colors.pink.shade600],
+                ),
+              ],
+            ),
+
+            _buildAdvancedSectionCard(
+              title: "Metabolic & Goals",
+              icon: Icons.local_fire_department,
+              iconColor: const Color(0xFFF44336),
+              children: [
+                _buildAdvancedNumberField(
+                  _biaBasalMetabolicRateCtrl, 
+                  "Basal Metabolic Rate", 
+                  icon: Icons.local_fire_department, 
+                  suffixText: "kcal",
+                  gradientColors: [Colors.deepOrange.shade400, Colors.deepOrange.shade600],
+                ),
+                _buildAdvancedNumberField(
+                  _biaWaistHipRatioCtrl, 
+                  "Waist-Hip Ratio", 
+                  icon: Icons.straighten, 
+                  suffixText: "ratio",
+                  gradientColors: [Colors.teal.shade400, Colors.teal.shade600],
+                ),
+                _buildAdvancedNumberField(
+                  _biaTargetWeightCtrl, 
+                  "Target Weight", 
+                  icon: Icons.flag, 
+                  suffixText: "kg",
+                  gradientColors: [Colors.indigo.shade400, Colors.indigo.shade600],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+            
+            // Ultra-Modern Save Button with Advanced Effects
+            _buildUltraModernSaveButton(
+              onPressed: () => _onSaveBIA(gender, age),
+              label: "Save BIA Analysis",
+              icon: Icons.save,
+            ),
+          ],
+        ),
     );
   }
 
@@ -315,34 +463,156 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
   Widget _buildUSArmyForm(BuildContext context, String gender, double age) {
     final isFemale = gender.toLowerCase().startsWith('f');
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
-        children: [
-          Text("Insert U.S. Army Measurements",
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
-              )),
-          const SizedBox(height: 16),
-          _buildNumberField(_armyHeightCtrl, "Height (cm) *"),
-          _buildNumberField(_armyNeckCtrl, "Neck (cm) *"),
-          _buildNumberField(_armyWaistCtrl, "Waist (cm) *"),
-          if (isFemale)
-            _buildNumberField(_armyHipsCtrl, "Hips (cm) (female) *"),
-          _buildNumberField(_armyWristCtrl, "Wrist (cm) (morphology)"),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _onSaveUSArmy(gender, age),
-            icon: Icon(Icons.save,
-                color: Theme.of(context).colorScheme.onPrimary),
-            label: Text(
-              "Save U.S. Army",
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          children: [
+            // Hero Header with Military Theme
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF1B5E20),
+                    const Color(0xFF2E7D32),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1B5E20).withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: const Icon(Icons.military_tech, color: Colors.white, size: 32),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "U.S. Army Method",
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Circumference-based body fat calculation",
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 24),
+
+            // Advanced Sections
+            _buildAdvancedSectionCard(
+              title: "Basic Measurements",
+              icon: Icons.straighten,
+              iconColor: const Color(0xFF2196F3),
+              children: [
+                _buildAdvancedNumberField(
+                  _armyHeightCtrl, 
+                  "Height", 
+                  icon: Icons.height, 
+                  suffixText: "cm",
+                  gradientColors: [Colors.blue.shade400, Colors.blue.shade600],
+                ),
+                _buildAdvancedNumberField(
+                  _armyNeckCtrl, 
+                  "Neck Circumference", 
+                  icon: Icons.accessibility, 
+                  suffixText: "cm",
+                  gradientColors: [Colors.cyan.shade400, Colors.cyan.shade600],
+                ),
+              ],
+            ),
+
+            _buildAdvancedSectionCard(
+              title: isFemale ? "Body Circumferences (Female)" : "Body Circumferences (Male)",
+              icon: Icons.straighten,
+              iconColor: isFemale ? const Color(0xFFE91E63) : const Color(0xFF3F51B5),
+              children: [
+                _buildAdvancedNumberField(
+                  _armyWaistCtrl, 
+                  "Waist Circumference", 
+                  icon: Icons.crop_free, 
+                  suffixText: "cm",
+                  gradientColors: isFemale 
+                    ? [Colors.pink.shade400, Colors.pink.shade600]
+                    : [Colors.indigo.shade400, Colors.indigo.shade600],
+                ),
+                if (isFemale)
+                  _buildAdvancedNumberField(
+                    _armyHipsCtrl, 
+                    "Hip Circumference", 
+                    icon: Icons.crop_free, 
+                    suffixText: "cm",
+                    gradientColors: [Colors.purple.shade400, Colors.purple.shade600],
+                  ),
+              ],
+            ),
+
+            _buildAdvancedSectionCard(
+              title: "Morphological Analysis",
+              icon: Icons.analytics,
+              iconColor: const Color(0xFFFF9800),
+              children: [
+                _buildAdvancedNumberField(
+                  _armyWristCtrl, 
+                  "Wrist Circumference", 
+                  icon: Icons.watch, 
+                  suffixText: "cm",
+                  gradientColors: [Colors.orange.shade400, Colors.orange.shade600],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+            
+            _buildUltraModernSaveButton(
+              onPressed: () => _onSaveUSArmy(gender, age),
+              label: "Save U.S. Army Analysis",
+              icon: Icons.save,
+            ),
+          ],
+        ),
     );
   }
 
@@ -407,68 +677,286 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
   Widget _buildPlicForm(BuildContext context, String gender, double age) {
     final isMale = gender.toLowerCase().startsWith('m');
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Insert Plicometro Measurements",
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
-              )),
-          Row(
-            children: [
-              Text("Sites (3-site method)", 
-                style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-              IconButton(
-                icon: Icon(Icons.help_outline, 
-                  color: Theme.of(context).colorScheme.primary),
-                onPressed: () {
-                  setState(() => _showPlicHelp = !_showPlicHelp);
-                },
-              ),
-            ],
-          ),
-          if (_showPlicHelp)
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero Header with Scientific Theme
             Container(
-              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF6A1B9A),
+                    const Color(0xFF8E24AA),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6A1B9A).withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: const Icon(Icons.straighten, color: Colors.white, size: 32),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Plicometer Analysis",
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Skinfold thickness measurements",
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: Text(
-                isMale
-                    ? "Men usually measure: Chest, Abdomen, Thigh."
-                    : "Women usually measure: Triceps, Suprailiac, Thigh.",
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(height: 24),
+
+            // Interactive Method Info Card
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.95),
+                    Colors.white.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() => _showPlicHelp = !_showPlicHelp);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary,
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  isMale
+                                      ? "3-Site Method (Male): Chest, Abdomen, Thigh"
+                                      : "3-Site Method (Female): Triceps, Suprailiac, Thigh",
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                              AnimatedRotation(
+                                turns: _showPlicHelp ? 0.5 : 0,
+                                duration: const Duration(milliseconds: 300),
+                                child: Icon(
+                                  Icons.expand_more,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            child: _showPlicHelp
+                                ? Column(
+                                    children: [
+                                      const SizedBox(height: 20),
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "📏 Measurement Guide:",
+                                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context).colorScheme.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              isMale
+                                                  ? "• Chest: Diagonal fold halfway between nipple and shoulder crease\n"
+                                                      "• Abdomen: Vertical fold 2cm to the right of the umbilicus\n"
+                                                      "• Thigh: Vertical fold on the front of the thigh midway between hip and knee"
+                                                  : "• Triceps: Vertical fold on the back of the upper arm\n"
+                                                      "• Suprailiac: Diagonal fold above the crest of the ilium\n"
+                                                      "• Thigh: Vertical fold on the front of the thigh midway between hip and knee",
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                color: Theme.of(context).colorScheme.primary,
+                                                height: 1.6,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          const SizedBox(height: 8),
-          if (isMale) ...[
-            _buildNumberField(_plicChestCtrl, "Chest (mm)"),
-            _buildNumberField(_plicAbdomenCtrl, "Abdomen (mm)"),
-            _buildNumberField(_plicThighCtrl, "Thigh (mm)"),
-          ] else ...[
-            _buildNumberField(_plicTricepsCtrl, "Triceps (mm)"),
-            _buildNumberField(_plicSuprailiacCtrl, "Suprailiac (mm)"),
-            _buildNumberField(_plicThighCtrl, "Thigh (mm)"),
-          ],
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _onSavePlic(gender, age),
-            icon: Icon(Icons.save,
-                color: Theme.of(context).colorScheme.onPrimary),
-            label: Text(
-              "Save Plicometer",
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+
+            const SizedBox(height: 24),
+
+            // Measurements Section
+            _buildAdvancedSectionCard(
+              title: isMale ? "Male Sites (3-Point Method)" : "Female Sites (3-Point Method)",
+              icon: Icons.straighten,
+              iconColor: isMale ? const Color(0xFF1976D2) : const Color(0xFFE91E63),
+              children: [
+                if (isMale) ...[
+                  _buildAdvancedNumberField(
+                    _plicChestCtrl, 
+                    "Chest", 
+                    icon: Icons.favorite, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.red.shade400, Colors.red.shade600],
+                  ),
+                  _buildAdvancedNumberField(
+                    _plicAbdomenCtrl, 
+                    "Abdomen", 
+                    icon: Icons.crop_free, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.orange.shade400, Colors.orange.shade600],
+                  ),
+                  _buildAdvancedNumberField(
+                    _plicThighCtrl, 
+                    "Thigh", 
+                    icon: Icons.accessibility, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.blue.shade400, Colors.blue.shade600],
+                  ),
+                ] else ...[
+                  _buildAdvancedNumberField(
+                    _plicTricepsCtrl, 
+                    "Triceps", 
+                    icon: Icons.fitness_center, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.pink.shade400, Colors.pink.shade600],
+                  ),
+                  _buildAdvancedNumberField(
+                    _plicSuprailiacCtrl, 
+                    "Suprailiac", 
+                    icon: Icons.crop_free, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.purple.shade400, Colors.purple.shade600],
+                  ),
+                  _buildAdvancedNumberField(
+                    _plicThighCtrl, 
+                    "Thigh", 
+                    icon: Icons.accessibility, 
+                    suffixText: "mm",
+                    gradientColors: [Colors.indigo.shade400, Colors.indigo.shade600],
+                  ),
+                ],
+              ],
             ),
-          ),
-        ],
-      ),
+
+            const SizedBox(height: 32),
+            
+            _buildUltraModernSaveButton(
+              onPressed: () => _onSavePlic(gender, age),
+              label: "Save Plicometer Analysis",
+              icon: Icons.save,
+            ),
+          ],
+        ),
     );
   }
 
@@ -532,15 +1020,253 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
     _plicSuprailiacCtrl.clear();
   }
 
-  Widget _buildNumberField(TextEditingController controller, String label) {
+  /// Advanced Section Card with Modern Glassmorphism Design
+  Widget _buildAdvancedSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+    Color? iconColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.9),
+            Colors.white.withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.8),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            iconColor?.withOpacity(0.8) ?? Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                            iconColor ?? Theme.of(context).colorScheme.primary,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (iconColor ?? Theme.of(context).colorScheme.primary).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ...children,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Ultra-Modern Number Field with Gradient Accents
+  Widget _buildAdvancedNumberField(
+    TextEditingController controller, 
+    String label, {
+    IconData? icon, 
+    String? suffixText,
+    List<Color>? gradientColors,
+  }) {
+    final colors = gradientColors ?? [
+      Theme.of(context).colorScheme.primary,
+      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+    ];
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              colors.first.withOpacity(0.05),
+              colors.last.withOpacity(0.02),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: colors.first.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: icon != null 
+              ? Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: colors),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
+                )
+              : null,
+            suffixText: suffixText,
+            suffixStyle: TextStyle(
+              color: colors.first,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colors.first, width: 2),
+            ),
+            filled: false,
+            labelStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              fontWeight: FontWeight.w500,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Ultra-Modern Save Button with Advanced Animation Effects
+  Widget _buildUltraModernSaveButton({
+    required VoidCallback onPressed,
+    required String label,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.9),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppGradients.primary(Theme.of(context)),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
