@@ -13,7 +13,6 @@ import 'package:isyfit/presentation/screens/medical_history/image_view_screen.da
 import 'package:isyfit/presentation/screens/medical_history/medical_questionnaire/questionnaire_screen.dart';
 import 'package:isyfit/presentation/widgets/gradient_app_bar.dart';
 import 'package:isyfit/presentation/widgets/gradient_button.dart';
-import 'package:isyfit/presentation/constants/layout_constants.dart';
 
 /// Helper function: Calculate age from dateOfBirth string
 int calculateAge(String? dateOfBirth) {
@@ -46,6 +45,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   late Future<Map<String, dynamic>?> medicalHistory;
   late Future<List<Map<String, dynamic>>> medicalDocuments;
   late Future<Map<String, dynamic>?> clientProfile;
+  late Future<String> userDisplayNameFuture;
 
   bool showAllDocuments = false;
 
@@ -56,6 +56,7 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     super.initState();
     medicalHistory = _fetchMedicalHistory();
     medicalDocuments = _fetchDocuments();
+    userDisplayNameFuture = _fetchUserDisplayName();
     if (isPTView) {
       clientProfile = _fetchClientProfile();
     }
@@ -64,6 +65,48 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
   String? get targetUid {
     if (widget.clientUid != null) return widget.clientUid;
     return FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  Future<String> _fetchUserDisplayName() async {
+    final uid = targetUid;
+    if (uid == null) return 'Unknown User';
+    
+    try {
+      final docSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      final data = docSnap.data();
+      
+      if (data == null) return 'Unknown User';
+      
+      final name = data['name']?.toString().trim() ?? '';
+      final surname = data['surname']?.toString().trim() ?? '';
+      
+      // Priorità 1: Nome e Cognome
+      if (name.isNotEmpty && surname.isNotEmpty) {
+        return '$name $surname';
+      }
+      
+      // Priorità 2: Solo nome o solo cognome se uno dei due c'è
+      if (name.isNotEmpty) {
+        return name;
+      }
+      if (surname.isNotEmpty) {
+        return surname;
+      }
+      
+      // Priorità 3: Email come fallback
+      final email = data['email']?.toString().trim() ?? '';
+      if (email.isNotEmpty) {
+        return email;
+      }
+      
+      // Priorità 4: Fallback finale
+      return 'Unknown User';
+    } catch (e) {
+      return 'Unknown User';
+    }
   }
 
   Future<Map<String, dynamic>?> _fetchMedicalHistory() async {
@@ -788,66 +831,19 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return LoginScreen();
 
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: medicalHistory,
-      builder: (context, snapshot) {
-        // While loading, show a loading indicator.
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: GradientAppBar(
-              title: 'IsyCheck',
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
-            body: Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          );
-        }
-
-        // If no data and non-PT view => show questionnaire
-        if (!isPTView && (!snapshot.hasData || snapshot.data == null)) {
-          return Scaffold(
-            appBar: GradientAppBar(
-              title: 'IsyCheck',
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
-            body: _buildNoMedicalHistoryForUser(),
-          );
-        }
-
-        // If no data but PT view => show "No Medical Data Found"
-        if (isPTView && (!snapshot.hasData || snapshot.data == null)) {
-          return FutureBuilder<Map<String, dynamic>?>(
-            future: clientProfile,
-            builder: (context, ptSnapshot) {
-              final profileData = ptSnapshot.data;
+    return FutureBuilder<String>(
+      future: userDisplayNameFuture,
+      builder: (context, displayNameSnapshot) {
+        final displayName = displayNameSnapshot.data ?? 'Loading...';
+        
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: medicalHistory,
+          builder: (context, snapshot) {
+            // While loading, show a loading indicator.
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return Scaffold(
                 appBar: GradientAppBar(
-                  title: 'IsyCheck',
+                  title: 'IsyCheck - $displayName',
                   actions: [
                     IconButton(
                       icon: Icon(Icons.home,
@@ -861,51 +857,105 @@ class _MedicalHistoryScreenState extends State<MedicalHistoryScreen> {
                     ),
                   ],
                 ),
-                body: _buildNoMedicalHistoryForPT(profileData),
-              );
-            },
-          );
-        }
-
-        // Otherwise, we have valid medical data => show the normal 4-tab layout
-        final data = snapshot.data!;
-        return DefaultTabController(
-          length: 4,
-          child: Scaffold(
-            appBar: GradientAppBar(
-              title: 'IsyCheck',
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: Theme.of(context).colorScheme.onPrimary),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BaseScreen()),
-                    );
-                  },
+                body: Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ],
-            ),
-            bottomNavigationBar: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
-                Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
-                Tab(icon: Icon(Icons.fitness_center), text: "Training"),
-                Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
-              ],
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.grey,
-            ),
-            body: TabBarView(
-              children: [
-                _tabWithPossibleHeader(child: _buildPersonalInfoTab(data)),
-                _tabWithPossibleHeader(child: _buildLifestyleTab(data)),
-                _tabWithPossibleHeader(child: _buildTrainingTab(data)),
-                _tabWithPossibleHeader(child: _buildDocumentsTab(context)),
-              ],
-            ),
-          ),
+              );
+            }
+
+            // If no data and non-PT view => show questionnaire
+            if (!isPTView && (!snapshot.hasData || snapshot.data == null)) {
+              return Scaffold(
+                appBar: GradientAppBar(
+                  title: 'IsyCheck - $displayName',
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.home,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BaseScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                body: _buildNoMedicalHistoryForUser(),
+              );
+            }
+
+            // If no data but PT view => show "No Medical Data Found"
+            if (isPTView && (!snapshot.hasData || snapshot.data == null)) {
+              return FutureBuilder<Map<String, dynamic>?>(
+                future: clientProfile,
+                builder: (context, ptSnapshot) {
+                  final profileData = ptSnapshot.data;
+                  return Scaffold(
+                    appBar: GradientAppBar(
+                      title: 'IsyCheck - $displayName',
+                      actions: [
+                        IconButton(
+                          icon: Icon(Icons.home,
+                              color: Theme.of(context).colorScheme.onPrimary),
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BaseScreen()),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    body: _buildNoMedicalHistoryForPT(profileData),
+                  );
+                },
+              );
+            }
+
+            // Otherwise, we have valid medical data => show the normal 4-tab layout
+            final data = snapshot.data!;
+            return DefaultTabController(
+              length: 4,
+              child: Scaffold(
+                appBar: GradientAppBar(
+                  title: 'IsyCheck - $displayName',
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.home,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BaseScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                bottomNavigationBar: const TabBar(
+                  tabs: [
+                    Tab(icon: Icon(Icons.person_pin), text: "Personal Info"),
+                    Tab(icon: Icon(Icons.local_drink), text: "Lifestyle"),
+                    Tab(icon: Icon(Icons.fitness_center), text: "Training"),
+                    Tab(icon: Icon(Icons.insert_drive_file), text: "Documents"),
+                  ],
+                  labelColor: Colors.blue,
+                  unselectedLabelColor: Colors.grey,
+                ),
+                body: TabBarView(
+                  children: [
+                    _tabWithPossibleHeader(child: _buildPersonalInfoTab(data)),
+                    _tabWithPossibleHeader(child: _buildLifestyleTab(data)),
+                    _tabWithPossibleHeader(child: _buildTrainingTab(data)),
+                    _tabWithPossibleHeader(child: _buildDocumentsTab(context)),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );

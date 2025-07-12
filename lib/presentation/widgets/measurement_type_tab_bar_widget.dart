@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_gradients.dart';
 
 /// A reusable 3‑tab bar for "BIA / USArmy / Plicometro"
 ///
@@ -21,14 +20,14 @@ class MeasurementTypeTabBarWidget extends StatelessWidget {
     return Container(
       // We omit extra margin so it can attach directly to whatever is above it.
       decoration: BoxDecoration(
-        gradient: AppGradients.primary(Theme.of(context)),
+        color: Theme.of(context).colorScheme.surface, // White background from theme
       ),
       child: TabBar(
         controller: tabController,
-        indicatorColor: Colors.white,
+        indicatorColor: Theme.of(context).colorScheme.primary, // Electric blue indicator
         indicatorWeight: 3,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white70,
+        labelColor: Theme.of(context).colorScheme.primary, // Electric blue for selected tab
+        unselectedLabelColor: Theme.of(context).colorScheme.primary.withOpacity(0.6), // Lighter blue for unselected tabs
         tabs: const [
           Tab(text: 'BIA'),
           Tab(text: 'USArmy'),

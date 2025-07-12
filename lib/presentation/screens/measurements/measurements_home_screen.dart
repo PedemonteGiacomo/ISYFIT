@@ -102,54 +102,54 @@ class _MeasurementsHomeScreenState extends State<MeasurementsHomeScreen> {
                   ),
                 ),
 
-                // Show the PT's "client info" if relevant
-                if (isPTView)
-                  FutureBuilder<Map<String, dynamic>?>(
-                    future: _clientProfileFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox(height: 0);
-                      }
-                      final data = snapshot.data;
-                      if (data == null) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Unknown Client',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        );
-                      }
-                      final name = data['name'] ?? '';
-                      final surname = data['surname'] ?? '';
-                      final email = data['email'] ?? '';
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          '$name $surname ($email)',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                      );
-                    },
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      'Your Measurements',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ),
+                // // Show the PT's "client info" if relevant
+                // if (isPTView)
+                //   FutureBuilder<Map<String, dynamic>?>(
+                //     future: _clientProfileFuture,
+                //     builder: (context, snapshot) {
+                //       if (snapshot.connectionState == ConnectionState.waiting) {
+                //         return const SizedBox(height: 0);
+                //       }
+                //       final data = snapshot.data;
+                //       if (data == null) {
+                //         return Padding(
+                //           padding: const EdgeInsets.symmetric(vertical: 8.0),
+                //           child: Text(
+                //             'Unknown Client',
+                //             style: Theme.of(context)
+                //                 .textTheme
+                //                 .titleMedium
+                //                 ?.copyWith(
+                //                   fontWeight: FontWeight.bold,
+                //                 ),
+                //           ),
+                //         );
+                //       }
+                //       final name = data['name'] ?? '';
+                //       final surname = data['surname'] ?? '';
+                //       final email = data['email'] ?? '';
+                //       return Padding(
+                //         padding: const EdgeInsets.symmetric(vertical: 8.0),
+                //         child: Text(
+                //           '$name $surname ($email)',
+                //           style:
+                //               Theme.of(context).textTheme.titleMedium?.copyWith(
+                //                     fontWeight: FontWeight.bold,
+                //                   ),
+                //         ),
+                //       );
+                //     },
+                //   )
+                // else
+                //   Padding(
+                //     padding: const EdgeInsets.symmetric(vertical: 8.0),
+                //     child: Text(
+                //       'Your Measurements',
+                //       style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //     ),
+                //   ),
 
                 // The TabBarView: if we have 2 tabs, we skip the Insert screen
                 Expanded(

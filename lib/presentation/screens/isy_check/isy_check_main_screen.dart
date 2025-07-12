@@ -40,7 +40,7 @@ class _IsyCheckMainScreenState extends State<IsyCheckMainScreen> {
         }
         final isPT = snapshot.data ?? false;
 
-        // 1) If we have a clientUid => show that client’s medical data
+        // 1) If we have a clientUid => show that client's medical data
         if (_clientUid != null) {
           return MedicalHistoryScreen(clientUid: _clientUid);
         }

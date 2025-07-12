@@ -183,16 +183,19 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
 
             // The 3 TabBarView children:
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // BIA form
-                  _buildBIAForm(context, gender, age),
-                  // USArmy form
-                  _buildUSArmyForm(context, gender, age),
-                  // Plicometro form
-                  _buildPlicForm(context, gender, age),
-                ],
+              child: Container(
+                color: Theme.of(context).colorScheme.surface, // White background from theme
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // BIA form
+                    _buildBIAForm(context, gender, age),
+                    // USArmy form
+                    _buildUSArmyForm(context, gender, age),
+                    // Plicometro form
+                    _buildPlicForm(context, gender, age),
+                  ],
+                ),
               ),
             ),
           ],
@@ -215,8 +218,12 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text("Insert BIA Measurements",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text("Insert BIA Measurements",
+              style: TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
+              )),
           const SizedBox(height: 16),
           _buildNumberField(_biaHeightCtrl, "Height (cm) *"),
           _buildNumberField(_biaWeightCtrl, "Weight (kg) *"),
@@ -311,8 +318,12 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text("Insert U.S. Army Measurements",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text("Insert U.S. Army Measurements",
+              style: TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
+              )),
           const SizedBox(height: 16),
           _buildNumberField(_armyHeightCtrl, "Height (cm) *"),
           _buildNumberField(_armyNeckCtrl, "Neck (cm) *"),
@@ -400,13 +411,19 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Insert Plicometro Measurements",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text("Insert Plicometro Measurements",
+              style: TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary, // Electric blue from theme
+              )),
           Row(
             children: [
-              const Text("Sites (3-site method)"),
+              Text("Sites (3-site method)", 
+                style: TextStyle(color: Theme.of(context).colorScheme.primary)),
               IconButton(
-                icon: const Icon(Icons.help_outline),
+                icon: Icon(Icons.help_outline, 
+                  color: Theme.of(context).colorScheme.primary),
                 onPressed: () {
                   setState(() => _showPlicHelp = !_showPlicHelp);
                 },
@@ -416,11 +433,18 @@ class _MeasurementsInsertScreenState extends State<MeasurementsInsertScreen>
           if (_showPlicHelp)
             Container(
               padding: const EdgeInsets.all(8),
-              color: Colors.grey.shade200,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                ),
+              ),
               child: Text(
                 isMale
                     ? "Men usually measure: Chest, Abdomen, Thigh."
                     : "Women usually measure: Triceps, Suprailiac, Thigh.",
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
             ),
           const SizedBox(height: 8),
